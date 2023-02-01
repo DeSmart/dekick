@@ -5,8 +5,9 @@ from os import path, remove
 
 from yaml import dump
 
+from lib.dotenv import get_dotenv_var
 from lib.fs import chown
-from lib.settings import C_END, C_FILE, DEKICKRC_PATH, PROJECT_ROOT
+from lib.settings import C_END, C_FILE, DEKICK_PATH, DEKICKRC_PATH, PROJECT_ROOT
 from migrations.shared import dekickrc_add_default_values, dekickrc_remove_unused_values
 
 OLD_DEKICKRC_PATH = path.join(PROJECT_ROOT, ".dekickrc")
@@ -24,7 +25,8 @@ def main():
         if error.filename == OLD_DEKICKRC_PATH:
             return {
                 "success": False,
-                "text": f"File {C_FILE}{OLD_DEKICKRC_PATH}{C_END} not found, maybe you already migrated?",
+                "text": f"File {C_FILE}{OLD_DEKICKRC_PATH}{C_END} "
+                + "not found, maybe you already migrated?",
             }
 
         return {
@@ -32,7 +34,7 @@ def main():
             "text": f"File {C_FILE}{error.filename}{C_END} not found",
         }
 
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-except
         logging.exception(error)
         return {"success": False, "text": "Migration failed"}
 
@@ -54,6 +56,12 @@ def convert_dekickrc_to_yaml():
         configuration = load_json(file)
 
     configuration["dekick"]["flavour"] = map_flavour(configuration["dekick"]["flavour"])
+    configuration["project"] = {
+        "group": configuration["gitlab"]["group"],
+        "name": configuration["gitlab"]["project"],
+    }
+    configuration["gitlab"]["url"] = get_dotenv_var("GITLAB_URL", path=DEKICK_PATH)
+    configuration["gitlab"]["getenv"] = True
 
     logging.debug("Writing to %s file", DEKICKRC_PATH)
     with open(DEKICKRC_PATH, "w", encoding="utf-8") as yaml_file:
