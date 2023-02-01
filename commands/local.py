@@ -154,17 +154,11 @@ def check_command_docker_compose():
 def update_dekick():
     """Updates DeKick if needed"""
 
-    if is_pytest():
+    if is_pytest() or not get_dekickrc_value("dekick.auto_update"):
         return
 
     if update() is True:
-        console.print("Restarting DeKick...\n")
-        args = sys.argv
-        args.append("--migrate-from")
-        args.append(get_local_version())
-
-        os.execv(sys.argv[0], sys.argv)
-
+        sys.exit(127)
 
 def check_flavour():
     """Checks if the flavour is supported"""

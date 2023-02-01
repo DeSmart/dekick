@@ -20,6 +20,7 @@ from lib.settings import (
     C_CMD,
     C_CODE,
     C_END,
+    CURRENT_UID,
     DEKICK_GIT_URL,
     DEKICK_MASTER_VERSION_URL,
     DEKICK_PATH,
@@ -78,12 +79,11 @@ def check_command_git():
 def update() -> bool:
 
     check_command_git()
-    get_remote_version()
 
-    if compare_versions() is False:
+    if not compare_versions():
         return False
 
-    if ask_for_update() is False:
+    if not ask_for_update():
         return False
 
     tmpdir = make_tmpdir()
@@ -144,7 +144,7 @@ def clone_dekick(tmpdir: str):
     def run():
         try:
             run_shell(
-                ["git", "clone", "--branch", "master", DEKICK_GIT_URL, tmpdir],
+                ["git", "clone", "--branch", "main", DEKICK_GIT_URL, tmpdir],
                 capture_output=True,
                 raise_exception=True,
             )
@@ -167,10 +167,11 @@ def clone_dekick(tmpdir: str):
 def copy_files(tmpdir: str):
     def run():
         try:
-            # shell_run(["rm", "-rf", DEKICK_PATH], {})
-            # shell_run(["cp", "-r", f"{tmpdir}/.", DEKICK_PATH], {})
-            # shell_run(["rm", "-rf", f"{DEKICK_PATH}/.git"], {})
-            # shell_run(["rm", "-rf", f"{tmpdir}"], {})
+            run_shell(["rm", "-rf", f"{DEKICK_PATH}*", f"{DEKICK_PATH}.*"], {})
+            run_shell(["cp", "-r", f"{tmpdir}/.", DEKICK_PATH], {})
+            run_shell(["rm", "-rf", f"{DEKICK_PATH}/.git"], {})
+            run_shell(["rm", "-rf", f"{tmpdir}"], {})
+            run_shell(["chown", "-R", CURRENT_UID, DEKICK_PATH], {})
 
             return {
                 "success": True,

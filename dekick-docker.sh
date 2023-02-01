@@ -50,3 +50,10 @@ docker run $DOCKER_FLAGS --rm \
   -v ~/.gitlabrc:/root/.gitlabrc \
   "${IMAGE}" \
   "$@"
+
+if [ "$?" = 127 ]; then
+  echo
+  echo "Restarting DeKick after update from version ${VERSION}"
+  "${DEKICK_PATH}/dekick-docker.sh" "$@" --migrate-from-version="${VERSION}"
+  exit 0
+fi
