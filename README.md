@@ -41,8 +41,8 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 …that's it 🙂 Happy DeKicking!
 
-# This project is still under a development
-Documentation will be available soon. If you are interested, please write to dooshek@desmart.com
+# This project is still under development
+More documentation will be available soon.
 
 # Contribution
 If you want to contribute, please email dooshek@desmart.com
