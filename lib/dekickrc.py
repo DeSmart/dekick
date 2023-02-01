@@ -73,7 +73,8 @@ def compare_dekickrc_file():
             if path not in dekickrc_flat and parsed_tmpl_value["required"]:
                 return {
                     "success": False,
-                    "text": f"Key {C_CMD}{path}{C_END} ({C_CMD}{tmpl_type}{C_END}) is required but does not exists in {C_FILE}{DEKICKRC_FILE}{C_END}",
+                    "text": f"Key {C_CMD}{path}{C_END} ({C_CMD}{tmpl_type}{C_END}) "
+                    + f"is required but does not exists in {C_FILE}{DEKICKRC_FILE}{C_END}",
                 }
 
             if (
@@ -84,14 +85,17 @@ def compare_dekickrc_file():
 
                 return {
                     "success": False,
-                    "text": f"Key of {C_CMD}{path}{C_END} has incorrect type in {C_FILE}{DEKICKRC_FILE}{C_END} (is {C_CMD}{cur_type}{C_END}, should be {C_CMD}{need_type}{C_END})",
+                    "text": f"Key of {C_CMD}{path}{C_END} has incorrect type in "
+                    + f"{C_FILE}{DEKICKRC_FILE}{C_END} (is {C_CMD}{cur_type}{C_END}, "
+                    + f"should be {C_CMD}{tmpl_type}{C_END})",
                 }
 
-        for path, need_type in dekickrc_flat.items():
+        for path, need_type in dekickrc_flat.items():  # pylint: disable=unused-variable
             if path not in tmpl_flat:
                 return {
                     "success": False,
-                    "text": f"Your {C_FILE}{DEKICKRC_FILE}{C_END} contains unneeded extra key {C_CMD}{path}{C_END} - please remove it.",
+                    "text": f"Your {C_FILE}{DEKICKRC_FILE}{C_END} contains unneeded extra key "
+                    + f"{C_CMD}{path}{C_END} - please remove it.",
                 }
 
     except TypeError:
