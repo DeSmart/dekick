@@ -77,7 +77,6 @@ DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
 
-BOILERPLATES_DEFAULT_GIT_URL = "https://github.com/desmart/dekick-boilerplates.git"  # pylint: disable=line-too-long
 BOILERPLATES_PATH = getcwd() + "/boilerplates/"
 
 

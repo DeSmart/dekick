@@ -1,9 +1,7 @@
-from logging import debug, error, info
-
 from rich.traceback import install
 
 from lib.dotenv import get_dotenv_var
-from lib.settings import BOILERPLATES_DEFAULT_GIT_URL, BOILERPLATES_PATH, CURRENT_UID
+from lib.settings import BOILERPLATES_PATH, CURRENT_UID
 from lib.tests.rbash import rbash
 
 install()
@@ -11,7 +9,7 @@ install()
 
 def get_boilerplates_git_url() -> str:
     """Returns boilerplates git url"""
-    return get_dotenv_var("BOILERPLATES_GIT_URL", BOILERPLATES_DEFAULT_GIT_URL)
+    return get_dotenv_var("BOILERPLATES_GIT_URL")
 
 
 def delete_boilerplates() -> bool:
