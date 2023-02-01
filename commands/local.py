@@ -160,6 +160,7 @@ def update_dekick():
     if update() is True:
         sys.exit(127)
 
+
 def check_flavour():
     """Checks if the flavour is supported"""
 
@@ -201,7 +202,16 @@ def get_env_from_gitlab() -> bool:
     if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
         return True
 
+    gitlab_url = get_dekickrc_value("gitlab.url")
+
     def actual_get():
+
+        if not gitlab_url:
+            return {
+                "success": False,
+                "text": f"GitLab URL is not set in {C_FILE}{DEKICKRC_FILE}{C_END} file",
+            }
+
         project_group = get_dekickrc_value("project.group")
         project_name = get_dekickrc_value("project.name")
 
@@ -223,7 +233,10 @@ def get_env_from_gitlab() -> bool:
                 "func_args": {"diff": diff, "project_vars": project_vars},
             }
 
-    return run_func(f"Downloading {C_CMD}.env{C_END} from GitLab", func=actual_get)
+    return run_func(
+        f"Downloading {C_FILE}.env{C_END} from GitLab {C_CMD}{gitlab_url}{C_END}",
+        func=actual_get,
+    )
 
 
 def ask_overwrite(diff: str, project_vars: str):
