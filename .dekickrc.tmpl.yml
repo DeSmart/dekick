@@ -2,7 +2,7 @@ project:
   name: str(default=dekick,required=true)
   group: str(default=,required=false)
 gitlab:
-  url: bool(default=,required=false)
+  url: str(default=,required=false)
   getenv: bool(default=false,required=false)
 dekick:
   auto_update: bool(default=true,required=false)
