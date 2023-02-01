@@ -413,7 +413,8 @@ def first_run_banner():
     """Shows some info if project is run for the first time"""
     if not os.path.exists(f"{PROJECT_ROOT}/.env"):
         print(
-            f"{C_BOLD}{C_CMD}  This is a first run, please be patient while we prepare"
+            f"{C_BOLD}{C_CMD}  This seems to be a first run on this machine, "
+            + "please be patient while we prepare"
             + f" your environment{C_END}"
         )
         time.sleep(2)
