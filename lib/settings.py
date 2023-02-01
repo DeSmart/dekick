@@ -7,9 +7,9 @@ from lib.terminal_colors import TerminalColors
 colors = TerminalColors()
 
 DEKICK_MASTER_VERSION_URL = (
-    "https://git.desmart.com/desmart/dekick/-/raw/master/.version"
+    "https://raw.githubusercontent.com/DeSmart/dekick/main/.version"
 )
-DEKICK_GIT_URL = "https://git.desmart.com/desmart/dekick.git"
+DEKICK_GIT_URL = "https://github.com/DeSmart/dekick.git"
 DEKICK_BOILERPLATES = [
     "api/node/js",
     "api/node/ts",
