@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "oderwat.indent-rainbow",
+    "ms-python.isort",
+    "ms-python.python",
+    "timonwong.shellcheck",
+    "johnpapa.vscode-peacock",
+    "KevinRose.vsc-python-indent",
+    "njpwerner.autodocstring",
+    "njqdev.vscode-python-typehint",
+    "evondev.indent-rainbow-palettes",
+    "wayou.vscode-todo-highlight"
+  ]
+}

@@ -1,0 +1,14 @@
+# ! IMPORTANT !
+# After updating requirements, please generate the Docker image with the following command: 
+# cd docker && ./create-docker-images.sh
+halo==0.0.31
+colorama==0.4.5
+rich==12.4.4
+python-gitlab==3.6.0
+python-dotenv==0.21.0
+flatdict==4.0.1
+pyyaml==6.0
+bash==0.6
+pytest==7.2.0
+pytest-instafail==0.4.2
+debugpy==1.6.5

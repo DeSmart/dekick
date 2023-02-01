@@ -1,0 +1,17 @@
+project:
+  name: str(default=dekick,required=true)
+  group: str(default=,required=false)
+gitlab:
+  getenv: bool(default=false,required=false)
+dekick:
+  boilerplate: str(default=express,required=true)
+  ports:
+    - service: str(default=api,required=false)
+      port: int(default=3000,required=false)
+  flavour: str(default=express,required=true)
+  settings:
+    apidoc:
+      generate: bool(default=false,required=false)
+      legacy: bool(default=false,required=false)
+    vite:
+      enabled: bool(default=false,required=false)

@@ -1,0 +1,26 @@
+[tool.isort]
+profile = 'black'
+force_grid_wrap = 0
+
+# https://docs.pytest.org/en/7.2.x/reference/reference.html#ini-options-ref
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "ERROR"
+cache_dir = "/tmp/.pytest_cache"
+addopts = "-x"
+testpaths = [
+  "tests/"
+]
+pythonpath = [
+  "."
+]
+markers = [
+    "command_local",
+    "command_build",
+    "command_status",
+    "command_local_stop",
+    "command_test",
+    "command_cleanup",
+]
+log_file = "logs/pytest.log"
+log_file_level = "DEBUG"

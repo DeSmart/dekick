@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+unset DEKICK_PATH
+unset PROJECT_ROOT
+
+
+if [ -n "$ZSH_VERSION" ]; then
+  SHELL=zsh
+elif [ -n "$BASH_VERSION" ]; then
+  SHELL=bash
+fi
+function realpath() {
+  local previouspwd=$PWD
+  cd "$(dirname "$1")" || exit 1
+
+  local link
+  link=$(readlink "$(basename "$1")")
+
+  while [ "$link" ]; do
+    cd "$(dirname "$link")" || exit 1
+    link=$(readlink "$(basename "$1")")
+  done
+
+  local realpath
+  realpath="$PWD/$(basename "$1")"
+  cd "$previouspwd" || exit 1
+
+  echo "$realpath"
+}
+
+function show_banner() {
+  if tty > /dev/null 2>&1; then
+    echo
+    echo "██████╗ ███████╗██╗  ██╗██╗ ██████╗██╗  ██╗";
+    echo "██╔══██╗██╔════╝██║ ██╔╝██║██╔════╝██║ ██╔╝";
+    echo "██║  ██║█████╗  █████╔╝ ██║██║     █████╔╝ ";
+    echo "██║  ██║██╔══╝  ██╔═██╗ ██║██║     ██╔═██╗ ";
+    echo "██████╔╝███████╗██║  ██╗██║╚██████╗██║  ██╗";
+    echo "╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝";
+    echo "Installed!"
+    echo
+    if [ "$PROJECT_ROOT" ]; then
+      echo "Project path: ${PROJECT_ROOT}"
+    fi
+    echo "DeKick path: ${DEKICK_PATH}"
+    echo
+    echo "See help by running 'dekick --help'. Happy coding!"
+  fi
+}
+
+function dekick() {
+  local PREV_PWD=$PWD
+  cd "$PROJECT_ROOT" || exit 1
+  "${DEKICK_PATH}/dekick-docker.sh" "$@"
+  local EC=$?
+  cd "$PREV_PWD" || exit 1
+  return $EC
+}
+
+function dck() {
+  dekick "$@"
+}
+
+# Checking if Docker daemon is running and there are proper rights to access it
+if ! docker ps >/dev/null 2>&1; then
+  echo "Docker daemon is not running or you don't have rights to access it."
+  echo "DeKick will not work properly without Docker!"
+fi
+
+
+if [ -z "$DEKICK_PATH" ]; then
+  if [ "$SHELL" = "zsh" ]; then
+    SOURCE=${(%):-%N}
+  elif [ "$SHELL" = "bash" ]; then
+    SOURCE=${BASH_SOURCE[0]}
+  fi
+
+  if [ "$SOURCE" = "dev" ]; then
+    DEKICK_PATH=$(realpath "$(pwd)")
+  else
+    DEKICK_PATH=$(realpath "$(dirname "${SOURCE}")")
+  fi
+fi
+
+if [ -z "$PROJECT_ROOT" ]; then
+  PROJECT_ROOT=$(realpath "$(pwd)")
+fi
+
+export DEKICK_PATH PROJECT_ROOT
+
+show_banner
