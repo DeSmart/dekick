@@ -2,6 +2,7 @@ project:
   name: str(default=dekick,required=true)
   group: str(default=,required=false)
 gitlab:
+  url: bool(default=,required=false)
   getenv: bool(default=false,required=false)
 dekick:
   boilerplate: str(default=express,required=true)

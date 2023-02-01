@@ -8,7 +8,7 @@ import gitlab
 from rich.console import Console
 from rich.traceback import install
 
-from lib.settings import GITLAB_URL
+from lib.dekickrc import get_dekickrc_value
 
 install()
 console = Console()
@@ -24,7 +24,12 @@ def auth() -> gitlab.Gitlab:
     logging.info("Authenticating to Gitlab with a token from %s", token_file)
     logging.debug("Token: %s", token)
 
-    gl_client = gitlab.Gitlab(private_token=token, url=GITLAB_URL)
+    gitlab_url = get_dekickrc_value("gitlab.url")
+
+    if gitlab_url == "":
+        raise Exception("Gitlab URL is not set in the config file")
+
+    gl_client = gitlab.Gitlab(private_token=token, url=gitlab_url)
 
     gl_client.auth()
 
