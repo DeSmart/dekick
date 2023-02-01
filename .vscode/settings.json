@@ -23,7 +23,7 @@
   "[shellscript]": {
     "editor.defaultFormatter": "timonwong.shellcheck"
   },
-  "peacock.color": "#9b2a08",
+  "peacock.color": "#c0111e",
   "python.linting.pylamaEnabled": false,
   "editor.detectIndentation": false,
   "indentRainbow.colors": [
@@ -50,17 +50,17 @@
   },
   "workbench.colorCustomizations": {
     "commandCenter.border": "#e7e7e799",
-    "titleBar.activeBackground": "#190a14",
+    "titleBar.activeBackground": "#910d17",
     "titleBar.activeForeground": "#e7e7e7",
-    "titleBar.inactiveBackground": "#190a1499",
+    "titleBar.inactiveBackground": "#910d1799",
     "titleBar.inactiveForeground": "#e7e7e799",
     "editorRuler.foreground": "#2a2424",
-    "statusBar.background": "#3d1931",
+    "statusBar.background": "#c0111e",
     "statusBar.foreground": "#e7e7e7",
-    "statusBarItem.hoverBackground": "#61284e",
-    "statusBarItem.remoteBackground": "#3d1931",
+    "statusBarItem.hoverBackground": "#eb1929",
+    "statusBarItem.remoteBackground": "#c0111e",
     "statusBarItem.remoteForeground": "#e7e7e7",
-    "tab.activeBorder": "#61284e"
+    "tab.activeBorder": "#eb1929"
   },
   "python.testing.pytestPath": "DEKICK_PATH=$(pwd) dekick pytest",
   "python.testing.pytestArgs": [
