@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 if [ -z "$DEKICK_PATH" ]; then
@@ -51,9 +52,13 @@ docker run $DOCKER_FLAGS --rm \
   "${IMAGE}" \
   "$@"
 
-if [ "$?" = 127 ]; then
+DEKICK_EXIT_CODE=$?
+
+if [ "$DEKICK_EXIT_CODE" = 255 ]; then
   echo
   echo "Restarting DeKick after update from version ${VERSION}"
   "${DEKICK_PATH}/dekick-docker.sh" "$@" --migrate-from-version="${VERSION}"
   exit 0
 fi
+
+exit $DEKICK_EXIT_CODE
