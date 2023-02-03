@@ -8,7 +8,7 @@ def get_dotenv_var(var: str, default: str = "", path: str = "") -> str:
 
     path_parsed = path
 
-    if not path.endswith("/"):
+    if path != "" and not path.endswith("/"):
         path_parsed = f"{path}/"
 
     config = dotenv_values(f"{path_parsed}.env")
