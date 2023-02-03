@@ -14,7 +14,6 @@ from random import randint
 from subprocess import PIPE, CalledProcessError, Popen
 from typing import Union
 
-from dotenv import dotenv_values
 from rich.traceback import install
 
 from lib.dekickrc import get_dekickrc_value
