@@ -2,6 +2,7 @@
 Runs the specified command
 """
 from argparse import ArgumentParser, Namespace
+from sys import exit
 
 from rich.traceback import install
 
@@ -54,7 +55,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     """
     parser_default_funcs(parser)
 
-    build(
+    if build(
         target_image=parser.target_image,
         docker_login_user=parser.docker_login_user,
         docker_login_password=parser.docker_login_password,
@@ -62,7 +63,10 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
         push=parser.push,
         log_level=parser.log_level or "INFO",
         log_filename=parser.log_filename or "dekick-build.log",
-    )
+    ):
+        exit(0)
+
+    exit(1)
 
 
 # pylint: disable=too-many-arguments
@@ -74,7 +78,7 @@ def build(
     push: bool,
     log_level: str,
     log_filename: str,
-):
+) -> bool:
     """
     Build an image
     """
@@ -90,15 +94,18 @@ def build(
 
     try:
         flavour_action("build")
+        build_image(target_image)
+
+        if push is True:
+            push_image(
+                target_image, docker_login_user, docker_login_password, docker_registry
+            )
+
     except Exception:  # pylint: disable=broad-except
         stop(remove=False)
-        return
+        return False
 
-    build_image(target_image)
-
-    if push is True:
-        push_image(
-            target_image, docker_login_user, docker_login_password, docker_registry
-        )
-
-    stop(remove=True)
+    stop(
+        remove=True,
+    )
+    return True
