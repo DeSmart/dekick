@@ -158,7 +158,7 @@ def update_dekick():
         return
 
     if update() is True:
-        sys.exit(127)
+        sys.exit(255)
 
 
 def check_flavour():
