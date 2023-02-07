@@ -40,11 +40,17 @@ if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
   docker pull -q "${IMAGE}"
 fi
 
+if [[ "$OSTYPE" == "linux"* ]]; then
+  DOCKER_GROUP_ADD="--group-add $(stat -c '%g' /var/run/docker.sock)"
+  DOCKER_GROUP_USER="--user $(id -u):$(id -g)"
+fi
+
+
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
-  --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-  --user "$(id -u):$(id -g)" \
+  ${DOCKER_GROUP_ADD} \
+  ${DOCKER_GROUP_USER} \
   -e DEKICK_PATH="${DEKICK_PATH}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
   -e CURRENT_UID="$(id -u):$(id -g)" \
