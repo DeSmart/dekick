@@ -2,6 +2,7 @@ import pytest
 
 from lib.tests.dekick_commands import (
     dekick_build,
+    dekick_dotenv_replace,
     dekick_local,
     dekick_status,
     dekick_stop,
@@ -45,4 +46,14 @@ def test_local_test():
 @pytest.mark.command_build
 def test_build():
     """Tests `dekick build` command"""
+    assert dekick_build(FLAVOUR, VERSION)
+
+
+@pytest.mark.command_build
+def test_build_app_env_production():
+    """
+    Tests `dekick build` command with additional APP_ENV environment
+    variable set to `production`
+    """
+    assert dekick_dotenv_replace(FLAVOUR, VERSION, {"APP_ENV": "production"})
     assert dekick_build(FLAVOUR, VERSION)

@@ -1,6 +1,7 @@
 """Miscellaneous functinos running tests"""
 from logging import debug
 
+from dotenv import set_key
 from rich.traceback import install
 
 from lib.tests.docker import docker_no_running_container, get_docker_env
@@ -56,3 +57,21 @@ def dekick_test(flavour: str, version: str) -> bool:
     """Runs dekick test command with given flavour and version of the boilerplate used"""
     proc = _dekick_command_wrapper(["test"], flavour, version)
     return proc["code"] == 0
+
+
+def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
+    """
+    Replaces .env file contents with given environment variables as env
+    """
+    try:
+        docker_env = get_docker_env(flavour, version)
+        project_root = docker_env["PROJECT_ROOT"]
+        env_file = f"{project_root}/.env"
+
+        for key, value in env.items():
+            set_key(env_file, key, value, quote_mode="auto")
+
+    except Exception:  # pylint: disable=broad-except
+        return False
+
+    return True
