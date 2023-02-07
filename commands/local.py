@@ -125,8 +125,7 @@ def check_gitlabrc():
     """Checks if .gitlabrc file exists"""
     if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
         return
-    home = Path.home().absolute()
-    check_file(f"{home}/.gitlabrc")
+    check_file(f"/.gitlabrc")
 
 
 def check_command_docker():

@@ -43,6 +43,8 @@ fi
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
+  --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+  --user "$(id -u):$(id -g)" \
   -e DEKICK_PATH="${DEKICK_PATH}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
   -e CURRENT_UID="$(id -u):$(id -g)" \
@@ -53,7 +55,7 @@ docker run $DOCKER_FLAGS --rm \
   -e PYTHONDONTWRITEBYTECODE=1 \
   ${DEKICK_DOCKER_PORTS} \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ~/.gitlabrc:/root/.gitlabrc \
+  -v ~/.gitlabrc:/.gitlabrc \
   "${IMAGE}" \
   "$@"
 

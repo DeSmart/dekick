@@ -2,7 +2,11 @@
 
 DEKICK_COMMANDS=("artisan" "build" "composer" "docker-compose" "knex" "local" "logs" "node" "npm" "npx" "phpunit" "pint" "seed" "status" "stop" "test" "update" "yarn")
 
-ln -s "${DEKICK_PATH}/dekick.py" /usr/bin/dekick
+function dekick() {
+  "${DEKICK_PATH}/dekick.py" "$@"
+  return $?
+}
+
 
 if [ -z "$1" ]; then
     dekick -h

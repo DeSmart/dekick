@@ -28,10 +28,10 @@ def main():
 
     laravel_nova_support()
     pull_and_build_images()
-    setup_permissions()
+    # setup_permissions()
     composer_install()
     start_services()
-    fix_permissions()
+    # fix_permissions()
     wait_for_database()
     ui_seed()
     generate_apidoc()

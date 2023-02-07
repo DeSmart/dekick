@@ -14,7 +14,7 @@ console = Console()
 def main():
     """Main"""
     pull_and_build_images()
-    setup_permissions()
+    # setup_permissions()
     yarn_install()
     start_services()
     wait_for_container()
