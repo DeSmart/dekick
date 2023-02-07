@@ -35,6 +35,11 @@ if [ "$DEKICK_PATH" = "$PROJECT_ROOT" ]; then
   VOLUME_PROJECT=""
 fi
 
+if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
+  echo -n "Downloading DeKick image... "
+  docker pull -q "${IMAGE}"
+fi
+
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
