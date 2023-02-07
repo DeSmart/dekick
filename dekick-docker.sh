@@ -55,7 +55,7 @@ docker run $DOCKER_FLAGS --rm \
   -e PYTHONDONTWRITEBYTECODE=1 \
   ${DEKICK_DOCKER_PORTS} \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ~/.gitlabrc:/.gitlabrc \
+  -v ~/.gitlabrc:/tmp/.gitlabrc \
   "${IMAGE}" \
   "$@"
 

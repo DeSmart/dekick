@@ -125,7 +125,8 @@ def check_gitlabrc():
     """Checks if .gitlabrc file exists"""
     if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
         return
-    check_file(f"/.gitlabrc")
+    token_file = "/tmp/.gitlabrc"
+    check_file(token_file)
 
 
 def check_command_docker():
