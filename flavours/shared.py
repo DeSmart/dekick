@@ -12,11 +12,14 @@ from lib.misc import create_temporary_dir, get_flavour_container, run_func, run_
 from lib.settings import C_CMD, C_CODE, C_END, CURRENT_UID
 
 
-def composer_install():
+def composer_install(args=None):
     """Run composer install command"""
 
+    if args is None:
+        args = []
+
     def run():
-        composer(["install"])
+        composer(["install", *args])
 
     run_func(text=f"Running {C_CMD}composer install{C_END}", func=run)
 
