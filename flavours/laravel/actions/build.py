@@ -24,13 +24,13 @@ def main():
     setup_permissions()
 
     app_env = get_dotenv_var("APP_ENV")
+    composer_args = []
     if app_env in ("production", "beta"):
         logging.debug(
             "APP_ENV is %s: running composer install in production mode", app_env
         )
-        composer_install(args=["--no-dev"])
-    else:
-        composer_install()
+        composer_args = ["--no-dev", "--optimize-autoloader"]
 
+    composer_install(composer_args)
     start_services()
     generate_apidoc()
