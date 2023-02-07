@@ -6,6 +6,7 @@ from bash import bash
 def rbash(info_desc: str, cmd: str, expected_code: int = 0, **kwargs) -> dict:
     """Runs command in bash and returns its output"""
     info(info_desc)
+    # cmd = f"umask 0000; {cmd}"
     debug("Bash command: %s", cmd)
     ret = bash(cmd, **kwargs)
 

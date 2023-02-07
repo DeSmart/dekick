@@ -71,6 +71,10 @@ def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
         for key, value in env.items():
             set_key(env_file, key, value, quote_mode="auto")
 
+        rbash(
+            "Change owner of .env file", f"chown {docker_env['CURRENT_UID']} {env_file}"
+        )
+
     except Exception:  # pylint: disable=broad-except
         return False
 
