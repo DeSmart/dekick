@@ -5,11 +5,7 @@ import logging
 
 from rich.traceback import install
 
-from flavours.laravel.shared import (
-    generate_apidoc,
-    laravel_nova_support,
-    setup_permissions,
-)
+from flavours.laravel.shared import generate_apidoc, laravel_nova_support, setup_dirs
 from flavours.shared import composer_install, pull_and_build_images, start_services
 from lib.dotenv import get_dotenv_var
 
@@ -21,7 +17,7 @@ def main():
 
     laravel_nova_support()
     pull_and_build_images()
-    setup_permissions()
+    setup_dirs()
 
     app_env = get_dotenv_var("APP_ENV")
     composer_args = []

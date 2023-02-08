@@ -7,10 +7,9 @@ from rich.traceback import install
 from commands.seed import ui_seed
 from flavours.laravel.shared import (
     api_is_ready,
-    fix_permissions,
     generate_apidoc,
     laravel_nova_support,
-    setup_permissions,
+    setup_dirs,
 )
 from flavours.shared import (
     composer_install,
@@ -28,10 +27,9 @@ def main():
 
     laravel_nova_support()
     pull_and_build_images()
-    # setup_permissions()
+    setup_dirs()
     composer_install()
     start_services()
-    # fix_permissions()
     wait_for_database()
     ui_seed()
     generate_apidoc()
