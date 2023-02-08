@@ -4,11 +4,12 @@ DEKICK_COMMANDS=("artisan" "build" "composer" "docker-compose" "knex" "local" "l
 
 user=$(whoami)
 
-if [ "$user" = "root" ]; then
+if [ "$user" = "root" ] && [ -n "$CURRENT_USERNAME" ]; then
   ln -s "${DEKICK_PATH}/dekick.py" /usr/bin/dekick
   adduser -D -h /tmp/homedir -u "${CURRENT_UID%:*}" "$CURRENT_USERNAME"
   chown "${CURRENT_UID%:*}" /var/run/docker.sock
-  su -m "$CURRENT_USERNAME" -c "./docker-entrypoint.sh $@"
+  su -c "/usr/local/bin/docker-entrypoint.sh $*" "$CURRENT_USERNAME"
+  exit $?
 fi
 
 if [ -z "$1" ]; then
@@ -18,10 +19,10 @@ fi
 
 if [[ " ${DEKICK_COMMANDS[*]} " == *" $1 "* ]]; then
   cd "${PROJECT_ROOT}" || cd /
-  su -m dooshek -c dekick "$@"
+  dekick "$@"
 elif command -v "$1" > /dev/null 2>&1; then
   cd "${DEKICK_PATH}" || cd /
-  su -m dooshek -c "$@"
+  exec "$@"
 else
-  su -m "$CURRENT_USERNAME" -c "dekick --help"
+  dekick --help
 fi

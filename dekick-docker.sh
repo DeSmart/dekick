@@ -40,10 +40,12 @@ if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
   docker pull -q "${IMAGE}"
 fi
 
-if [[ "$OSTYPE" == "linux"* ]]; then
-  DOCKER_GROUP_ADD="--group-add $(stat -c '%g' /var/run/docker.sock)"
-  DOCKER_GROUP_USER="--user $(id -u):$(id -g)"
-fi
+# if [[ "$OSTYPE" == "linux"* ]]; then
+#   DOCKER_GROUP_ADD="--group-add $(stat -c '%g' /var/run/docker.sock)"
+#   DOCKER_GROUP_USER="--user $(id -u):$(id -g)"
+# fi
+
+# DOCKER_GROUP_USER="--user root"
 
 
 #  -e PYTHONDONTWRITEBYTECODE=1 \
