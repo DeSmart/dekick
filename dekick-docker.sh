@@ -46,6 +46,8 @@ fi
 
 DOCKER_GROUP_USER="--user $(id -u):$(id -g)"
 
+#  -e PYTHONDONTWRITEBYTECODE=1 \
+
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
@@ -54,11 +56,11 @@ docker run $DOCKER_FLAGS --rm \
   -e DEKICK_PATH="${DEKICK_PATH}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
   -e CURRENT_UID="$(id -u):$(id -g)" \
+  -e CURRENT_USERNAME="$(whoami)" \
   -e DEKICK_DOCKER_IMAGE="${IMAGE}" \
   -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
   -e HOST_ARCH="${HOST_ARCH}" \
   -e HOST_PLATFORM="${HOST_PLATFORM}" \
-  -e PYTHONDONTWRITEBYTECODE=1 \
   ${DEKICK_DOCKER_PORTS} \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v ~/.gitlabrc:/tmp/.gitlabrc \
