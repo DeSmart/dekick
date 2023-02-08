@@ -7,13 +7,6 @@ def parser_default_args(parser):
 
     def log_level():
         """Adds the log level argument"""
-        parser.add_argument(
-            "--log-level",
-            required=False,
-            default="",
-            help="Log level to use for logging",
-            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        )
 
     def log_filename():
         parser.add_argument(
@@ -32,15 +25,6 @@ def parser_default_args(parser):
             help="used for running test with Pytest",
         )
 
-    def spinner():
-        """What spinner to use?"""
-        parser.add_argument(
-            "--spinner",
-            required=False,
-            type=str,
-            choices=["simple", "null", "halo"],
-            help="What spinner to use?",
-        )
 
     log_level()
     log_filename()
