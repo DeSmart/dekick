@@ -40,7 +40,6 @@ def setup_dirs():
 
     def run():
         dirs_chown = "bootstrap/cache/ storage/ storage/app/ storage/app/public/ storage/app/scribe/ storage/framework/ storage/framework/cache/ storage/framework/testing/ storage/framework/sessions/ storage/framework/views/ storage/app/apidoc storage/logs/ vendor/ /.cache/"
-        # dirs_chmod = "bootstrap/cache/ storage/ vendor/ /.cache/"
         cmd = "run"
         args = [
             "-T",
