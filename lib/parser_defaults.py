@@ -32,6 +32,16 @@ def parser_default_args(parser):
             help="used for running test with Pytest",
         )
 
+    def spinner():
+        """What spinner to use?"""
+        parser.add_argument(
+            "--spinner",
+            required=False,
+            type=str,
+            choices=["simple", "null", "halo"],
+            help="What spinner to use?",
+        )
+
     log_level()
     log_filename()
     pytest()
