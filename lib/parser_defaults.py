@@ -7,6 +7,13 @@ def parser_default_args(parser):
 
     def log_level():
         """Adds the log level argument"""
+        parser.add_argument(
+            "--log-level",
+            required=False,
+            default="",
+            help="Log level to use for logging",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        )
 
     def log_filename():
         parser.add_argument(
@@ -24,7 +31,6 @@ def parser_default_args(parser):
             action="store_true",
             help="used for running test with Pytest",
         )
-
 
     log_level()
     log_filename()
