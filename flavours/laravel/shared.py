@@ -12,7 +12,7 @@ from lib.dotenv import get_dotenv_var
 from lib.fs import chown
 from lib.misc import run_func
 from lib.settings import C_CMD, C_END, CURRENT_UID
-
+from flavours.shared import open_url_browser
 
 def api_is_ready():
     """Display a message when the API is ready."""
@@ -21,9 +21,11 @@ def api_is_ready():
         try:
             healtcheck_key = get_dotenv_var("HEALTHCHECK_KEY")
             app_url = get_dotenv_var("APP_URL")
+            healtcheck_url = f"{app_url}/api/healthcheck?HEALTHCHECK_KEY={healtcheck_key}"
+            open_url_browser(healtcheck_url)
             return {
                 "success": True,
-                "text": f"API should be available at {app_url}/api/healthcheck?HEALTHCHECK_KEY={healtcheck_key}",
+                "text": f"API should be available at {healtcheck_url}",
             }
         except KeyError as error:
             return {

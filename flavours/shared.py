@@ -291,3 +291,8 @@ def is_service_running(service: str) -> bool:
         raise_exception=False,
     )
     return bool(ret["stdout"].strip() == service)
+
+def open_url_browser(url):
+    """Opens URL in default system browser"""
+    logging.info("Opening %s in default system browser (open command)", url)
+    run_shell(["open", url])

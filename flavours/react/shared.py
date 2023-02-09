@@ -1,14 +1,14 @@
-from flavours.shared import setup_permissions as shared_setup_permissions
-from flavours.shared import wait_for_container as shared_wait_for_container
+from flavours.shared import setup_permissions as shared_setup_permissions, wait_for_container as shared_wait_for_container, open_url_browser
 from lib.dekickrc import get_dekickrc_value
 from lib.dotenv import get_dotenv_var
-from lib.misc import run_func
+from lib.misc import run_func, run_shell
 
 
 def app_is_ready():
     def run():
         try:
             react_app_home_url = get_dotenv_var("REACT_APP_HOME_URL")
+            open_url_browser(react_app_home_url)
             return {
                 "success": True,
                 "text": f"App should be available at {react_app_home_url}",
