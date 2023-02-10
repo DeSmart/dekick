@@ -1,5 +1,4 @@
-#FROM desmart/dind:latest
-FROM docker:23.0-cli
+FROM docker:23-cli
 
 RUN apk update\
   && apk add --no-cache git bash curl ncurses net-tools jq perl gettext rsync python3 py3-pip \
