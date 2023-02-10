@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ -z "$DEKICK_PATH" ]; then
   DEKICK_PATH=$(pwd)
