@@ -15,7 +15,7 @@ def install_logger(level: str = "", filename: str = ""):
     """Installs the logger and sets the log level and filenam"""
 
     filename = "dekick.log" if filename == "" else filename
-    level = "WARNING" if level == "" else level
+    level = "INFO" if level == "" else level
 
     set_log_level(level)
     set_log_filename(filename)
