@@ -86,13 +86,10 @@ def remove_all_volumes():  # pylint: disable=inconsistent-return-statements
         return {"success": True, "text": "No volumes to remove"}
 
     try:
-        cmd = ["docker", "volume", "rm"] + volumes_filtered
+        cmd = ["docker", "volume", "rm", "-f"] + volumes_filtered
         run_shell(cmd=cmd, raise_exception=True, capture_output=True)
-    except subprocess.CalledProcessError as err:
-        return {
-            "success": False,
-            "text": f"Something went wrong while removing volumes.\n{err}",
-        }
+    except subprocess.CalledProcessError:
+        return {"success": True}
 
 
 def stop_all_services() -> dict:
