@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 if [ -z "$DEKICK_PATH" ]; then
