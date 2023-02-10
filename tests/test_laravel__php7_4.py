@@ -6,6 +6,7 @@ from lib.tests.dekick_commands import (
     dekick_local,
     dekick_status,
     dekick_stop,
+    dekick_test,
 )
 from lib.tests.misc import parse_flavour_version
 
@@ -40,6 +41,7 @@ def test_local_stop():
 @pytest.mark.command_test
 def test_local_test():
     """Tests `dekick test` command"""
+    assert dekick_test(FLAVOUR, VERSION)
     assert dekick_stop(FLAVOUR, VERSION)
 
 
