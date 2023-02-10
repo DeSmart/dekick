@@ -40,15 +40,16 @@ def setup_dirs():
 
     def run():
         dirs_chown = "bootstrap/cache/ storage/ storage/app/ storage/app/public/ storage/app/scribe/ storage/framework/ storage/framework/cache/ storage/framework/testing/ storage/framework/sessions/ storage/framework/views/ storage/app/apidoc storage/logs/ vendor/ /.cache/"
+        dirs_chmod = "bootstrap/cache/ storage/ vendor/ /.cache/"
         cmd = "run"
         args = [
             "-T",
             "--rm",
-            f"--user={CURRENT_UID}",
+            "--user=root",
             get_container(),
             "sh",
             "-c",
-            f"mkdir -p {dirs_chown}",
+            f"mkdir -p {dirs_chown}; chown {CURRENT_UID} {dirs_chown}; chmod o+rwX {dirs_chmod} -R",
         ]
 
         docker_compose(cmd=cmd, args=args, env={})
