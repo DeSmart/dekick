@@ -92,7 +92,7 @@ def get_all_services() -> list:
     return str(ret["stdout"]).strip().split("\n")
 
 
-def wait_for_container(search_string: str, timeout: int = 60, container=None):
+def wait_for_container(search_string: str, failed_string: str = "" ,timeout: int = 60, container=None, terminate: bool = True) -> bool:
     """Wait for container logs to contain a search_string
 
     Args:
@@ -103,7 +103,7 @@ def wait_for_container(search_string: str, timeout: int = 60, container=None):
 
     def run():
         try:
-            wait_for_log(container, search_string, timeout)
+            wait_for_log(container, search_string, failed_string, timeout)
             return {
                 "success": True,
                 "text": f"Your {C_CMD}{container}{C_END} container is ready!",
@@ -117,7 +117,7 @@ def wait_for_container(search_string: str, timeout: int = 60, container=None):
         except Exception as error:  # pylint: disable=broad-except
             error_text = (
                 f"Failed to start {C_CMD}{container}{C_END} container, check container "
-                + f" logs for more information. {error}"
+                + f"logs for more information. {error}"
             )
             logging.error(error_text)
             return {
@@ -125,9 +125,10 @@ def wait_for_container(search_string: str, timeout: int = 60, container=None):
                 "text": error_text,
             }
 
-    run_func(
+    return run_func(
         text=f"Waiting for {C_CMD}{container}{C_END} container to start",
         func=run,
+        terminate=terminate
     )
 
 
@@ -135,6 +136,7 @@ def wait_for_database(container: str = "db"):
     """Wait for database to be ready"""
     wait_for_container(
         "database system is ready to accept connections",
+        "failed",
         60,
         container,
     )

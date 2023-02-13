@@ -119,7 +119,7 @@ def docker_compose(
     )
 
 
-def wait_for_log(container_name: str, search_string: str, timeout: int = 60):
+def wait_for_log(container_name: str, search_string: str, failed_string: str, timeout: int = 60):
     """Reads container logs every second and returns True if the log contains
     search_string within specified timeout time
 
@@ -135,12 +135,13 @@ def wait_for_log(container_name: str, search_string: str, timeout: int = 60):
     timer = 0
 
     while timer < timeout:
-
         log = get_container_log(container_name, get_seconds_since_dekick_start())
-
-        if search_string in log:
+        if failed_string in log:
+            raise Exception()
+        if failed_string in log and search_string in log:
+            raise Exception()
+        if search_string in log and failed_string not in log:
             return
-
         (exit_code, status) = get_container_exit_code(container_name)
 
         if status == "exited" and exit_code != 0:
@@ -157,7 +158,6 @@ def wait_for_log(container_name: str, search_string: str, timeout: int = 60):
         f"Timeout when waiting for {C_CODE}{search_string}{C_END} in a container "
         + f"{C_CMD}{container_name}{C_END} after {timeout} seconds"
     )
-
 
 def get_container_exit_code(container_name: str) -> tuple:
     """Gets container exit code and status"""
@@ -180,7 +180,7 @@ def get_container_exit_code(container_name: str) -> tuple:
     return (int(inspect[0]), inspect[1])
 
 
-def get_container_log(container_name: str, since: int = 0) -> str:
+def get_container_log(container_name: str, since: int = 0, capture_output: bool = True) -> str:
     """Gets container log since seconds ago, if since is 0, it will return the whole log"""
 
     since_formatted = f"{since}s"
@@ -195,7 +195,7 @@ def get_container_log(container_name: str, since: int = 0) -> str:
             "--no-color",
             container_name,
         ],
-        capture_output=True,
+        capture_output=capture_output,
     )["stdout"]
 
 

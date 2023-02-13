@@ -18,4 +18,3 @@ def main():
     yarn_install()
     start_services()
     wait_for_container()
-    app_is_ready()
