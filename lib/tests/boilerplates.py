@@ -1,4 +1,4 @@
-from logging import fatal
+from logging import fatal, warning
 from os import getcwd, makedirs
 from tempfile import mkdtemp
 
@@ -16,7 +16,7 @@ FLAVOUR_ROOT = getcwd() + "/tmp/boilerplates/flavours/"
 
 def generate_boilerplates_base_path() -> str:
     """Generates boilerplates path"""
-    return _generate_path(BOILERPLATES_ROOT)
+    return BOILERPLATES_ROOT
 
 
 def get_boilerplates_base_path() -> str:
@@ -45,11 +45,16 @@ def download_boilerplates_base() -> bool:
     boilerplates_git_url = get_boilerplates_git_url()
     boilerplates_path = get_boilerplates_base_path()
 
-    rbash(
+    ret = rbash(
         "Downloading boilerplates",
-        f'git clone "{boilerplates_git_url}" "{boilerplates_path}";'
-        + f'cd {boilerplates_path}; git config --global --add safe.directory "*"',
+        f'git clone "{boilerplates_git_url}" "{boilerplates_path}"'
+        #        + f'cd {boilerplates_path}; git config --global --add safe.directory "*"',
     )
+
+    if ret["code"] == 128:
+        warning("Boilerplates already exists")
+        reset_boilerplates()
+
     return rbash("Checking directory exists", f"ls {boilerplates_path}")["stdout"] != ""
 
 
@@ -66,11 +71,11 @@ def generate_flavour_path() -> str:
     return _generate_path(FLAVOUR_ROOT)
 
 
-def get_flavour_path() -> str:
+def get_flavour_path(regenerate: bool = False) -> str:
     """Returns flavour path"""
     global FLAVOUR_PATH  # pylint: disable=global-statement
 
-    if FLAVOUR_PATH is None:
+    if FLAVOUR_PATH is None or regenerate is True:
         FLAVOUR_PATH = generate_flavour_path()
 
     return FLAVOUR_PATH
@@ -79,7 +84,7 @@ def get_flavour_path() -> str:
 def create_flavour(flavour: str, version: str) -> bool:
     """Copies boilerplate flavour to flavour generated directory"""
     boilerplates_path = get_boilerplates_base_path()
-    flavour_path = get_flavour_path()
+    flavour_path = get_flavour_path(regenerate=True)
     return (
         rbash(
             "Copying boilerplate flavour",
@@ -101,11 +106,11 @@ def _generate_path(root: str) -> str:
     return mkdtemp(prefix="", dir=root) + "/"
 
 
-# def reset_boilerplates() -> bool:
-#     """Resets boilerplates repository to initial position"""
-#     boilerplates_path = get_boilerplates_path()
-#     rbash(
-#         "Resetting boilerplates",
-#         f"cd {boilerplates_path}; git reset --hard HEAD; git clean -fdx",
-#     )
-#     return True
+def reset_boilerplates() -> bool:
+    """Resets boilerplates repository to initial position"""
+    boilerplates_path = get_boilerplates_base_path()
+    rbash(
+        "Resetting boilerplates",
+        f"cd {boilerplates_path}; git pull; git reset --hard HEAD; git clean -fdx",
+    )
+    return True

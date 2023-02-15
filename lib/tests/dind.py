@@ -1,4 +1,4 @@
-from logging import debug
+from logging import debug, warning
 from os import getgid, getuid
 
 from lib.tests.rbash import rbash
@@ -6,26 +6,41 @@ from lib.tests.rbash import rbash
 DIND_CONTAINER_ID = None
 
 
-def start_dind_container():
+def start_dind_container(count: int = 0):
     """Start a Docker-in-Docker container"""
-    global DIND_CONTAINER_ID  # pylint: disable=global-statement
 
     def create_dind_container():
-        return rbash(
+
+        global DIND_CONTAINER_ID  # pylint: disable=global-statement
+        container_id = rbash(
             "Starting DinD container",
             "docker run --privileged -d --rm --add-host host.docker.internal:host-gateway -e DOCKER_REGISTRY_MIRROR=http://host.docker.internal:5000/ -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:2.0.3",
         )["stdout"].strip()
+        DIND_CONTAINER_ID = container_id
 
     def chmod_socket_wait_for_dind():
         dind_container_id = get_dind_container_id()
-        rbash(
+        ret = rbash(
             "Waiting for DinD to start then change permissions of docker socket",
             f'docker exec "{dind_container_id}" bash -c "while ! '
-            + 'docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock"',
+            + 'docker ps; do sleep 1; done; chmod 666 /var/run/docker.sock"',
         )
 
-    DIND_CONTAINER_ID = create_dind_container()
-    chmod_socket_wait_for_dind()
+        if ret["code"] == 137:
+            return False
+        return True
+
+    create_dind_container()
+
+    didn_is_working = chmod_socket_wait_for_dind()
+    max_retries = 5
+    if not didn_is_working and count < max_retries:
+        count = count + 1
+        warning("DinD didn't start properly, retrying... %s", count)
+        return start_dind_container(count)
+
+    if not didn_is_working and count >= max_retries:
+        return False
 
     return True
 
@@ -41,7 +56,7 @@ def stop_dind_container():
     dind_container_id = get_dind_container_id()
     rbash(
         "Stopping DinD container",
-        f'docker kill "{dind_container_id}" >/dev/null 2>&1; exit 0',
+        f'docker kill "{dind_container_id}"; exit 0',
     )
     DIND_CONTAINER_ID = None
     return True

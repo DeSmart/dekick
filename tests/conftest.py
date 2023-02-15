@@ -1,30 +1,41 @@
-from os import path
+from os import getcwd, path
 
 import pytest
+from filelock import FileLock
 
 from lib.tests.boilerplates import (
     create_flavour,
-    delete_boilerplates,
     delete_flavour,
     download_boilerplates_base,
 )
 from lib.tests.dind import start_dind_container, stop_dind_container
 from lib.tests.misc import parse_flavour_version
-from lib.tests.registry import start_docker_registry, stop_docker_registry
+from lib.tests.registry import start_docker_registry
+
+
+def init_session(worker_id):
+    """Do some things before workers start"""
+    lock = FileLock(getcwd() + "/tmp/pytest.lock", timeout=240)
+
+    if worker_id in ("gw0", "main"):
+        start_docker_registry()
+        download_boilerplates_base()
+        lock.release()
+        return
+
+    lock.acquire(timeout=240)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def start_session(request):
+def start_session(worker_id, request):
     """Setup boilerplates before running tests"""
-    download_boilerplates_base()
-    start_docker_registry()
+    init_session(worker_id)
     request.addfinalizer(teardown_session)
 
 
 def teardown_session():
     """Teardown boilerplates after running tests"""
-    stop_docker_registry()
-    delete_boilerplates()
+    pass
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -37,5 +48,5 @@ def start_function(request):
 
 def teardown_function():
     """Cleans up boilerplates and stops containers after running test"""
-    stop_dind_container()
     delete_flavour()
+    stop_dind_container()
