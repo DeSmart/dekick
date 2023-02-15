@@ -13,7 +13,7 @@ def start_dind_container():
     def create_dind_container():
         return rbash(
             "Starting DinD container",
-            "docker run --privileged -d --rm -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:2.0.3",
+            "docker run --privileged -d --rm --add-host host.docker.internal:host-gateway -e DOCKER_REGISTRY_MIRROR=http://host.docker.internal:5000/ -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:2.0.3",
         )["stdout"].strip()
 
     def chmod_socket_wait_for_dind():
