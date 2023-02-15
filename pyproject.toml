@@ -7,7 +7,7 @@ force_grid_wrap = 0
 log_cli = true
 log_cli_level = "ERROR"
 cache_dir = "/tmp/.pytest_cache"
-addopts = "-x"
+addopts = "-x -n 3 --dist loadscope"
 testpaths = [
   "tests/"
 ]

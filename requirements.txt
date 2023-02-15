@@ -10,5 +10,6 @@ flatdict==4.0.1
 pyyaml==6.0
 bash==0.6
 pytest==7.2.0
+pytest_xdist==3.2.0
 pytest-instafail==0.4.2
 debugpy==1.6.5

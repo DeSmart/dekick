@@ -52,6 +52,7 @@ docker run $DOCKER_FLAGS --rm \
   -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
   -e HOST_ARCH="${HOST_ARCH}" \
   -e HOST_PLATFORM="${HOST_PLATFORM}" \
+  --add-host host.docker.internal:host-gateway \
   ${DEKICK_DOCKER_PORTS} \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v ~/.gitlabrc:/tmp/.gitlabrc \

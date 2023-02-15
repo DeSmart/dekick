@@ -35,7 +35,7 @@ def api_is_ready():
     run_func(text="Checking if app is ready", func=run)
 
 
-def setup_dirs():
+def setup_permissions(fix: bool = False):
     """Setup permissions for the Laravel project."""
 
     def run():
@@ -49,7 +49,7 @@ def setup_dirs():
             get_container(),
             "sh",
             "-c",
-            f"mkdir -p {dirs_chown}; chown {CURRENT_UID} {dirs_chown}; chmod o+rwX {dirs_chmod} -R",
+            f"mkdir -p {dirs_chown}; chown {CURRENT_UID} {dirs_chown}; chmod oug+rwX {dirs_chmod} -R",
         ]
 
         docker_compose(cmd=cmd, args=args, env={})
@@ -57,9 +57,16 @@ def setup_dirs():
         return {"success": True, "text": ""}
 
     run_func(
-        text="Creating required directories",
+        text="Creating required directories and setting permissions"
+        if fix is False
+        else "Fixing permissions",
         func=run,
     )
+
+
+def fix_permissions():
+    """Fix permissions for the Laravel project."""
+    return setup_permissions(fix=True)
 
 
 def db_migrate(service: str = "db"):

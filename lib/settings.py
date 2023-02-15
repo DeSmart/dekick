@@ -77,8 +77,6 @@ DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
 
-BOILERPLATES_PATH = getcwd() + "/boilerplates/"
-
 
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""

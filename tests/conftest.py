@@ -2,33 +2,37 @@ from os import path
 
 import pytest
 
-from lib.boilerplates import delete_boilerplates, get_boilerplates, reset_boilerplates
-from lib.tests.docker import docker_kill_all_containers, docker_no_running_container
+from lib.tests.boilerplates import (
+    create_flavour,
+    delete_boilerplates,
+    delete_flavour,
+    download_boilerplates_base,
+)
+from lib.tests.dind import start_dind_container, stop_dind_container
+from lib.tests.misc import parse_flavour_version
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_boilerplates(request):
+def start_session(request):
     """Setup boilerplates before running tests"""
-    assert delete_boilerplates()
-    assert get_boilerplates()
-    assert docker_kill_all_containers()
-    assert docker_no_running_container()
-    request.addfinalizer(teardown_boilerplates)
+    assert download_boilerplates_base()
+    assert start_dind_container()
+    request.addfinalizer(teardown_session)
 
 
-def teardown_boilerplates():
+def teardown_session():
     """Teardown boilerplates after running tests"""
+    assert stop_dind_container()
     assert delete_boilerplates()
 
 
 @pytest.fixture(scope="function", autouse=True)
-def setup(request):
+def start_function(request):
     """Cleans up boilerplates and stops containers before running test"""
-    assert reset_boilerplates()
-    request.addfinalizer(teardown)
+    assert create_flavour(*parse_flavour_version(path.basename(request.node.fspath)))
+    request.addfinalizer(teardown_function)
 
 
-def teardown():
+def teardown_function():
     """Cleans up boilerplates and stops containers after running test"""
-    assert docker_kill_all_containers()
-    assert docker_no_running_container()
+    assert delete_flavour()

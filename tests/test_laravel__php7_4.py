@@ -35,6 +35,7 @@ def test_local_status_failed():
 @pytest.mark.command_local_stop
 def test_local_stop():
     """Tests `dekick status` command"""
+    assert dekick_local(FLAVOUR, VERSION)
     assert dekick_stop(FLAVOUR, VERSION)
 
 
