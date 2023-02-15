@@ -5,9 +5,11 @@ DEKICK_COMMANDS=("artisan" "build" "composer" "docker-compose" "knex" "local" "l
 user=$(whoami)
 
 if [ "$user" = "root" ] && [ -n "$CURRENT_USERNAME" ]; then
+  user="${CURRENT_UID%:*}"
   ln -s "${DEKICK_PATH}/dekick.py" /usr/bin/dekick
-  adduser -D -h /tmp/homedir -u "${CURRENT_UID%:*}" "$CURRENT_USERNAME"
-  chown "${CURRENT_UID%:*}" /var/run/docker.sock
+  adduser -D -h /tmp/homedir -u "${user}" "$CURRENT_USERNAME"
+  chown "${user}" /var/run/docker.sock
+  echo "${CURRENT_USERNAME} ALL=(ALL) NOPASSWD:/bin/rm" >> /etc/sudoers
   su -c "/usr/local/bin/docker-entrypoint.sh $*" "$CURRENT_USERNAME"
   exit $?
 fi
