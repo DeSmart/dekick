@@ -117,9 +117,10 @@ if [ "$#" -eq 0 ] || [ "${1#-}" != "$1" ]; then
 	if [ -n "${DOCKER_TLS_CERTDIR:-}" ]; then
 		_tls_generate_certs "$DOCKER_TLS_CERTDIR"
 
-    if [ -n "$DOCKER_REGISTRY_MIRROR" ]; then
-      REGISTRY_MIRROR="--registry-mirror="${DOCKER_REGISTRY_MIRROR}""
-    fi
+    # Get the CA cert from the proxy and install to the system
+    curl http://proxy:3128/ca.crt > /usr/share/ca-certificates/docker_registry_proxy.crt
+    echo "docker_registry_proxy.crt" >> /etc/ca-certificates.conf
+    update-ca-certificates --fresh
 
 		# generate certs and use TLS if requested/possible (default in 19.03+)
 		set -- dockerd \
@@ -129,7 +130,8 @@ if [ "$#" -eq 0 ] || [ "${1#-}" != "$1" ]; then
 			--tlscacert "$DOCKER_TLS_CERTDIR/server/ca.pem" \
 			--tlscert "$DOCKER_TLS_CERTDIR/server/cert.pem" \
 			--tlskey "$DOCKER_TLS_CERTDIR/server/key.pem" \
-      $REGISTRY_MIRROR \
+      --http-proxy http://proxy:3128 \
+      --https-proxy http://proxy:3128 \
       --max-concurrent-downloads 10 \
 			"$@"
 		DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS="${DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS:-} -p 0.0.0.0:2376:2376/tcp"

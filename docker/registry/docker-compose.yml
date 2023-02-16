@@ -2,7 +2,7 @@ version: "3.9"
 services:
   registry:
     restart: always
-    image: rpardini/docker-registry-proxy
+    image: rpardini/docker-registry-proxy:latest
     ports:
       - 3128:3128
     volumes:
