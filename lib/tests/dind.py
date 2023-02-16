@@ -3,10 +3,10 @@ from os import getgid, getuid
 
 from lib.tests.rbash import rbash
 
-DIND_CONTAINER_ID = None
+DIND_CONTAINER_ID = ""
 
 
-def start_dind_container(count: int = 0):
+def start_dind_container(count: int = 0) -> str:
     """Start a Docker-in-Docker container"""
 
     def create_dind_container():
@@ -32,24 +32,24 @@ def start_dind_container(count: int = 0):
 
     create_dind_container()
 
-    didn_is_working = chmod_socket_wait_for_dind()
+    dind_started = chmod_socket_wait_for_dind()
     max_retries = 5
-    if not didn_is_working and count < max_retries:
+    if not dind_started and count < max_retries:
         count = count + 1
         warning("DinD didn't start properly, retrying... %s", count)
         return start_dind_container(count)
 
-    if not didn_is_working and count >= max_retries:
-        return False
+    if not dind_started and count >= max_retries:
+        raise Exception("DinD didn't start properly")
 
-    return True
+    return DIND_CONTAINER_ID
 
 
 def stop_dind_container():
     """Stop the Docker-in-Docker container"""
     global DIND_CONTAINER_ID  # pylint: disable=global-statement
 
-    if DIND_CONTAINER_ID is None:
+    if DIND_CONTAINER_ID == "":
         debug("DinD container is not running")
         return True
 
@@ -58,11 +58,11 @@ def stop_dind_container():
         "Stopping DinD container",
         f'docker kill "{dind_container_id}"; exit 0',
     )
-    DIND_CONTAINER_ID = None
+    DIND_CONTAINER_ID = ""
     return True
 
 
-def get_dind_container_id():
+def get_dind_container_id() -> str:
     """Get the ID of the DinD container"""
     return DIND_CONTAINER_ID
 

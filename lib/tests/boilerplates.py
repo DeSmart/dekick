@@ -1,6 +1,5 @@
 from logging import fatal, warning
-from os import getcwd, makedirs
-from tempfile import mkdtemp
+from os import getcwd
 
 from rich.traceback import install
 
@@ -8,25 +7,13 @@ from lib.dotenv import get_dotenv_var
 from lib.tests.rbash import rbash
 
 install()
-BOILERPLATES_PATH = None
-BOILERPLATES_ROOT = getcwd() + "/tmp/boilerplates/base/"
-FLAVOUR_PATH = None
-FLAVOUR_ROOT = getcwd() + "/tmp/boilerplates/flavours/"
+BOILERPLATES_ROOT = getcwd() + "/tmp/boilerplates/"
+DIND_PROJECT_ROOT = "/project_root/"
 
 
-def generate_boilerplates_base_path() -> str:
-    """Generates boilerplates path"""
+def get_boilerplates_path() -> str:
+    """Gets boilerplates base path"""
     return BOILERPLATES_ROOT
-
-
-def get_boilerplates_base_path() -> str:
-    """Returns boilerplates path"""
-    global BOILERPLATES_PATH  # pylint: disable=global-statement
-
-    if BOILERPLATES_PATH is None:
-        BOILERPLATES_PATH = generate_boilerplates_base_path()
-
-    return BOILERPLATES_PATH
 
 
 def get_boilerplates_git_url() -> str:
@@ -40,10 +27,10 @@ def get_boilerplates_git_url() -> str:
     return boilerplates_git_url
 
 
-def download_boilerplates_base() -> bool:
+def download_boilerplates() -> bool:
     """Downloads boilerplates to BOILERPLATES_BASE_PATH directory"""
     boilerplates_git_url = get_boilerplates_git_url()
-    boilerplates_path = get_boilerplates_base_path()
+    boilerplates_path = get_boilerplates_path()
 
     ret = rbash(
         "Downloading boilerplates",
@@ -60,55 +47,33 @@ def download_boilerplates_base() -> bool:
 
 def delete_boilerplates() -> bool:
     """Removes boilerplates from .BOILERPLATES_PATH directory"""
-    boilerplates_path = get_boilerplates_base_path()
+    boilerplates_path = get_boilerplates_path()
     return (
         rbash("Removing boilerplates", f"sudo rm -rf {boilerplates_path}")["code"] == 0
     )
 
 
-def generate_flavour_path() -> str:
-    """Returns flavour and version generated path"""
-    return _generate_path(FLAVOUR_ROOT)
-
-
-def get_flavour_path(regenerate: bool = False) -> str:
-    """Returns flavour path"""
-    global FLAVOUR_PATH  # pylint: disable=global-statement
-
-    if FLAVOUR_PATH is None or regenerate is True:
-        FLAVOUR_PATH = generate_flavour_path()
-
-    return FLAVOUR_PATH
-
-
-def create_flavour(flavour: str, version: str) -> bool:
+def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> bool:
     """Copies boilerplate flavour to flavour generated directory"""
-    boilerplates_path = get_boilerplates_base_path()
-    flavour_path = get_flavour_path(regenerate=True)
+    boilerplates_path = get_boilerplates_path()
+    project_root = get_project_root()
     return (
         rbash(
-            "Copying boilerplate flavour",
-            f"rsync -a {boilerplates_path}{flavour}/{version}/ {flavour_path}",
+            f"Copying flavour/version to DinD container {container_id}",
+            f"docker cp -aq {boilerplates_path}{flavour}/{version}/ {container_id}:{project_root}",
         )["code"]
         == 0
     )
 
 
-def delete_flavour() -> bool:
-    """Removes flavour from .FLAVOUR_PATH directory"""
-    flavour_path = get_flavour_path()
-    return rbash("Removing flavour", f"sudo rm -rf {flavour_path}")["code"] == 0
-
-
-def _generate_path(root: str) -> str:
-    """Generates path"""
-    makedirs(root, exist_ok=True)
-    return mkdtemp(prefix="", dir=root) + "/"
+def get_project_root() -> str:
+    """Gets project root path for DinD container"""
+    return DIND_PROJECT_ROOT
 
 
 def reset_boilerplates() -> bool:
     """Resets boilerplates repository to initial position"""
-    boilerplates_path = get_boilerplates_base_path()
+    boilerplates_path = get_boilerplates_path()
     rbash(
         "Resetting boilerplates",
         f"cd {boilerplates_path}; git pull; git reset --hard HEAD; git clean -fdx",

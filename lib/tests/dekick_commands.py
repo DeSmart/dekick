@@ -1,10 +1,14 @@
 """Miscellaneous functinos running tests"""
 from logging import debug
+from os import remove
+from shutil import copy
+from tempfile import mktemp
 
 from dotenv import set_key
 from rich.traceback import install
 
-from lib.tests.dind import rbash_dind
+from lib.tests.boilerplates import get_boilerplates_path
+from lib.tests.dind import get_dind_container_id, rbash_dind
 from lib.tests.docker import docker_no_running_container, get_docker_env
 from lib.tests.misc import get_dekick_runner
 from lib.tests.rbash import rbash
@@ -67,14 +71,22 @@ def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
     try:
         docker_env = get_docker_env()
         project_root = docker_env["PROJECT_ROOT"]
-        env_file = f"{project_root}/.env"
+        source_env_file = f"{get_boilerplates_path()}/{flavour}/{version}/.env"
+        # copy source_env_file to temporary file
+        tmp_env_file = mktemp()
+        copy(source_env_file, tmp_env_file)
+
+        container_id = get_dind_container_id()
 
         for key, value in env.items():
-            set_key(env_file, key, value, quote_mode="auto")
+            set_key(tmp_env_file, key, value, quote_mode="auto")
 
+        destination_env_file = f"{project_root}/.env"
         rbash(
-            "Change owner of .env file", f"chown {docker_env['CURRENT_UID']} {env_file}"
+            f"Copying {tmp_env_file} .env file to DinD container",
+            f"docker cp -aq {tmp_env_file} {container_id}:{destination_env_file}",
         )
+        remove(tmp_env_file)
 
     except Exception:  # pylint: disable=broad-except
         return False

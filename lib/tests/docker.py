@@ -1,6 +1,6 @@
 from os import environ, getcwd, getenv, getgid, getuid
 
-from lib.tests.boilerplates import get_flavour_path
+from lib.tests.boilerplates import get_project_root
 from lib.tests.dind import rbash_dind
 
 
@@ -31,13 +31,12 @@ def docker_kill_all_containers() -> bool:
 
 def get_docker_env() -> dict:
     """Gets environment variables needed for DeKick to run properly"""
-    flavour_path = get_flavour_path()
 
     return {
         "HOME": environ["HOME"],
         "PATH": "/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin",
         "DEKICK_PATH": getcwd(),
-        "PROJECT_ROOT": flavour_path,
+        "PROJECT_ROOT": get_project_root(),
         "CURRENT_UID": getenv("CURRENT_UID") or f"{getuid()}:{getgid()}",
         "HOST_ARCH": getenv("HOST_ARCH") or "",
         "HOST_PLATFORM": getenv("HOST_PLATFORM") or "",
