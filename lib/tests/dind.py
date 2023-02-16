@@ -67,11 +67,13 @@ def get_dind_container_id() -> str:
     return DIND_CONTAINER_ID
 
 
-def rbash_dind(info_desc, cmd, env=None, expected_code=0, **kwargs):
+def rbash_dind(info_desc, cmd, env=None, expected_code=0, user=None, **kwargs):
     """Runs command in DinD and returns its output"""
     env = env or {}
     dind_container_id = get_dind_container_id()
-    current_uid = f"{getuid()}:{getgid()}"
+
+    if user is None:
+        user = f"{getuid()}:{getgid()}"
 
     tmp_docker_env = ""
 
@@ -80,7 +82,7 @@ def rbash_dind(info_desc, cmd, env=None, expected_code=0, **kwargs):
 
     cmd = cmd.replace('"', '\\"')
     dind_cmd = (
-        f"docker exec {tmp_docker_env} --user={current_uid} "
+        f"docker exec {tmp_docker_env} --user={user} "
         + f'"{dind_container_id}" bash -c "{cmd}"'
     )
 

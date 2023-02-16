@@ -67,6 +67,7 @@ def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> 
     rbash_dind(
         f"Changing ownership of {project_root}",
         f"chown -R {current_uid} {project_root}",
+        user="root",
     )
 
 
