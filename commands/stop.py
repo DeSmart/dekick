@@ -7,6 +7,7 @@ import sys
 import time
 from argparse import ArgumentParser, Namespace
 
+from rich.prompt import Confirm
 from rich.traceback import install
 
 from commands.docker_compose import docker_compose
@@ -56,13 +57,15 @@ def stop(
 ):
     """Stops all services"""
     run_func("Stopping all services", func=stop_all_services)
-
-    if remove is True and containers is True:
-        run_func("Removing all containers", func=remove_all_containers)
-    if remove is True and volumes is True:
-        run_func("Removing all volumes", func=remove_all_volumes)
-    if remove is True and networks is True:
-        run_func("Removing unused networks", func=remove_unused_networks)
+    if remove is True:
+        if not ask_for_confirmation():
+            return False
+        if remove is True and containers is True:
+            run_func("Removing all containers", func=remove_all_containers)
+        if remove is True and volumes is True:
+            run_func("Removing all volumes", func=remove_all_volumes)
+        if remove is True and networks is True:
+            run_func("Removing unused networks", func=remove_unused_networks)
 
 
 def remove_all_volumes():  # pylint: disable=inconsistent-return-statements
@@ -126,3 +129,11 @@ def remove_unused_networks():
     run_shell(cmd=cmd, raise_exception=False, raise_error=False, capture_output=True)
 
     return {"success": True, "text": ""}
+
+def ask_for_confirmation():
+    """Asks for confirmation before using a flag --remove"""
+    question = "Are you sure you want to remove all containers, volumes and networks?"
+    if Confirm.ask(question, default=False) is True:
+        return True
+
+    return False
