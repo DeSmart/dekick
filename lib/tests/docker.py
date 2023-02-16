@@ -37,7 +37,7 @@ def get_docker_env() -> dict:
         "PATH": "/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin",
         "DEKICK_PATH": getcwd(),
         "PROJECT_ROOT": get_project_root(),
-        "CURRENT_UID": getenv("CURRENT_UID") or f"{getuid()}:{getgid()}",
+        "CURRENT_UID": getenv("CURRENT_UID") or getuid(),
         "HOST_ARCH": getenv("HOST_ARCH") or "",
         "HOST_PLATFORM": getenv("HOST_PLATFORM") or "",
         "DEKICK_DEBUGGER": getenv("DEKICK_DEBUGGER") or "",
