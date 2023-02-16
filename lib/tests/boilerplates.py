@@ -4,6 +4,8 @@ from os import getcwd
 from rich.traceback import install
 
 from lib.dotenv import get_dotenv_var
+from lib.tests.dind import rbash_dind
+from lib.tests.docker import get_docker_env
 from lib.tests.rbash import rbash
 
 install()
@@ -57,12 +59,14 @@ def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> 
     """Copies boilerplate flavour to flavour generated directory"""
     boilerplates_path = get_boilerplates_path()
     project_root = get_project_root()
-    return (
-        rbash(
-            f"Copying flavour/version to DinD container {container_id}",
-            f"docker cp -aq {boilerplates_path}{flavour}/{version}/ {container_id}:{project_root}",
-        )["code"]
-        == 0
+    current_uid = get_docker_env()["CURRENT_UID"]
+    rbash(
+        f"Copying flavour/version to DinD container {container_id}",
+        f"docker cp -aq {boilerplates_path}{flavour}/{version}/ {container_id}:{project_root}",
+    )
+    rbash_dind(
+        f"Changing ownership of {project_root}",
+        f"chown -R {current_uid} {project_root}",
     )
 
 

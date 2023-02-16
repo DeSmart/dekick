@@ -86,6 +86,7 @@ def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
             f"Copying {tmp_env_file} .env file to DinD container",
             f"docker cp -aq {tmp_env_file} {container_id}:{destination_env_file}",
         )
+
         remove(tmp_env_file)
 
     except Exception:  # pylint: disable=broad-except
