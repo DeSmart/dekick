@@ -1,3 +1,4 @@
+from logging import debug
 from os import getcwd, path
 
 import pytest
@@ -12,6 +13,8 @@ from lib.tests.registry import start_docker_registry
 def init_session(worker_id):
     """Do some things before workers start"""
     lock = FileLock(getcwd() + "/tmp/pytest.lock", timeout=240)
+
+    debug("worker_id: %s", worker_id)
 
     if worker_id in ("gw0", "master"):
         start_docker_registry()
