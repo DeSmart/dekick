@@ -1,5 +1,5 @@
 from logging import fatal, warning
-from os import getcwd, getgid, getuid
+from os import getcwd, getenv, getgid, getuid
 
 from rich.traceback import install
 
