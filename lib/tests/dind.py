@@ -86,8 +86,6 @@ def rbash_dind(info_desc, cmd, env=None, expected_code=0, user=None, **kwargs):
         + f'"{dind_container_id}" bash -c "{cmd}"'
     )
 
-    debug(dind_cmd)
-
     return rbash(
         info_desc=info_desc,
         cmd=dind_cmd,
