@@ -1,11 +1,10 @@
 from logging import fatal, warning
-from os import getcwd
+from os import getcwd, getgid, getuid
 
 from rich.traceback import install
 
 from lib.dotenv import get_dotenv_var
 from lib.tests.dind import rbash_dind
-from lib.tests.docker import get_docker_env
 from lib.tests.rbash import rbash
 
 install()
@@ -59,7 +58,7 @@ def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> 
     """Copies boilerplate flavour to flavour generated directory"""
     boilerplates_path = get_boilerplates_path()
     project_root = get_project_root()
-    current_uid = get_docker_env()["CURRENT_UID"]
+    current_uid = getenv("CURRENT_UID") or f"{getuid()}:{getgid()}"
     rbash(
         f"Copying flavour/version to DinD container {container_id}",
         f"docker cp -aq {boilerplates_path}{flavour}/{version}/ {container_id}:{project_root}",
