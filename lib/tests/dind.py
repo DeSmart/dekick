@@ -14,7 +14,7 @@ def start_dind_container(count: int = 0) -> str:
         global DIND_CONTAINER_ID  # pylint: disable=global-statement
         container_id = rbash(
             "Starting DinD container",
-            "docker run --privileged -d --rm --add-host host.docker.internal:host-gateway -e DOCKER_REGISTRY_MIRROR=http://host.docker.internal:3128/ -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:2.0.3",
+            "docker run --privileged -d --rm --add-host proxy:host-gateway -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:2.0.3",
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
 
