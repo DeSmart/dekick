@@ -15,6 +15,7 @@ FLAVOUR, VERSION = parse_flavour_version(__file__)
 
 
 @pytest.mark.command_local
+@pytest.mark.basic
 def test_local():
     """Tests `dekick local` command"""
     assert dekick_local(FLAVOUR, VERSION)
@@ -22,6 +23,7 @@ def test_local():
 
 
 @pytest.mark.command_status
+@pytest.mark.basic
 def test_local_status_success():
     """Tests `dekick status` command"""
     assert dekick_local(FLAVOUR, VERSION)
@@ -30,12 +32,14 @@ def test_local_status_success():
 
 
 @pytest.mark.command_status
+@pytest.mark.extended
 def test_local_status_failed():
     """Tests `dekick status` command"""
     assert not dekick_status(FLAVOUR, VERSION)
 
 
 @pytest.mark.command_local_stop
+@pytest.mark.basic
 def test_local_stop():
     """Tests `dekick status` command"""
     assert dekick_local(FLAVOUR, VERSION)
@@ -44,6 +48,7 @@ def test_local_stop():
 
 
 @pytest.mark.command_local_stop
+@pytest.mark.extended
 def test_local_stop_remove():
     """Tests `dekick status` command"""
     assert dekick_local(FLAVOUR, VERSION)
@@ -52,6 +57,7 @@ def test_local_stop_remove():
 
 
 @pytest.mark.command_test
+@pytest.mark.basic
 def test_local_test():
     """Tests `dekick test` command"""
     assert dekick_test(FLAVOUR, VERSION)
@@ -60,12 +66,14 @@ def test_local_test():
 
 
 @pytest.mark.command_build
+@pytest.mark.basic
 def test_build():
     """Tests `dekick build` command"""
     assert dekick_build(FLAVOUR, VERSION)
 
 
 @pytest.mark.command_build
+@pytest.mark.extended
 def test_build_app_env_production():
     """
     Tests `dekick build` command with additional APP_ENV environment
