@@ -8,6 +8,7 @@ from lib.tests.dekick_commands import (
     dekick_stop,
     dekick_test,
 )
+from lib.tests.docker import any_container_running, no_container_running
 from lib.tests.misc import parse_flavour_version
 
 FLAVOUR, VERSION = parse_flavour_version(__file__)
@@ -17,6 +18,7 @@ FLAVOUR, VERSION = parse_flavour_version(__file__)
 def test_local():
     """Tests `dekick local` command"""
     assert dekick_local(FLAVOUR, VERSION)
+    assert any_container_running()
 
 
 @pytest.mark.command_status
@@ -24,6 +26,7 @@ def test_local_status_success():
     """Tests `dekick status` command"""
     assert dekick_local(FLAVOUR, VERSION)
     assert dekick_status(FLAVOUR, VERSION)
+    assert any_container_running()
 
 
 @pytest.mark.command_status
@@ -37,13 +40,23 @@ def test_local_stop():
     """Tests `dekick status` command"""
     assert dekick_local(FLAVOUR, VERSION)
     assert dekick_stop(FLAVOUR, VERSION)
+    assert no_container_running()
+
+
+@pytest.mark.command_local_stop
+def test_local_stop_remove():
+    """Tests `dekick status` command"""
+    assert dekick_local(FLAVOUR, VERSION)
+    assert dekick_stop(FLAVOUR, VERSION, ["--remove"])
+    assert no_container_running()
 
 
 @pytest.mark.command_test
 def test_local_test():
     """Tests `dekick test` command"""
     assert dekick_test(FLAVOUR, VERSION)
-    assert dekick_stop(FLAVOUR, VERSION)
+    assert dekick_stop(FLAVOUR, VERSION, ["--remove"])
+    assert no_container_running()
 
 
 @pytest.mark.command_build

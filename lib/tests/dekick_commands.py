@@ -9,7 +9,7 @@ from rich.traceback import install
 
 from lib.tests.boilerplates import get_boilerplates_path
 from lib.tests.dind import get_dind_container_id, rbash_dind
-from lib.tests.docker import docker_no_running_container, get_docker_env
+from lib.tests.docker import get_docker_env
 from lib.tests.misc import get_dekick_runner
 from lib.tests.rbash import rbash
 
@@ -44,10 +44,11 @@ def dekick_status(flavour: str, version: str) -> bool:
     return proc["code"] == 0
 
 
-def dekick_stop(flavour: str, version: str) -> bool:
+def dekick_stop(flavour: str, version: str, args=None) -> bool:
     """Runs dekick stop command with given flavour and version of the boilerplate used"""
-    proc = _dekick_command_wrapper(["stop", "--remove"], flavour, version)
-    return proc["code"] == 0 and docker_no_running_container()
+    args = args or []
+    proc = _dekick_command_wrapper(["stop", *args], flavour, version)
+    return proc["code"] == 0
 
 
 def dekick_build(flavour: str, version: str) -> bool:

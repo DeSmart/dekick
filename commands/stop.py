@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 from argparse import ArgumentParser, Namespace
+from sys import stdout
 
 from rich.prompt import Confirm
 from rich.traceback import install
@@ -58,8 +59,8 @@ def stop(
     """Stops all services"""
     run_func("Stopping all services", func=stop_all_services)
     if remove is True:
-        if not ask_for_confirmation():
-            return False
+        if stdout.isatty() and not ask_for_confirmation():
+            return
         if remove is True and containers is True:
             run_func("Removing all containers", func=remove_all_containers)
         if remove is True and volumes is True:
@@ -127,9 +128,13 @@ def remove_unused_networks():
 
     return {"success": True, "text": ""}
 
+
 def ask_for_confirmation():
     """Asks for confirmation before using a flag --remove"""
-    question = "Are you sure you want to remove all containers, volumes and networks?"
+    question = (
+        "Are you sure you want to remove all containers?"
+        + "This could lead to data loss. (e.g. database)"
+    )
     if Confirm.ask(question, default=False) is True:
         return True
 

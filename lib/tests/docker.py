@@ -1,32 +1,23 @@
-from os import environ, getcwd, getenv, getgid, getuid
+from os import environ, getcwd, getenv, getuid
 
 from lib.tests.boilerplates import get_project_root
 from lib.tests.dind import rbash_dind
 
 
-def docker_no_running_container() -> bool:
-    """Checks if there are no running containers except dekick"""
+def any_container_running() -> bool:
+    """Checks if there are any running container inside DinD"""
     env = get_docker_env()
     proc = rbash_dind(
-        "Checking if no containers are running",
-        'docker ps -q --format "{{.ID}}|{{.Image}}" | grep -v "dekick"',
-        env=env,
-        expected_code=1,
-    )
-    return proc["stdout"] == "" and proc["code"] == 1
-
-
-def docker_kill_all_containers() -> bool:
-    """Kills all running containers except dekick"""
-    env = get_docker_env()
-    rbash_dind(
-        "Kills all running containers",
-        'docker kill $(docker ps -q --format "{{.ID}}|{{.Image}}" | '
-        + "grep -v \"dekick\" | awk -F'|' '{print$1}')"
-        + " >/dev/null 2>&1; exit 0",
+        "Checking if there are any running containers",
+        'docker ps --format "{{.ID}}|{{.Image}}"',
         env=env,
     )
-    return True
+    return proc["stdout"] != "" and proc["code"] == 0
+
+
+def no_container_running() -> bool:
+    """Checks if there are no running container inside DinD"""
+    return not any_container_running()
 
 
 def get_docker_env() -> dict:
