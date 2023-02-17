@@ -1,6 +1,7 @@
 from logging import debug, warning
 from os import getgid, getuid
 
+from lib.settings import DEKICK_VERSION_PATH
 from lib.tests.rbash import rbash
 
 DIND_CONTAINER_ID = ""
@@ -12,9 +13,10 @@ def start_dind_container(count: int = 0) -> str:
     def create_dind_container():
 
         global DIND_CONTAINER_ID  # pylint: disable=global-statement
+        dekick_version = get_dekick_version()
         container_id = rbash(
             "Starting DinD container",
-            "docker run --privileged -d --rm --add-host proxy:host-gateway -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:2.0.3",
+            f"docker run --privileged -d --rm --add-host proxy:host-gateway -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:{dekick_version}",
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
 
@@ -93,3 +95,8 @@ def rbash_dind(info_desc, cmd, env=None, expected_code=0, user=None, **kwargs):
         expected_code=expected_code,
         **kwargs,
     )
+
+
+def get_dekick_version() -> str:
+    """Gets current version of DeKick"""
+    return open(DEKICK_VERSION_PATH, encoding="utf-8").read().strip()
