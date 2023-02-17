@@ -14,6 +14,7 @@ from lib.tests.registry import start_docker_registry
 
 def pytest_configure(config):
     worker_id = environ.get("PYTEST_XDIST_WORKER")
+
     if worker_id is not None:
         basicConfig(
             format=config.getini("log_file_format"),
@@ -30,7 +31,7 @@ def init_session():
 
     if worker_id in ("gw0", "master"):
 
-        makedirs(dirname(lock_path))
+        makedirs(dirname(lock_path), exist_ok=True)
 
         if exists(lock_path):
             remove(lock_path)
