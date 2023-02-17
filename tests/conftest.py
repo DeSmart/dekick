@@ -1,6 +1,6 @@
 from logging import basicConfig, debug
-from os import environ, getcwd, path, remove
-from os.path import exists
+from os import environ, makedirs, path, remove
+from os.path import dirname, exists
 from time import sleep
 
 import pytest
@@ -29,6 +29,9 @@ def init_session():
     debug("worker_id: %s", worker_id)
 
     if worker_id in ("gw0", "master"):
+
+        makedirs(dirname(lock_path))
+
         if exists(lock_path):
             remove(lock_path)
 
