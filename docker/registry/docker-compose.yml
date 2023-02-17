@@ -6,9 +6,12 @@ services:
     ports:
       - 3128:3128
     volumes:
-      - ${DEKICK_PATH}/tmp/registry-cache/:/docker_mirror_cache
+      - registry-cache:/docker_mirror_cache
     environment:
       MANIFEST_CACHE_DEFAULT_TIME: "12h"
       MANIFEST_CACHE_PRIMARY_TIME: "12h"
       MANIFEST_CACHE_SECONDARY_TIME: "24h"
       ENABLE_MANIFEST_CACHE: "true"
+
+volumes:
+  registry-cache:
