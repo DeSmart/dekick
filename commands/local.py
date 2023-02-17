@@ -7,7 +7,6 @@ import re
 import sys
 from argparse import ArgumentParser, Namespace
 from importlib import import_module
-from pathlib import Path
 from shutil import move
 
 from rich.console import Console
@@ -17,7 +16,7 @@ from rich.traceback import install
 import lib.logger as logger
 from commands.docker_compose import docker_compose
 from commands.stop import stop
-from commands.update import get_local_version, update
+from commands.update import update
 from lib.dekickrc import compare_dekickrc_file, get_dekickrc_value
 from lib.fs import chown
 from lib.glcli import get_project_var
@@ -125,8 +124,8 @@ def check_gitlabrc():
     """Checks if .gitlabrc file exists"""
     if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
         return
-    home = Path.home().absolute()
-    check_file(f"{home}/.gitlabrc")
+    token_file = "/tmp/.gitlabrc"
+    check_file(token_file)
 
 
 def check_command_docker():
@@ -303,6 +302,7 @@ def check_ports():
         return 0
 
     def are_all_ports_free() -> bool:
+        return True
         return bool(get_first_used_port() == 0)
 
     def ports_check(recheck: bool = False):

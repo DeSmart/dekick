@@ -30,6 +30,8 @@ function realpath() {
 
 function show_banner() {
   if tty > /dev/null 2>&1; then
+    local dekick_version
+    dekick_version=$(cat "${DEKICK_PATH}/.version")
     echo
     echo "██████╗ ███████╗██╗  ██╗██╗ ██████╗██╗  ██╗";
     echo "██╔══██╗██╔════╝██║ ██╔╝██║██╔════╝██║ ██╔╝";
@@ -37,7 +39,7 @@ function show_banner() {
     echo "██║  ██║██╔══╝  ██╔═██╗ ██║██║     ██╔═██╗ ";
     echo "██████╔╝███████╗██║  ██╗██║╚██████╗██║  ██╗";
     echo "╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝";
-    echo "Installed!"
+    echo "${dekick_version} installed!"
     echo
     if [ "$PROJECT_ROOT" ]; then
       echo "Project path: ${PROJECT_ROOT}"

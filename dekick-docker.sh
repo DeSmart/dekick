@@ -1,5 +1,4 @@
-
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ -z "$DEKICK_PATH" ]; then
   DEKICK_PATH=$(pwd)
@@ -45,15 +44,16 @@ docker run $DOCKER_FLAGS --rm \
   ${VOLUME_PROJECT} \
   -e DEKICK_PATH="${DEKICK_PATH}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
-  -e CURRENT_UID="$(id -u):$(id -g)" \
+  -e CURRENT_UID="$(id -u)" \
+  -e CURRENT_USERNAME="$(whoami)" \
   -e DEKICK_DOCKER_IMAGE="${IMAGE}" \
   -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
   -e HOST_ARCH="${HOST_ARCH}" \
   -e HOST_PLATFORM="${HOST_PLATFORM}" \
-  -e PYTHONDONTWRITEBYTECODE=1 \
+  --add-host proxy:host-gateway \
   ${DEKICK_DOCKER_PORTS} \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ~/.gitlabrc:/root/.gitlabrc \
+  -v ~/.gitlabrc:/tmp/.gitlabrc \
   "${IMAGE}" \
   "$@"
 

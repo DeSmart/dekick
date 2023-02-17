@@ -1,4 +1,4 @@
-from os import get_terminal_size, getcwd, getenv, getgid, getuid
+from os import get_terminal_size, getcwd, getenv, getuid
 from sys import stdout
 from time import time
 
@@ -56,7 +56,7 @@ C_WARN = colors.fg("yellow")
 PROJECT_ROOT = getenv("PROJECT_ROOT") or f"{getcwd()}"
 DEKICK_PATH = getenv("DEKICK_PATH") or f"{getcwd()}/dekick"
 DEKICK_DOCKER_IMAGE = getenv("DEKICK_DOCKER_IMAGE") or None
-CURRENT_UID = getenv("CURRENT_UID") or f"{getuid()}:{getgid()}"
+CURRENT_UID = getenv("CURRENT_UID") or getuid()
 TERMINAL_COLUMN_WIDTH = (get_terminal_size().columns - 3) if stdout.isatty() else 120
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"
@@ -76,8 +76,6 @@ DEKICK_DOTENV_PATH = f"{PROJECT_ROOT}/{DEKICK_DOTENV_FILE}"
 DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
-
-BOILERPLATES_PATH = getcwd() + "/boilerplates/"
 
 
 def set_dekick_time_start():

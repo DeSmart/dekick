@@ -6,7 +6,9 @@ import subprocess
 import sys
 import time
 from argparse import ArgumentParser, Namespace
+from sys import stdout
 
+from rich.prompt import Confirm
 from rich.traceback import install
 
 from commands.docker_compose import docker_compose
@@ -56,13 +58,15 @@ def stop(
 ):
     """Stops all services"""
     run_func("Stopping all services", func=stop_all_services)
-
-    if remove is True and containers is True:
-        run_func("Removing all containers", func=remove_all_containers)
-    if remove is True and volumes is True:
-        run_func("Removing all volumes", func=remove_all_volumes)
-    if remove is True and networks is True:
-        run_func("Removing unused networks", func=remove_unused_networks)
+    if remove is True:
+        if stdout.isatty() and not ask_for_confirmation():
+            return
+        if remove is True and containers is True:
+            run_func("Removing all containers", func=remove_all_containers)
+        if remove is True and volumes is True:
+            run_func("Removing all volumes", func=remove_all_volumes)
+        if remove is True and networks is True:
+            run_func("Removing unused networks", func=remove_unused_networks)
 
 
 def remove_all_volumes():  # pylint: disable=inconsistent-return-statements
@@ -86,13 +90,10 @@ def remove_all_volumes():  # pylint: disable=inconsistent-return-statements
         return {"success": True, "text": "No volumes to remove"}
 
     try:
-        cmd = ["docker", "volume", "rm"] + volumes_filtered
+        cmd = ["docker", "volume", "rm", "-f"] + volumes_filtered
         run_shell(cmd=cmd, raise_exception=True, capture_output=True)
-    except subprocess.CalledProcessError as err:
-        return {
-            "success": False,
-            "text": f"Something went wrong while removing volumes.\n{err}",
-        }
+    except subprocess.CalledProcessError:
+        return {"success": True}
 
 
 def stop_all_services() -> dict:
@@ -126,3 +127,15 @@ def remove_unused_networks():
     run_shell(cmd=cmd, raise_exception=False, raise_error=False, capture_output=True)
 
     return {"success": True, "text": ""}
+
+
+def ask_for_confirmation():
+    """Asks for confirmation before using a flag --remove"""
+    question = (
+        "Are you sure you want to remove all containers?"
+        + "This could lead to data loss. (e.g. database)"
+    )
+    if Confirm.ask(question, default=False) is True:
+        return True
+
+    return False

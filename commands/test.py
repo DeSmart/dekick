@@ -1,8 +1,9 @@
 """
 Runs the specified command
 """
+import logging
+import sys
 from argparse import ArgumentParser, Namespace
-from sys import exit
 
 from rich.traceback import install
 
@@ -33,7 +34,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     """
     parser_default_funcs(parser)
 
-    exit(
+    sys.exit(
         test(
             log_level=parser.log_level or "INFO",
             log_filename=parser.log_filename or "dekick-test.log",
@@ -57,6 +58,8 @@ def test(
     try:
         flavour_action("test")
         return 0
-    except Exception:  # pylint: disable=broad-except
+    except Exception as err:  # pylint: disable=broad-except
+        logging.error("Error running tests")
+        logging.debug("Error: %s", err)
         stop(remove=True, volumes=False)
         return 1
