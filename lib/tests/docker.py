@@ -42,6 +42,4 @@ def get_docker_env() -> dict:
         "HOST_PLATFORM": getenv("HOST_PLATFORM") or "",
         "DEKICK_DEBUGGER": getenv("DEKICK_DEBUGGER") or "",
         "DEKICK_DOCKER_IMAGE": getenv("DEKICK_DOCKER_IMAGE") or "",
-        "HTTP_PROXY": getenv("HTTP_PROXY") or "",
-        "HTTPS_PROXY": getenv("HTTPS_PROXY") or "",
     }
