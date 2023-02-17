@@ -20,7 +20,6 @@ markers = [
     "command_status",
     "command_local_stop",
     "command_test",
-    "command_cleanup",
     "basic",
     "extended"
 ]
