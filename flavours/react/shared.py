@@ -1,3 +1,5 @@
+from sys import stdout
+
 from rich.prompt import Confirm
 
 from commands.docker_compose import get_container_log
@@ -35,12 +37,20 @@ def wait_for_container():
     timeout = 10 if is_vite_enabled else 90
 
     def ask_for_log():
+
+        if stdout.isatty() is False:
+            return
+
         container = get_flavour_container()
         question = "Do you want to see logs?"
         if Confirm.ask(question, default=False) is True:
-            get_container_log(container, get_seconds_since_dekick_start(), capture_output=False)
+            get_container_log(
+                container, get_seconds_since_dekick_start(), capture_output=False
+            )
 
-    if shared_wait_for_container(search_string, failed_string, timeout, terminate=False):
+    if shared_wait_for_container(
+        search_string, failed_string, timeout, terminate=False
+    ):
         app_is_ready()
         return
 
