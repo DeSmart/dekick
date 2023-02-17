@@ -1,5 +1,5 @@
 from logging import basicConfig, debug
-from os import environ, makedirs, path, remove
+from os import environ, makedirs, path, remove, rename
 from os.path import dirname, exists
 from time import sleep
 
@@ -13,12 +13,22 @@ from lib.tests.registry import start_docker_registry
 
 
 def pytest_configure(config):
+    """Setup different logs for each worker"""
     worker_id = environ.get("PYTEST_XDIST_WORKER")
 
     if worker_id is not None:
+
+        log_filename = f"logs/pytest_{worker_id}.log"
+
+        if exists(log_filename):
+            previous_log_filename = log_filename + ".bak"
+            if exists(previous_log_filename):
+                remove(previous_log_filename)
+            rename(log_filename, previous_log_filename)
+
         basicConfig(
             format=config.getini("log_file_format"),
-            filename=f"logs/pytest_{worker_id}.log",
+            filename=log_filename,
             level=config.getini("log_file_level"),
         )
 
