@@ -99,7 +99,6 @@ def docker_compose(
     Returns:
         : return of the command
     """
-    logging.info("Running docker-compose(%s)", locals())
 
     tmp_docker_env = []
 
@@ -108,6 +107,7 @@ def docker_compose(
         tmp_docker_env.append(f'{key}="{value}"')
 
     shell_cmd = ["docker", "compose", cmd] + tmp_docker_env + args
+    logging.info("Running docker-compose(%s)", [cmd] + args)
     logging.debug(locals())
 
     return run_shell(
@@ -119,7 +119,9 @@ def docker_compose(
     )
 
 
-def wait_for_log(container_name: str, search_string: str, failed_string: str, timeout: int = 60):
+def wait_for_log(
+    container_name: str, search_string: str, failed_string: str, timeout: int = 60
+):
     """Reads container logs every second and returns True if the log contains
     search_string within specified timeout time
 
@@ -159,6 +161,7 @@ def wait_for_log(container_name: str, search_string: str, failed_string: str, ti
         + f"{C_CMD}{container_name}{C_END} after {timeout} seconds"
     )
 
+
 def get_container_exit_code(container_name: str) -> tuple:
     """Gets container exit code and status"""
     container_id = get_container_id_by_name(container_name)
@@ -180,7 +183,9 @@ def get_container_exit_code(container_name: str) -> tuple:
     return (int(inspect[0]), inspect[1])
 
 
-def get_container_log(container_name: str, since: int = 0, capture_output: bool = True) -> str:
+def get_container_log(
+    container_name: str, since: int = 0, capture_output: bool = True
+) -> str:
     """Gets container log since seconds ago, if since is 0, it will return the whole log"""
 
     since_formatted = f"{since}s"
