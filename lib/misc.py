@@ -230,7 +230,6 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
             port_def["port"]
         )
 
-    logging.debug("default_env: %s", env)
     return env
 
 
