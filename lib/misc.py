@@ -438,4 +438,5 @@ def get_compose_project_name() -> str:
     """Get compose project name"""
     project_name = get_dekickrc_value("project.name")
     project_group = get_dekickrc_value("project.group")
-    return f"{project_name}{project_group}"
+
+    return str(f"{project_group}_{project_name}" if project_group else project_name)
