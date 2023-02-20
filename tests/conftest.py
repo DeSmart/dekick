@@ -59,16 +59,10 @@ def init_session():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def start_session(request):
+def start_session():
     """Setup boilerplates before running tests"""
     debug("start session")
     init_session()
-    request.addfinalizer(teardown_session)
-
-
-def teardown_session():
-    """Teardown boilerplates after running tests"""
-    pass
 
 
 @pytest.fixture(scope="function", autouse=True)
