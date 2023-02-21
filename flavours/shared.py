@@ -92,7 +92,13 @@ def get_all_services() -> list:
     return str(ret["stdout"]).strip().split("\n")
 
 
-def wait_for_container(search_string: str, failed_string: str = "" ,timeout: int = 60, container=None, terminate: bool = True) -> bool:
+def wait_for_container(
+    search_string: str,
+    failed_string: str = "",
+    timeout: int = 60,
+    container=None,
+    terminate: bool = True,
+) -> bool:
     """Wait for container logs to contain a search_string
 
     Args:
@@ -128,7 +134,7 @@ def wait_for_container(search_string: str, failed_string: str = "" ,timeout: int
     return run_func(
         text=f"Waiting for {C_CMD}{container}{C_END} container to start",
         func=run,
-        terminate=terminate
+        terminate=terminate,
     )
 
 
