@@ -32,7 +32,6 @@ def main():
     composer_install()
     start_services()
     fix_permissions()
-    wait_for_database()
     ui_seed()
     generate_apidoc()
     api_is_ready()
