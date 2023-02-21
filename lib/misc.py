@@ -17,6 +17,7 @@ from typing import Union
 from rich.traceback import install
 
 from lib.dekickrc import get_dekickrc_value
+from lib.dind import get_dind_container_id, get_dind_project_root, is_dind_running
 from lib.logger import get_log_filename, log_exception
 from lib.settings import (
     C_BOLD,
@@ -309,7 +310,20 @@ def run_shell(
     stderr = ""
     returncode = 0
     logfile = get_log_filename()
-    logging.debug(locals())
+
+    if is_dind_running():
+        tmp_docker_env = []
+
+        for key, value in env.items():
+            tmp_docker_env = tmp_docker_env + ["-e", f"{key}={value}"]
+
+        dind_container_id = get_dind_container_id()
+        cmd = [
+            "docker",
+            "exec",
+            *tmp_docker_env,
+            dind_container_id,
+        ] + cmd
 
     with Popen(
         args=cmd,
