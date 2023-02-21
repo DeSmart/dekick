@@ -1,4 +1,4 @@
-from os import environ, getcwd, getenv, getuid
+from os import getcwd, getenv, getuid
 
 from lib.tests.boilerplates import get_project_root
 from lib.tests.dind import rbash_dind
@@ -24,7 +24,7 @@ def get_docker_env() -> dict:
     """Gets environment variables needed for DeKick to run properly"""
 
     return {
-        "HOME": environ["HOME"],
+        "HOME": getenv("HOME"),
         "PATH": "/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin",
         "DEKICK_PATH": getcwd(),
         "PROJECT_ROOT": get_project_root(),

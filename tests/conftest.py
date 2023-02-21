@@ -6,10 +6,10 @@ from time import sleep
 import pytest
 from filelock import SoftFileLock
 
+from lib.registry import start_docker_registry
 from lib.tests.boilerplates import copy_flavour_to_container, download_boilerplates
 from lib.tests.dind import start_dind_container, stop_dind_container
 from lib.tests.misc import parse_flavour_version
-from lib.tests.registry import start_docker_registry
 
 
 def pytest_configure(config):

@@ -1,8 +1,8 @@
 from logging import debug, warning
 from os import getgid, getuid
 
+from lib.rbash import rbash
 from lib.settings import DEKICK_VERSION_PATH
-from lib.tests.rbash import rbash
 
 DIND_CONTAINER_ID = ""
 
@@ -25,7 +25,7 @@ def start_dind_container(count: int = 0) -> str:
         ret = rbash(
             "Waiting for DinD to start then change permissions of docker socket",
             f'docker exec "{dind_container_id}" bash -c "while ! '
-            + 'docker ps; do sleep 1; done; chmod 666 /var/run/docker.sock"',
+            + 'docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock"',
         )
 
         if ret["code"] == 137:

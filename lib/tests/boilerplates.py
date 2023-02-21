@@ -4,8 +4,8 @@ from os import getcwd, getenv, getuid
 from rich.traceback import install
 
 from lib.dotenv import get_dotenv_var
+from lib.rbash import rbash
 from lib.tests.dind import rbash_dind
-from lib.tests.rbash import rbash
 
 install()
 BOILERPLATES_ROOT = getcwd() + "/tmp/boilerplates/"

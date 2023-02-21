@@ -7,11 +7,11 @@ from tempfile import mktemp
 from dotenv import set_key
 from rich.traceback import install
 
+from lib.rbash import rbash
 from lib.tests.boilerplates import get_boilerplates_path
 from lib.tests.dind import get_dind_container_id, rbash_dind
 from lib.tests.docker import get_docker_env
 from lib.tests.misc import get_dekick_runner
-from lib.tests.rbash import rbash
 
 install()
 
