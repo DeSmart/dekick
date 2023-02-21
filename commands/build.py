@@ -1,15 +1,16 @@
 """
 Runs the specified command
 """
+import sys
 from argparse import ArgumentParser, Namespace
-from sys import exit
+from logging import debug, error
 
 from rich.traceback import install
 
 from commands.local import flavour_action, install_logger
-from commands.stop import stop
 from flavours.shared import build_image, push_image
-from lib.misc import check_argparse_arg, randomize_compose_project_name, randomize_ports
+from lib.dind import dind_container
+from lib.misc import check_argparse_arg
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 
 install()
@@ -55,18 +56,17 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     """
     parser_default_funcs(parser)
 
-    if build(
-        target_image=parser.target_image,
-        docker_login_user=parser.docker_login_user,
-        docker_login_password=parser.docker_login_password,
-        docker_registry=parser.docker_registry,
-        push=parser.push,
-        log_level=parser.log_level or "INFO",
-        log_filename=parser.log_filename or "dekick-build.log",
-    ):
-        exit(0)
-
-    exit(1)
+    sys.exit(
+        build(
+            target_image=parser.target_image,
+            docker_login_user=parser.docker_login_user,
+            docker_login_password=parser.docker_login_password,
+            docker_registry=parser.docker_registry,
+            push=parser.push,
+            log_level=parser.log_level or "INFO",
+            log_filename=parser.log_filename or "dekick-build.log",
+        )
+    )
 
 
 # pylint: disable=too-many-arguments
@@ -78,7 +78,7 @@ def build(
     push: bool,
     log_level: str,
     log_filename: str,
-) -> bool:
+) -> int:
     """
     Build an image
     """
@@ -89,23 +89,21 @@ def build(
         check_argparse_arg(docker_login_password, "--docker-login-password")
         check_argparse_arg(docker_login_user, "--docker-login-user")
 
-    randomize_ports()
-    randomize_compose_project_name()
-
     try:
-        flavour_action("build")
-        build_image(target_image)
+        with dind_container():
+            flavour_action("build")
+            build_image(target_image)
 
-        if push is True:
-            push_image(
-                target_image, docker_login_user, docker_login_password, docker_registry
-            )
+            if push is True:
+                push_image(
+                    target_image,
+                    docker_login_user,
+                    docker_login_password,
+                    docker_registry,
+                )
+    except Exception as err:  # pylint: disable=broad-except
+        error("Error running tests")
+        debug("Error: %s", err)
+        return 1
 
-    except Exception:  # pylint: disable=broad-except
-        stop(remove=False)
-        return False
-
-    stop(
-        remove=True,
-    )
-    return True
+    return 0

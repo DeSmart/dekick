@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 from logging import debug, warning
 from os import getcwd
-from subprocess import Popen
 
 from lib.dekickrc import get_dekick_version
-from lib.tests.rbash import rbash
+from lib.rbash import rbash
+from lib.registry import start_docker_registry
+from lib.settings import is_pytest
 
 DIND_CONTAINER_ID = ""
 
@@ -13,13 +14,18 @@ DIND_CONTAINER_ID = ""
 def dind_container():
     """Start a Docker-in-Docker container"""
 
+    if is_pytest():
+        debug("Not using DinD container in pytest mode")
+        yield ""
+        return
+
     def create_dind_container():
 
         global DIND_CONTAINER_ID  # pylint: disable=global-statement
         dekick_version = get_dekick_version()
         container_id = rbash(
             "Starting DinD container",
-            f"docker run --privileged -d --rm --add-host proxy:host-gateway -w {getcwd()} desmart/dekick-dind:{dekick_version}",
+            f"docker run --privileged -d --rm --add-host proxy:host-gateway desmart/dekick-dind:{dekick_version}",
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
 
@@ -28,7 +34,7 @@ def dind_container():
         ret = rbash(
             "Waiting for DinD to start then change permissions of docker socket",
             f'docker exec "{dind_container_id}" bash -c "while ! '
-            + 'docker ps; do sleep 1; done; chmod 666 /var/run/docker.sock"',
+            + 'docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock"',
         )
 
         if ret["code"] == 137:
@@ -36,6 +42,8 @@ def dind_container():
         return True
 
     try:
+        start_docker_registry()
+
         create_dind_container()
         max_retries = 5
         count = 1
@@ -64,13 +72,13 @@ def copy_project_to_dind():
         current_path,
     )
 
-    cmd = f'docker cp -aq "{current_path}/." "{dind_container_id}:{current_path}"'
-    debug("Running command: %s", cmd)
-
-    Popen(
-        cmd,
-        shell=True,
-        universal_newlines=True,
+    rbash(
+        "Create project path",
+        f'docker exec {dind_container_id} mkdir -p "{current_path}"',
+    )
+    rbash(
+        "Copying project to DinD container",
+        f'docker cp -aq "{current_path}/." "{dind_container_id}:{current_path}"',
     )
 
 
@@ -88,10 +96,6 @@ def stop_dind_container():
         f'docker kill "{dind_container_id}"; exit 0',
     )
     DIND_CONTAINER_ID = ""
-
-
-def get_dind_project_root():
-    return DIND_PROJECT_ROOT
 
 
 def get_dind_container_id() -> str:

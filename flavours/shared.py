@@ -2,7 +2,6 @@
 Shared functions for all flavours
 """
 import logging
-from shutil import rmtree
 
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
@@ -167,7 +166,6 @@ def build_image(target_image: str):
             capture_output=True,
             raise_exception=True,
         )
-        rmtree(tmp_dir)
 
     run_func(
         text=f"Building image {C_CODE}{target_image}{C_END} using files "

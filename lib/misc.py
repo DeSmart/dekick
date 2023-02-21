@@ -10,14 +10,13 @@ import tempfile
 import time
 from importlib import import_module
 from os.path import basename, exists
-from random import randint
 from subprocess import PIPE, CalledProcessError, Popen
 from typing import Union
 
 from rich.traceback import install
 
 from lib.dekickrc import get_dekickrc_value
-from lib.dind import get_dind_container_id, get_dind_project_root, is_dind_running
+from lib.dind import get_dind_container_id, is_dind_running
 from lib.logger import get_log_filename, log_exception
 from lib.settings import (
     C_BOLD,
@@ -321,6 +320,8 @@ def run_shell(
         cmd = [
             "docker",
             "exec",
+            "-w",
+            os.getcwd(),
             *tmp_docker_env,
             dind_container_id,
         ] + cmd
@@ -430,22 +431,6 @@ def first_run_banner():
             + f" your environment{C_END}"
         )
         time.sleep(2)
-
-
-def randomize_ports():
-    """Create environment variables with randomized port numbers"""
-    for port_def in get_dekickrc_value("dekick.ports"):
-        service = port_def["service"].upper().replace("-", "_")
-        port = randint(10000, 50000)
-        os.environ[f"DOCKER_PORT_{service}"] = str(port)
-        logging.debug("Randomizing port DOCKER_PORT_%s=%s", service, port)
-
-
-def randomize_compose_project_name():
-    """Create environment variable with randomized compose project name"""
-    project = f"{get_compose_project_name()}{randint(10000, 50000)}"
-    os.environ["COMPOSE_PROJECT_NAME"] = project
-    logging.debug("Randomizing compose project COMPOSE_PROJECT_NAME=%s", project)
 
 
 def get_compose_project_name() -> str:
