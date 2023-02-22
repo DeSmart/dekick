@@ -23,6 +23,6 @@ def main():
     setup_permissions()
     composer_install()
     start_services()
-    fix_permissions(recursive_chown=True)
+    fix_permissions()
     db_migrate()
     phpunit(raise_exception=True, capture_output=False)
