@@ -10,9 +10,11 @@ if [ "$user" = "root" ] && [ -n "$CURRENT_USERNAME" ] && [ -n "$CURRENT_UID" ]; 
   adduser -D -h /tmp/homedir -u "${CURRENT_UID}" "${CURRENT_USERNAME}"
   chmod oug+rwX /var/run/docker.sock
   echo "${CURRENT_USERNAME} ALL=(ALL) NOPASSWD:/bin/rm" >> /etc/sudoers
-  su -c "/usr/local/bin/docker-entrypoint.sh $*" "${CURRENT_USERNAME}"
+  su -p -c "/usr/local/bin/docker-entrypoint.sh $*" "${CURRENT_USERNAME}"
   exit $?
 fi
+
+export HOME=/tmp/homedir
 
 if [ -z "$1" ]; then
     dekick -h

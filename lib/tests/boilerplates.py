@@ -58,15 +58,17 @@ def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> 
     """Copies boilerplate flavour to flavour generated directory"""
     boilerplates_path = get_boilerplates_path()
     project_root = get_project_root()
-    current_uid = getenv("CURRENT_UID") or getuid()
+    rbash(
+        "Create project path",
+        f'docker exec {container_id} mkdir -p "{project_root}"',
+    )
     rbash(
         f"Copying flavour/version to DinD container {container_id}",
-        f"docker cp -aq {boilerplates_path}{flavour}/{version}/ {container_id}:{project_root}",
+        f"docker cp -aq {boilerplates_path}{flavour}/{version}/. {container_id}:{project_root}",
     )
-    rbash_dind(
-        f"Changing ownership of {project_root}",
-        f"chown -R {current_uid} {project_root}",
-        user="root",
+    rbash(
+        "Changing permissions",
+        f'docker exec {container_id} chmod -R oug+rw "{project_root}"',
     )
 
 

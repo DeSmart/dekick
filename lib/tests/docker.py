@@ -1,4 +1,4 @@
-from os import getcwd, getenv, getuid
+from os import getcwd, getenv
 
 from lib.tests.boilerplates import get_project_root
 from lib.tests.dind import rbash_dind
@@ -28,7 +28,8 @@ def get_docker_env() -> dict:
         "PATH": "/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin",
         "DEKICK_PATH": getcwd(),
         "PROJECT_ROOT": get_project_root(),
-        "CURRENT_UID": getenv("CURRENT_UID") or getuid(),
+        "CURRENT_UID": "1000",
+        "CURRENT_USERNAME": "dekick",
         "HOST_ARCH": getenv("HOST_ARCH") or "",
         "HOST_PLATFORM": getenv("HOST_PLATFORM") or "",
         "DEKICK_DEBUGGER": getenv("DEKICK_DEBUGGER") or "",
