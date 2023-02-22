@@ -29,7 +29,7 @@ def start_dind_container(count: int = 0) -> str:
             "Waiting for DinD to start then change permissions of docker socket",
             f'docker exec "{dind_container_id}" bash -c "while ! '
             + "docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock"
-            # + f"adduser -D -h /tmp/homedir -u {current_uid} {current_username}"
+            + f"adduser -D -h /tmp/homedir -u {current_uid} {current_username}"
             + ';"',
         )
 
@@ -85,8 +85,10 @@ def rbash_dind(info_desc, cmd, env=None, expected_code=0, user=None, **kwargs):
         tmp_docker_env += f'-e {key}="{value}" '
 
     cmd = cmd.replace('"', '\\"')
+    user = user or "1000"
     dind_cmd = (
-        f"docker exec {tmp_docker_env} " + f'"{dind_container_id}" bash -c "{cmd}"'
+        f"docker exec --user={user} {tmp_docker_env} "
+        + f'"{dind_container_id}" bash -c "{cmd}"'
     )
 
     return rbash(
