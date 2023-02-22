@@ -320,6 +320,8 @@ def run_shell(
         cmd = [
             "docker",
             "exec",
+            "--user",
+            CURRENT_UID,
             "-w",
             os.getcwd(),
             *tmp_docker_env,

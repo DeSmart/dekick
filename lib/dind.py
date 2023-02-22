@@ -5,7 +5,7 @@ from os import getcwd
 from lib.dekickrc import get_dekick_version
 from lib.rbash import rbash
 from lib.registry import start_docker_registry
-from lib.settings import is_pytest
+from lib.settings import CURRENT_UID, CURRENT_USERNAME, is_pytest
 
 DIND_CONTAINER_ID = ""
 
@@ -29,12 +29,14 @@ def dind_container():
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
 
-    def chmod_socket_wait_for_dind() -> bool:
+    def wait_for_dind() -> bool:
         dind_container_id = get_dind_container_id()
         ret = rbash(
             "Waiting for DinD to start then change permissions of docker socket",
             f'docker exec "{dind_container_id}" bash -c "while ! '
-            + 'docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock"',
+            + "docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock; "
+            + f"adduser -D -h /tmp/homedir -u {CURRENT_UID} {CURRENT_USERNAME}"
+            + '"',
         )
 
         if ret["code"] == 137:
@@ -47,7 +49,7 @@ def dind_container():
         create_dind_container()
         max_retries = 5
         count = 1
-        while count < max_retries and not chmod_socket_wait_for_dind():
+        while count < max_retries and not wait_for_dind():
             count = count + 1
             warning("DinD didn't start properly, retrying... %s", count)
             create_dind_container()
@@ -55,14 +57,17 @@ def dind_container():
         if count > max_retries:
             raise Exception("DinD didn't start properly")
 
-        copy_project_to_dind()
+        copy_to_dind()
         yield DIND_CONTAINER_ID
     finally:
         stop_dind_container()
 
 
-def copy_project_to_dind():
+def copy_to_dind(filename: str = ""):
     """Copy the project to the DinD container"""
+    if not is_dind_running():
+        return
+
     dind_container_id = get_dind_container_id()
     current_path = getcwd()
     debug(
@@ -76,14 +81,22 @@ def copy_project_to_dind():
         "Create project path",
         f'docker exec {dind_container_id} mkdir -p "{current_path}"',
     )
+    filename = filename or "."
     rbash(
         "Copying project to DinD container",
-        f'docker cp -aq "{current_path}/." "{dind_container_id}:{current_path}"',
+        f'docker cp -aq "{current_path}/{filename}" "{dind_container_id}:{current_path}"',
+    )
+    rbash(
+        "Changing permissions",
+        f'docker exec {dind_container_id} chmod -R oug+rw "{current_path}"',
     )
 
 
 def stop_dind_container():
     """Stop the Docker-in-Docker container"""
+    if not is_dind_running():
+        return
+
     global DIND_CONTAINER_ID  # pylint: disable=global-statement
 
     if DIND_CONTAINER_ID == "":
