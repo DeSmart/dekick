@@ -8,11 +8,10 @@ from typing import Union
 from rich.traceback import install
 
 from commands.docker_compose import docker_compose
-from flavours.shared import stop_service
 from lib.logger import install_logger
 from lib.misc import get_flavour_container, run_func
 from lib.parser_defaults import parser_default_args, parser_default_funcs
-from lib.settings import C_CMD, C_END
+from lib.settings import C_CMD, C_END, CURRENT_UID
 
 install()
 
@@ -83,6 +82,8 @@ def phpunit(
     cmd = "run"
     args = [
         "--rm",
+        "--user",
+        CURRENT_UID,
         container,
         "vendor/bin/phpunit",
         "--cache-result-file=/tmp/.phpunit.result.cache",
