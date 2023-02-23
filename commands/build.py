@@ -102,7 +102,7 @@ def build(
                     docker_registry,
                 )
     except Exception as err:  # pylint: disable=broad-except
-        error("Error running tests")
+        error("Error running build")
         debug("Error: %s", err)
         return 1
 
