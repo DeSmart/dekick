@@ -4,7 +4,7 @@ from os.path import dirname, exists
 from time import sleep
 
 import pytest
-from filelock import SoftFileLock
+from filelock import SoftFileLock, Timeout
 
 from lib.registry import start_docker_registry
 from lib.tests.boilerplates import copy_flavour_to_container, download_boilerplates
@@ -36,12 +36,25 @@ def pytest_configure(config):
 def init_session():
     """Do some things before workers start"""
     lock_path = "tmp/pytest.lock"
+    makedirs(dirname(lock_path), exist_ok=True)
+
     worker_id = environ.get("PYTEST_XDIST_WORKER")
     debug("worker_id: %s", worker_id)
 
-    if worker_id in ("gw0", "master") or worker_id is None:
+    timeout = int(
+        0 if worker_id is None or worker_id == "master" else worker_id.replace("gw", "")
+    )
+    sleep(timeout)
 
-        makedirs(dirname(lock_path), exist_ok=True)
+    lock = SoftFileLock(lock_path, timeout=240)
+
+    try:
+        lock.acquire(poll_interval=1, timeout=5)
+    except Timeout:
+        lock.acquire(poll_interval=1)
+        debug("Lock acquired, let's move!")
+        return
+    else:
 
         if exists(lock_path):
             remove(lock_path)
@@ -50,12 +63,6 @@ def init_session():
             start_docker_registry()
             download_boilerplates()
             return
-
-    sleep(1)
-    lock = SoftFileLock(lock_path, timeout=240)
-    lock.acquire(poll_interval=1)
-    debug("Lock acquired, let's move!")
-    return
 
 
 @pytest.fixture(scope="session", autouse=True)
