@@ -68,7 +68,7 @@ def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> 
     )
     rbash(
         "Changing permissions",
-        f'docker exec {container_id} chmod -R oug+rw "{project_root}"',
+        f'docker exec {container_id} bash -c "chmod -R oug+rw {project_root}; chown -R 1000 {project_root}"',
     )
 
 
