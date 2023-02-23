@@ -1,6 +1,6 @@
 """Miscellaneous functinos running tests"""
 from logging import debug
-from os import chmod, remove
+from os import remove
 from shutil import copy
 from tempfile import mktemp
 
@@ -76,17 +76,20 @@ def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
         # copy source_env_file to temporary file
         tmp_env_file = mktemp()
         copy(source_env_file, tmp_env_file)
-        chmod(tmp_env_file, 0o664)
 
         container_id = get_dind_container_id()
 
         for key, value in env.items():
             set_key(tmp_env_file, key, value, quote_mode="auto")
 
-        destination_env_file_container = f"{project_root}/.env"
+        destination_env_file = f"{project_root}/.env"
         rbash(
             f"Copying {tmp_env_file} .env file to DinD container",
-            f"docker cp -aq {tmp_env_file} {container_id}:{destination_env_file_container}",
+            f"docker cp -aq {tmp_env_file} {container_id}:{destination_env_file}",
+        )
+        rbash(
+            "Setting permissions for .env file",
+            f"docker exec -it {container_id} chmod 666 {destination_env_file}",
         )
 
         remove(tmp_env_file)
