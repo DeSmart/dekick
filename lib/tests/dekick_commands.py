@@ -89,7 +89,7 @@ def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
         )
         rbash(
             "Setting permissions for .env file",
-            f"docker exec -it {container_id} chmod 666 {destination_env_file}",
+            f"docker exec {container_id} chmod 666 {destination_env_file}",
         )
 
         remove(tmp_env_file)
