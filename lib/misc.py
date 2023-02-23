@@ -212,7 +212,7 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
         os.getenv("COMPOSE_PROJECT_NAME") or compose_project_name
     )
     env["PROJECT_ROOT"] = PROJECT_ROOT
-    env["CURRENT_UID"] = CURRENT_UID
+    env["CURRENT_UID"] = str(CURRENT_UID)
     env["PATH"] = os.getenv("PATH")
 
     # Override environment variables
