@@ -57,7 +57,7 @@ C_WARN = colors.fg("yellow")
 PROJECT_ROOT = getenv("PROJECT_ROOT") or f"{getcwd()}"
 DEKICK_PATH = getenv("DEKICK_PATH") or f"{getcwd()}/dekick"
 DEKICK_DOCKER_IMAGE = getenv("DEKICK_DOCKER_IMAGE") or None
-CURRENT_UID = getenv("CURRENT_UID") or getuid()
+CURRENT_UID = str(getenv("CURRENT_UID") or getuid())
 CURRENT_USERNAME = getenv("CURRENT_USERNAME") or getuser()
 TERMINAL_COLUMN_WIDTH = (get_terminal_size().columns - 3) if stdout.isatty() else 120
 
