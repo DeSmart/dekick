@@ -21,11 +21,11 @@ if [ "$DEKICK_DEBUGGER" ]; then
 fi
 
 # Architecture detection (arm64, amd64])
-DOCKER_DEFAULT_PLATFORM="linux/amd64"
-if [ "$HOST_ARCH" = "arm64" ]; then
-  DOCKER_DEFAULT_PLATFORM="linux/arm64"
-fi
-export DOCKER_DEFAULT_PLATFORM
+# DOCKER_DEFAULT_PLATFORM="linux/amd64"
+# if [ "$HOST_ARCH" = "arm64" ]; then
+#   DOCKER_DEFAULT_PLATFORM="linux/arm64"
+# fi
+# export DOCKER_DEFAULT_PLATFORM
 
 VOLUME_DEKICK="-v "${DEKICK_PATH}:${DEKICK_PATH}""
 VOLUME_PROJECT="-v "${PROJECT_ROOT}:${PROJECT_ROOT}""

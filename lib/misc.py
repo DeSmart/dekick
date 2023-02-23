@@ -207,7 +207,7 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
         override_env = {}
 
     env = override_env
-    env["DOCKER_DEFAULT_PLATFORM"] = get_cpu_arch()
+    # env["DOCKER_DEFAULT_PLATFORM"] = get_cpu_arch()
     env["COMPOSE_PROJECT_NAME"] = (
         os.getenv("COMPOSE_PROJECT_NAME") or compose_project_name
     )
