@@ -39,7 +39,7 @@ def init_session():
     worker_id = environ.get("PYTEST_XDIST_WORKER")
     debug("worker_id: %s", worker_id)
 
-    if worker_id in ("gw0", "master"):
+    if worker_id in ("gw0", "master", None):
 
         makedirs(dirname(lock_path), exist_ok=True)
 
