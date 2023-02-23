@@ -2,7 +2,6 @@
 API for GitLab
 """
 import logging
-import os
 
 import gitlab
 from rich.console import Console

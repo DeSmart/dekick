@@ -1,5 +1,4 @@
 from logging import debug, warning
-from os import getgid, getuid
 
 from lib.rbash import rbash
 from lib.settings import DEKICK_VERSION_PATH
