@@ -1,8 +1,7 @@
 from logging import debug, warning
-from os import getgid, getuid
 
+from lib.rbash import rbash
 from lib.settings import DEKICK_VERSION_PATH
-from lib.tests.rbash import rbash
 
 DIND_CONTAINER_ID = ""
 
@@ -20,12 +19,17 @@ def start_dind_container(count: int = 0) -> str:
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
 
-    def chmod_socket_wait_for_dind():
+    def wait_for_dind():
         dind_container_id = get_dind_container_id()
+        current_uid = "1000"
+        current_username = "dekick"
+
         ret = rbash(
             "Waiting for DinD to start then change permissions of docker socket",
             f'docker exec "{dind_container_id}" bash -c "while ! '
-            + 'docker ps; do sleep 1; done; chmod 666 /var/run/docker.sock"',
+            + "docker ps >/dev/null 2>&1; do sleep 1; done; chmod 666 /var/run/docker.sock; "
+            + f"adduser -D -h /tmp/homedir -u {current_uid} {current_username}"
+            + ';"',
         )
 
         if ret["code"] == 137:
@@ -34,7 +38,7 @@ def start_dind_container(count: int = 0) -> str:
 
     create_dind_container()
 
-    dind_started = chmod_socket_wait_for_dind()
+    dind_started = wait_for_dind()
     max_retries = 5
     if not dind_started and count < max_retries:
         count = count + 1
@@ -74,17 +78,15 @@ def rbash_dind(info_desc, cmd, env=None, expected_code=0, user=None, **kwargs):
     env = env or {}
     dind_container_id = get_dind_container_id()
 
-    if user is None:
-        user = f"{getuid()}:{getgid()}"
-
     tmp_docker_env = ""
 
     for key, value in env.items():
         tmp_docker_env += f'-e {key}="{value}" '
 
     cmd = cmd.replace('"', '\\"')
+    user = user or "1000"
     dind_cmd = (
-        f"docker exec {tmp_docker_env} --user={user} "
+        f"docker exec --user={user} {tmp_docker_env} "
         + f'"{dind_container_id}" bash -c "{cmd}"'
     )
 

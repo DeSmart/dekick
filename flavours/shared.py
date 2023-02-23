@@ -2,7 +2,6 @@
 Shared functions for all flavours
 """
 import logging
-from shutil import rmtree
 
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
@@ -92,7 +91,13 @@ def get_all_services() -> list:
     return str(ret["stdout"]).strip().split("\n")
 
 
-def wait_for_container(search_string: str, failed_string: str = "" ,timeout: int = 60, container=None, terminate: bool = True) -> bool:
+def wait_for_container(
+    search_string: str,
+    failed_string: str = "",
+    timeout: int = 60,
+    container=None,
+    terminate: bool = True,
+) -> bool:
     """Wait for container logs to contain a search_string
 
     Args:
@@ -128,7 +133,7 @@ def wait_for_container(search_string: str, failed_string: str = "" ,timeout: int
     return run_func(
         text=f"Waiting for {C_CMD}{container}{C_END} container to start",
         func=run,
-        terminate=terminate
+        terminate=terminate,
     )
 
 
@@ -161,7 +166,6 @@ def build_image(target_image: str):
             capture_output=True,
             raise_exception=True,
         )
-        rmtree(tmp_dir)
 
     run_func(
         text=f"Building image {C_CODE}{target_image}{C_END} using files "

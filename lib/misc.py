@@ -10,13 +10,13 @@ import tempfile
 import time
 from importlib import import_module
 from os.path import basename, exists
-from random import randint
 from subprocess import PIPE, CalledProcessError, Popen
 from typing import Union
 
 from rich.traceback import install
 
 from lib.dekickrc import get_dekickrc_value
+from lib.dind import get_dind_container_id, is_dind_running
 from lib.logger import get_log_filename, log_exception
 from lib.settings import (
     C_BOLD,
@@ -207,12 +207,12 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
         override_env = {}
 
     env = override_env
-    env["DOCKER_DEFAULT_PLATFORM"] = get_cpu_arch()
+    # env["DOCKER_DEFAULT_PLATFORM"] = get_cpu_arch()
     env["COMPOSE_PROJECT_NAME"] = (
         os.getenv("COMPOSE_PROJECT_NAME") or compose_project_name
     )
     env["PROJECT_ROOT"] = PROJECT_ROOT
-    env["CURRENT_UID"] = CURRENT_UID
+    env["CURRENT_UID"] = str(CURRENT_UID)
     env["PATH"] = os.getenv("PATH")
 
     # Override environment variables
@@ -309,7 +309,24 @@ def run_shell(
     stderr = ""
     returncode = 0
     logfile = get_log_filename()
-    logging.debug(locals())
+
+    if is_dind_running():
+        tmp_docker_env = []
+
+        for key, value in env.items():
+            tmp_docker_env = tmp_docker_env + ["-e", f"{key}={value}"]
+
+        dind_container_id = get_dind_container_id()
+        cmd = [
+            "docker",
+            "exec",
+            "--user",
+            CURRENT_UID,
+            "-w",
+            os.getcwd(),
+            *tmp_docker_env,
+            dind_container_id,
+        ] + cmd
 
     with Popen(
         args=cmd,
@@ -416,22 +433,6 @@ def first_run_banner():
             + f" your environment{C_END}"
         )
         time.sleep(2)
-
-
-def randomize_ports():
-    """Create environment variables with randomized port numbers"""
-    for port_def in get_dekickrc_value("dekick.ports"):
-        service = port_def["service"].upper().replace("-", "_")
-        port = randint(10000, 50000)
-        os.environ[f"DOCKER_PORT_{service}"] = str(port)
-        logging.debug("Randomizing port DOCKER_PORT_%s=%s", service, port)
-
-
-def randomize_compose_project_name():
-    """Create environment variable with randomized compose project name"""
-    project = f"{get_compose_project_name()}{randint(10000, 50000)}"
-    os.environ["COMPOSE_PROJECT_NAME"] = project
-    logging.debug("Randomizing compose project COMPOSE_PROJECT_NAME=%s", project)
 
 
 def get_compose_project_name() -> str:

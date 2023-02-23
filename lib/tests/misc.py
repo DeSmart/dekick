@@ -18,9 +18,3 @@ def parse_flavour_version(file: str) -> tuple:
 def get_dekick_runner() -> str:
     dekick_path = getenv("DEKICK_PATH")
     return f"{dekick_path}/dekick.py"
-
-
-# if getenv("DEKICK_DOCKER_IMAGE"):
-#     dekick_path = getenv("DEKICK_PATH")
-#     return f"{dekick_path}/dekick.py"
-# return getcwd() + "/dekick-docker.sh"

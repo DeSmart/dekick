@@ -8,8 +8,7 @@ from argparse import ArgumentParser, Namespace
 from rich.traceback import install
 
 from commands.local import flavour_action, install_logger
-from commands.stop import stop
-from lib.misc import randomize_compose_project_name, randomize_ports
+from lib.dind import dind_container
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 
 install()
@@ -52,14 +51,11 @@ def test(
     """
     install_logger(log_level, log_filename)
 
-    randomize_ports()
-    randomize_compose_project_name()
-
     try:
-        flavour_action("test")
-        return 0
+        with dind_container():
+            flavour_action("test")
+            return 0
     except Exception as err:  # pylint: disable=broad-except
         logging.error("Error running tests")
         logging.debug("Error: %s", err)
-        stop(remove=True, volumes=False)
         return 1

@@ -7,11 +7,11 @@ from tempfile import mktemp
 from dotenv import set_key
 from rich.traceback import install
 
+from lib.rbash import rbash
 from lib.tests.boilerplates import get_boilerplates_path
 from lib.tests.dind import get_dind_container_id, rbash_dind
 from lib.tests.docker import get_docker_env
 from lib.tests.misc import get_dekick_runner
-from lib.tests.rbash import rbash
 
 install()
 
@@ -86,6 +86,10 @@ def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
         rbash(
             f"Copying {tmp_env_file} .env file to DinD container",
             f"docker cp -aq {tmp_env_file} {container_id}:{destination_env_file}",
+        )
+        rbash(
+            "Setting permissions for .env file",
+            f"docker exec {container_id} chmod 666 {destination_env_file}",
         )
 
         remove(tmp_env_file)
