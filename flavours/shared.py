@@ -7,19 +7,40 @@ from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
 from commands.yarn import ui_yarn
 from lib.dind import copy_from_dind
+from lib.dotenv import get_dotenv_var
 from lib.logger import log_exception
 from lib.misc import create_temporary_dir, get_flavour_container, run_shell
 from lib.run_func import run_func
 from lib.settings import C_CMD, C_CODE, C_END, C_FILE, CURRENT_UID, is_ci
 
 
-def composer_install(args=None):
+def composer_install():
     """Run composer install command"""
+
+    args = []
 
     if args is None:
         args = []
 
     artifacts_dir = "vendor/"
+
+    def check_app_env():
+
+        try:
+            app_env = get_dotenv_var("APP_ENV")
+            if app_env in ("production", "beta"):
+                logging.debug(
+                    "APP_ENV is %s: running composer install in production mode",
+                    app_env,
+                )
+                args.append("--no-dev")
+                args.append("--optimize-autoloader")
+
+        except KeyError:  # pylint: disable=broad-except
+            return {
+                "status": False,
+                "text": "No key APP_ENV defined in .env file",
+            }
 
     def run_composer_install():
         composer(["install", *args])
@@ -27,6 +48,7 @@ def composer_install(args=None):
     def run_copy_from_dind():
         copy_from_dind(artifacts_dir)
 
+    run_func(text="Getting APP_ENV from .env", func=check_app_env)
     run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
 
     if is_ci():
