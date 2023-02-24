@@ -3,7 +3,7 @@ from importlib import import_module
 from os import listdir
 
 from lib.dekickrc import version_int
-from lib.misc import run_func
+from lib.run_func import run_func
 from lib.settings import C_CODE, C_END, DEKICK_MIGRATIONS_DIR
 
 

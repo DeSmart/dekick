@@ -28,9 +28,9 @@ from lib.misc import (
     get_colored_diff,
     get_flavour,
     is_port_free,
-    run_func,
 )
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import (
     C_CMD,
     C_CODE,
@@ -41,6 +41,7 @@ from lib.settings import (
     DEKICKRC_FILE,
     DEKICKRC_PATH,
     PROJECT_ROOT,
+    is_ci,
     is_pytest,
 )
 
@@ -93,7 +94,6 @@ def local(parser: Namespace) -> int:
     check_command_docker_compose()
     check_ports()
     update_dekick()
-    check_gitlabrc()
     check_project_group()
     first_run_banner()
     get_env_from_gitlab()
@@ -198,9 +198,10 @@ def install_logger(level, filename):
 def get_env_from_gitlab() -> bool:
     """Gets .env file from GitLab"""
 
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
+    if is_pytest() or not get_dekickrc_value("gitlab.getenv") or is_ci():
         return True
 
+    check_gitlabrc()
     gitlab_url = get_dekickrc_value("gitlab.url")
 
     def actual_get():
@@ -211,8 +212,8 @@ def get_env_from_gitlab() -> bool:
                 "text": f"GitLab URL is not set in {C_FILE}{DEKICKRC_FILE}{C_END} file",
             }
 
-        project_group = get_dekickrc_value("project.group")
-        project_name = get_dekickrc_value("project.name")
+        project_group = str(get_dekickrc_value("project.group"))
+        project_name = str(get_dekickrc_value("project.name"))
 
         project_vars = get_project_var(
             group=project_group, project=project_name, variable="ENVFILE", scope="local"

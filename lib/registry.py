@@ -12,20 +12,11 @@ REGISTRY_DOCKER_COMPOSE = DEKICK_PATH + "/docker/registry/docker-compose.yml"
 def start_docker_registry():
     """Starts Docker registry"""
     rbash(
-        "Starting Docker registry",
+        "Starting Docker registry proxy",
         f"docker compose -f {REGISTRY_DOCKER_COMPOSE} up -d --no-recreate --quiet-pull",
         env=get_env(),
     )
     wait_for_docker_registry()
-
-
-def stop_docker_registry():
-    """Stops Docker registry"""
-    rbash(
-        "Stopping Docker registry",
-        f"docker compose -f {REGISTRY_DOCKER_COMPOSE} down",
-        env=get_env(),
-    )
 
 
 def wait_for_docker_registry():

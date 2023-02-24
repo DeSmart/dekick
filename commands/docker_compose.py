@@ -11,8 +11,9 @@ from rich.console import Console
 from rich.traceback import install
 
 from lib.logger import install_logger
-from lib.misc import run_func, run_shell
+from lib.misc import run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import C_CMD, C_CODE, C_END, C_ERROR, get_seconds_since_dekick_start
 
 install()

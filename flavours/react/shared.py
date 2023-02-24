@@ -7,7 +7,8 @@ from flavours.shared import setup_permissions as shared_setup_permissions
 from flavours.shared import wait_for_container as shared_wait_for_container
 from lib.dekickrc import get_dekickrc_value
 from lib.dotenv import get_dotenv_var
-from lib.misc import get_flavour_container, run_func
+from lib.misc import get_flavour_container
+from lib.run_func import run_func
 from lib.settings import get_seconds_since_dekick_start
 
 

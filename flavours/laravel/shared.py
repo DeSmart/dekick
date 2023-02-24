@@ -12,7 +12,7 @@ from lib.dekickrc import get_dekickrc_value
 from lib.dind import copy_to_dind
 from lib.dotenv import get_dotenv_var
 from lib.fs import chown
-from lib.misc import run_func
+from lib.run_func import run_func
 from lib.settings import C_CMD, C_END, CURRENT_UID
 
 
@@ -71,18 +71,17 @@ def fix_permissions():
     return setup_permissions(fix=True)
 
 
-def db_migrate(service: str = "db"):
+def db_migrate():
     """Migration the database."""
 
     def run():
         artisan(
-            args=["migrate:fresh"],
+            args=["migrate:fresh", "--force"],
             capture_output=True,
-            docker_env={"DB_HOST": service},
         )
 
     run_func(
-        text=f"Running {C_CMD}artisan migrate:fresh{C_END} using {C_CMD}{service}{C_END}",
+        text=f"Running {C_CMD}artisan migrate:fresh{C_END}",
         func=run,
     )
 

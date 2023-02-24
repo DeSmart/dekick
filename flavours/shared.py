@@ -8,7 +8,8 @@ from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_
 from commands.yarn import ui_yarn
 from lib.dind import copy_from_dind
 from lib.logger import log_exception
-from lib.misc import create_temporary_dir, get_flavour_container, run_func, run_shell
+from lib.misc import create_temporary_dir, get_flavour_container, run_shell
+from lib.run_func import run_func
 from lib.settings import C_CMD, C_CODE, C_END, C_FILE, CURRENT_UID, is_ci
 
 

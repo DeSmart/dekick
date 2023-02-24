@@ -9,8 +9,8 @@ from rich.traceback import install
 
 from flavours.shared import get_all_services, is_service_running
 from lib.logger import install_logger
-from lib.misc import run_func
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import C_CMD, C_END
 
 install()

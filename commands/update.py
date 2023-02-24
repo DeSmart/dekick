@@ -14,8 +14,9 @@ from rich.traceback import install
 
 from lib.dekickrc import version_int
 from lib.logger import get_log_level, install_logger, log_exception
-from lib.misc import check_command, run_func, run_shell
+from lib.misc import check_command, run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import (
     C_CMD,
     C_CODE,

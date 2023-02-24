@@ -5,6 +5,7 @@ from os import getcwd
 from lib.dekickrc import get_dekick_version
 from lib.rbash import rbash
 from lib.registry import start_docker_registry
+from lib.run_func import run_func
 from lib.settings import CURRENT_UID, CURRENT_USERNAME, is_pytest
 
 DIND_CONTAINER_ID = ""
@@ -28,8 +29,9 @@ def dind_container():
             f"docker run --privileged -d --rm --add-host proxy:host-gateway desmart/dekick-dind:{dekick_version}",
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
+        wait_for_dind()
 
-    def wait_for_dind() -> bool:
+    def check_dind_docker_running() -> bool:
         dind_container_id = get_dind_container_id()
         ret = rbash(
             "Waiting for DinD to start then change permissions of docker socket",
@@ -43,13 +45,10 @@ def dind_container():
             return False
         return True
 
-    try:
-        start_docker_registry()
-
-        create_dind_container()
+    def wait_for_dind():
         max_retries = 5
         count = 1
-        while count < max_retries and not wait_for_dind():
+        while count < max_retries and not check_dind_docker_running():
             count = count + 1
             warning("DinD didn't start properly, retrying... %s", count)
             create_dind_container()
@@ -57,7 +56,10 @@ def dind_container():
         if count > max_retries:
             raise Exception("DinD didn't start properly")
 
-        copy_to_dind()
+    try:
+        run_func(text="Starting Docker registry proxy", func=start_docker_registry)
+        run_func(text="Creating DinD container", func=create_dind_container)
+        run_func(text="Copying project to DinD container", func=copy_to_dind)
         yield DIND_CONTAINER_ID
     finally:
         stop_dind_container()
