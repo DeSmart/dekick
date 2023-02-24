@@ -13,10 +13,10 @@ from rich.console import Console
 from rich.prompt import Confirm
 from rich.traceback import install
 
-import lib.logger as logger
 from commands.docker_compose import docker_compose
 from commands.stop import stop
 from commands.update import update
+from lib import logger
 from lib.dekickrc import compare_dekickrc_file, get_dekickrc_value
 from lib.fs import chown
 from lib.glcli import get_project_var
@@ -302,7 +302,6 @@ def check_ports():
         return 0
 
     def are_all_ports_free() -> bool:
-        return True
         return bool(get_first_used_port() == 0)
 
     def ports_check(recheck: bool = False):
