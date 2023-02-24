@@ -68,7 +68,7 @@ def parser_default_funcs(parser):
 
     def ci_cd():
         """Sets the CI/CD mode"""
-        set_ci_mode(parser.pytest)
+        set_ci_mode(parser.ci)
 
     def spinner():
         set_spinner_mode(parser.spinner)
