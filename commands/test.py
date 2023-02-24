@@ -42,10 +42,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
 
 
 # pylint: disable=too-many-arguments
-def test(
-    log_level: str,
-    log_filename: str,
-) -> int:
+def test(log_level: str, log_filename: str) -> int:
     """
     Run unit test for specific flavour
     """

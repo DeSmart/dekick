@@ -6,9 +6,10 @@ import logging
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
 from commands.yarn import ui_yarn
+from lib.dind import copy_from_dind
 from lib.logger import log_exception
 from lib.misc import create_temporary_dir, get_flavour_container, run_func, run_shell
-from lib.settings import C_CMD, C_CODE, C_END, CURRENT_UID
+from lib.settings import C_CMD, C_CODE, C_END, C_FILE, CURRENT_UID, is_ci
 
 
 def composer_install(args=None):
@@ -17,10 +18,21 @@ def composer_install(args=None):
     if args is None:
         args = []
 
-    def run():
+    artifacts_dir = "vendor/"
+
+    def run_composer_install():
         composer(["install", *args])
 
-    run_func(text=f"Running {C_CMD}composer install{C_END}", func=run)
+    def run_copy_from_dind():
+        copy_from_dind(artifacts_dir)
+
+    run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
+
+    if is_ci():
+        run_func(
+            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
+            func=run_copy_from_dind,
+        )
 
 
 def yarn_install():

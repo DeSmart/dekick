@@ -79,6 +79,8 @@ DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
 
+DEKICK_CI_MODE = False
+
 
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""
@@ -110,3 +112,14 @@ def set_pytest_mode(mode: bool):
 def is_pytest() -> bool:
     """Check if DeKick is running inside a Docker container"""
     return DEKICK_PYTEST_MODE
+
+
+def set_ci_mode(mode: bool):
+    """Sets DEKICK_CI_MODE to True"""
+    global DEKICK_CI_MODE  # pylint: disable=global-statement
+    DEKICK_CI_MODE = mode
+
+
+def is_ci() -> bool:
+    """Check if DeKick is running in CI/CD environment"""
+    return DEKICK_CI_MODE

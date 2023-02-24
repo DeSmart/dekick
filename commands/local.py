@@ -101,10 +101,10 @@ def local(parser: Namespace) -> int:
     return flavour_action(action="local")
 
 
-def flavour_action(action: str) -> int:
+def flavour_action(action: str, *args, **kwargs) -> int:
     """Runs the specified action from the current flavour"""
     flavour = get_flavour()
-    return import_module(f"flavours.{flavour}.actions.{action}").main()
+    return import_module(f"flavours.{flavour}.actions.{action}").main(*args, **kwargs)
 
 
 def check_project_group():

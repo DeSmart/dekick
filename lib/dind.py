@@ -92,6 +92,28 @@ def copy_to_dind(filename: str = ""):
     )
 
 
+def copy_from_dind(dirname: str = ""):
+    """Copy the project files (artifacts) from the DinD container back to host"""
+
+    if not is_dind_running():
+        return
+
+    dind_container_id = get_dind_container_id()
+    current_path = getcwd()
+    debug(
+        "Copying %s from DinD container %s:%s",
+        current_path,
+        dind_container_id,
+        current_path,
+    )
+
+    dirname = dirname or "."
+    rbash(
+        "Copying project from DinD container",
+        f'docker cp -aq "{dind_container_id}:{current_path}/{dirname}" "{current_path}"',
+    )
+
+
 def stop_dind_container():
     """Stop the Docker-in-Docker container"""
     if not is_dind_running():
