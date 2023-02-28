@@ -1,14 +1,14 @@
 """
 Runs the specified command
 """
+import logging
+import sys
 from argparse import ArgumentParser, Namespace
-from sys import exit
 
 from rich.traceback import install
 
 from commands.local import flavour_action, install_logger
-from commands.stop import stop
-from lib.misc import randomize_compose_project_name, randomize_ports
+from lib.dind import dind_container
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 
 install()
@@ -33,7 +33,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     """
     parser_default_funcs(parser)
 
-    exit(
+    sys.exit(
         test(
             log_level=parser.log_level or "INFO",
             log_filename=parser.log_filename or "dekick-test.log",
@@ -42,21 +42,17 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
 
 
 # pylint: disable=too-many-arguments
-def test(
-    log_level: str,
-    log_filename: str,
-) -> int:
+def test(log_level: str, log_filename: str) -> int:
     """
     Run unit test for specific flavour
     """
     install_logger(log_level, log_filename)
 
-    randomize_ports()
-    randomize_compose_project_name()
-
     try:
-        flavour_action("test")
-        return 0
-    except Exception:  # pylint: disable=broad-except
-        stop(remove=True, volumes=False)
+        with dind_container():
+            flavour_action("test")
+            return 0
+    except Exception as err:  # pylint: disable=broad-except
+        logging.error("Error running tests")
+        logging.debug("Error: %s", err)
         return 1

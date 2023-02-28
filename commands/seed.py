@@ -12,8 +12,9 @@ from commands.artisan import artisan
 from commands.knex import knex
 from flavours.shared import is_service_running, start_service
 from lib.logger import install_logger, log_exception
-from lib.misc import get_flavour, run_func
+from lib.misc import get_flavour
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import is_pytest
 
 install()

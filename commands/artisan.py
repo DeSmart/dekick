@@ -9,8 +9,9 @@ from rich.traceback import install
 
 from commands.docker_compose import docker_compose
 from lib.logger import install_logger
-from lib.misc import get_flavour_container, run_func
+from lib.misc import get_flavour_container
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import C_CMD, C_CODE, C_END, CURRENT_UID
 
 install()

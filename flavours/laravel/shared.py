@@ -3,14 +3,16 @@ Shared functions for Laravel flavour
 """
 import json
 import shutil
+from logging import debug
 from os.path import exists
 
 from commands.artisan import artisan
 from commands.docker_compose import docker_compose
 from lib.dekickrc import get_dekickrc_value
+from lib.dind import copy_to_dind
 from lib.dotenv import get_dotenv_var
 from lib.fs import chown
-from lib.misc import run_func
+from lib.run_func import run_func
 from lib.settings import C_CMD, C_END, CURRENT_UID
 
 
@@ -69,18 +71,17 @@ def fix_permissions():
     return setup_permissions(fix=True)
 
 
-def db_migrate(service: str = "db"):
+def db_migrate():
     """Migration the database."""
 
     def run():
         artisan(
-            args=["migrate:fresh"],
+            args=["migrate:fresh", "--force"],
             capture_output=True,
-            docker_env={"DB_HOST": service},
         )
 
     run_func(
-        text=f"Running {C_CMD}artisan migrate:fresh{C_END} using {C_CMD}{service}{C_END}",
+        text=f"Running {C_CMD}artisan migrate:fresh{C_END}",
         func=run,
     )
 
@@ -111,10 +112,12 @@ def generate_apidoc():
 
 def laravel_nova_support():
     """Saves the Laravel Nova credentials in the auth.json file."""
+    debug("Setting up Laravel Nova support")
     try:
         nova_username = get_dotenv_var("NOVA_USERNAME")
         nova_password = get_dotenv_var("NOVA_PASSWORD")
     except KeyError:
+        debug("Didn't find NOVA_USERNAME and NOVA_PASSWORD in .env file")
         return
 
     auth_tmpl_file = "auth.json.tmpl"
@@ -123,7 +126,7 @@ def laravel_nova_support():
     if not exists(auth_tmpl_file):
         return
 
-    if exists("auth.json"):
+    if exists(auth_file):
         return
 
     def run():
@@ -137,6 +140,8 @@ def laravel_nova_support():
         with open(auth_file, "w", encoding="utf-8") as file:
             file.write(json.dumps(auth_json, indent=4))
             chown(auth_file)
+
+        copy_to_dind(auth_file)
 
     run_func("Setting up Laravel Nova", func=run)
 

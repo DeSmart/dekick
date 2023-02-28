@@ -60,8 +60,14 @@ def convert_dekickrc_to_yaml():
         "group": configuration["gitlab"]["group"],
         "name": configuration["gitlab"]["project"],
     }
-    configuration["gitlab"]["url"] = get_dotenv_var("GITLAB_URL", path=DEKICK_PATH)
-    configuration["gitlab"]["getenv"] = True
+
+    gitlab_url = get_dotenv_var(
+        "GITLAB_URL", path=DEKICK_PATH, default="https://git.desmart.com/"
+    )
+
+    if gitlab_url != "":
+        configuration["gitlab"]["url"] = gitlab_url
+        configuration["gitlab"]["getenv"] = True
 
     logging.debug("Writing to %s file", DEKICKRC_PATH)
     with open(DEKICKRC_PATH, "w", encoding="utf-8") as yaml_file:
