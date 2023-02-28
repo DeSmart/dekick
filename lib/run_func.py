@@ -6,7 +6,15 @@ from typing import Union
 from rich.traceback import install
 
 from lib.logger import get_log_filename, log_exception
-from lib.settings import C_END, C_ERROR, C_FILE
+from lib.settings import (
+    C_END,
+    C_ERROR,
+    C_FILE,
+    get_function_time_end,
+    get_function_time_start,
+    is_profiler_mode,
+    show_elapsed_time,
+)
 from lib.spinner import DEFAULT_SPINNER_MODE, create_spinner
 
 install()
@@ -29,7 +37,7 @@ def run_func(
     Returns:
         bool: _description_
     """
-
+    function_start = get_function_time_start()
     logging.debug(locals())
 
     logging.info(text)
@@ -100,5 +108,9 @@ def run_func(
             return out["func"](**out["func_args"])
 
         return out["func"]()
+    function_end = get_function_time_end()
+    elapsed_time = function_end - function_start
+    if is_profiler_mode() :
+        show_elapsed_time(elapsed_time)
 
     return True

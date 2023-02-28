@@ -26,6 +26,10 @@ from lib.settings import (
     DEKICK_MASTER_VERSION_URL,
     DEKICK_PATH,
     DEKICK_VERSION_PATH,
+    get_function_time_end,
+    get_function_time_start,
+    is_profiler_mode,
+    show_elapsed_time,
 )
 
 install()
@@ -78,7 +82,7 @@ def check_command_git():
 
 
 def update() -> bool:
-
+    function_start = get_function_time_start()
     check_command_git()
 
     if not compare_versions():
@@ -90,6 +94,10 @@ def update() -> bool:
     tmpdir = make_tmpdir()
     clone_dekick(tmpdir)
     copy_files(tmpdir)
+    function_end = get_function_time_end()
+    elapsed_time = function_end - function_start
+    if is_profiler_mode():
+        show_elapsed_time(elapsed_time)
 
     return True
 
