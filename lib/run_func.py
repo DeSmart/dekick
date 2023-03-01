@@ -12,7 +12,6 @@ from lib.settings import (
     C_ERROR,
     C_FILE,
     C_TIME,
-    C_WARN,
     get_seconds_since_dekick_start,
     is_profiler_mode,
 )
