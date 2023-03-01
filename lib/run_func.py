@@ -7,13 +7,14 @@ from rich.traceback import install
 
 from lib.logger import get_log_filename, log_exception
 from lib.settings import (
+    C_CODE,
     C_END,
     C_ERROR,
     C_FILE,
-    get_function_time_end,
-    get_function_time_start,
+    C_TIME,
+    C_WARN,
+    get_seconds_since_dekick_start,
     is_profiler_mode,
-    show_elapsed_time,
 )
 from lib.spinner import DEFAULT_SPINNER_MODE, create_spinner
 
@@ -37,7 +38,6 @@ def run_func(
     Returns:
         bool: _description_
     """
-    function_start = get_function_time_start()
     logging.debug(locals())
 
     logging.info(text)
@@ -50,13 +50,25 @@ def run_func(
         spinner.succeed()
         return True
 
-    out = None
+    out = {}
 
     try:
+        function_start = get_seconds_since_dekick_start()
         if func_args is not None:
             out = func(**func_args)
         else:
             out = func()
+        if out is None: # pylint: disable=using-constant-test
+            out = {}
+        if "text" not in out:
+            out["text"] = text
+        if "text" in out and out["text"] == "":
+            out["text"] = text
+        function_end = get_seconds_since_dekick_start()
+        elapsed_time = function_end - function_start
+        if is_profiler_mode() :
+            out["text"] = out["text"] + get_elapsed_time(elapsed_time)
+
     except Exception as error:  # pylint: disable=broad-except
 
         log_file = get_log_filename()
@@ -79,7 +91,7 @@ def run_func(
         if terminate is True:
             sys.exit(1)
 
-    if out is not None and out["success"] is not True:
+    if "success" in out and out["success"] is not True:
         logging.debug(out)
 
         if "type" in out and out["type"] == "warn":
@@ -108,9 +120,19 @@ def run_func(
             return out["func"](**out["func_args"])
 
         return out["func"]()
-    function_end = get_function_time_end()
-    elapsed_time = function_end - function_start
-    if is_profiler_mode() :
-        show_elapsed_time(elapsed_time)
 
     return True
+
+
+def get_elapsed_time(elapsed_time) -> str:
+    """Show elapsed time"""
+    if elapsed_time < 1:
+        return " "
+    if elapsed_time >1 and elapsed_time < 10:
+        return (" ") + f"{C_TIME}{elapsed_time:.1f}s{C_END}"
+    if elapsed_time > 10 and elapsed_time < 30:
+        return (" ") + f"{C_CODE}{elapsed_time:.1f}s{C_END}"
+    if elapsed_time > 30:
+        return (" ") + f"{C_ERROR}{elapsed_time:.1f}s{C_END}"
+
+    return (" ") + f"{C_TIME}{elapsed_time:.1f}s{C_END}"

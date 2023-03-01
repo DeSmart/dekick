@@ -95,13 +95,6 @@ def get_dekick_time_start() -> float:
     """Get DEKICK_TIME_START"""
     return DEKICK_TIME_START
 
-def get_function_time_start() -> float:
-    """Get DEKICK_TIME_START"""
-    return time.perf_counter()
-
-def get_function_time_end() -> float:
-    return time.perf_counter()
-
 def get_seconds_since_dekick_start() -> int:
     """Get seconds since dekick start"""
     return int(round(time.time() - get_dekick_time_start()))
@@ -141,7 +134,3 @@ def set_profiler_mode(mode: bool):
 def is_profiler_mode() -> bool:
     """Check if DeKick is running in profiler mode"""
     return DEKICK_PROFILER_MODE
-
-def show_elapsed_time(elapsed_time):
-    """Show elapsed time"""
-    print(((TERMINAL_COLUMN_WIDTH - 4) * " ") + f"{C_TIME}{elapsed_time:.1f}s{C_END}")

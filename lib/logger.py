@@ -4,16 +4,7 @@ from sys import stdout
 from typing import Union
 
 from lib.fs import chown, touch
-from lib.settings import (
-    C_CMD,
-    C_CODE,
-    C_END,
-    C_FILE,
-    get_function_time_end,
-    get_function_time_start,
-    is_profiler_mode,
-    show_elapsed_time,
-)
+from lib.settings import C_CMD, C_CODE, C_END, C_FILE
 from lib.spinner import create_spinner, set_spinner_mode
 
 LOG_FILE_NAME = ""
@@ -22,7 +13,6 @@ CURRENT_LOG_LEVEL = ""
 
 def install_logger(level: str = "", filename: str = ""):
     """Installs the logger and sets the log level and filenam"""
-    function_start = get_function_time_start()
 
     filename = "dekick.log" if filename == "" else filename
     level = "INFO" if level == "" else level
@@ -62,10 +52,6 @@ def install_logger(level: str = "", filename: str = ""):
     logging.basicConfig(**config)
 
     spinner.succeed()
-    function_end = get_function_time_end()
-    elapsed_time = function_end - function_start
-    if is_profiler_mode():
-        show_elapsed_time(elapsed_time)
 
 
 def set_log_filename(filename: Union[str, None]):

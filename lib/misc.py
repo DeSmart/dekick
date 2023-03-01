@@ -26,11 +26,7 @@ from lib.settings import (
     CURRENT_UID,
     DEKICK_DOCKER_IMAGE,
     PROJECT_ROOT,
-    get_function_time_end,
-    get_function_time_start,
     is_dekick_dockerized,
-    is_profiler_mode,
-    show_elapsed_time,
 )
 from lib.spinner import create_spinner
 
@@ -96,7 +92,6 @@ def check_command(
 
 def check_file(file) -> None:
     """Check file"""
-    function_start = get_function_time_start()
     spinner = create_spinner(f"Checking file {C_FILE}{basename(file)}{C_END} exists")
     spinner.start()
 
@@ -106,10 +101,7 @@ def check_file(file) -> None:
         spinner.fail()
         sys.exit(1)
 
-    function_end = get_function_time_end()
-    elapsed_time = function_end - function_start
-    if is_profiler_mode():
-        show_elapsed_time(elapsed_time)
+
 
 
 def default_env(override_env: Union[dict, None] = None) -> dict:
