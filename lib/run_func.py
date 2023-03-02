@@ -1,6 +1,8 @@
 import logging
+import re
 import sys
 import time
+from math import inf
 from typing import Union
 
 from rich.traceback import install
@@ -12,6 +14,7 @@ from lib.settings import (
     C_ERROR,
     C_FILE,
     C_TIME,
+    TERMINAL_COLUMN_WIDTH,
     get_seconds_since_dekick_start,
     is_profiler_mode,
 )
@@ -66,7 +69,8 @@ def run_func(
         function_end = get_seconds_since_dekick_start()
         elapsed_time = function_end - function_start
         if is_profiler_mode() :
-            out["text"] = out["text"] + get_elapsed_time(elapsed_time)
+            logging.debug("function elapsed time: %s", f"{elapsed_time:.2f}")
+            out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
 
     except Exception as error:  # pylint: disable=broad-except
 
@@ -123,15 +127,23 @@ def run_func(
     return True
 
 
-def get_elapsed_time(elapsed_time) -> str:
+def get_elapsed_time(text: str, elapsed_time: int) -> str:
     """Show elapsed time"""
-    if elapsed_time < 1:
-        return " "
-    if elapsed_time >1 and elapsed_time < 10:
-        return (" ") + f"{C_TIME}{elapsed_time:.1f}s{C_END}"
-    if elapsed_time > 10 and elapsed_time < 30:
-        return (" ") + f"{C_CODE}{elapsed_time:.1f}s{C_END}"
-    if elapsed_time > 30:
-        return (" ") + f"{C_ERROR}{elapsed_time:.1f}s{C_END}"
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    elapsed_time_formatted = f"{elapsed_time}s"
+    result = ansi_escape.sub('', text)
+    text_length = len(result)
+    right_margin = 5
+    checks = [
+        (0, 1, C_TIME, "< 1s"),
+        (1, 10, C_TIME, elapsed_time_formatted),
+        (10, 30, C_CODE, elapsed_time_formatted),
+        (30, inf, C_ERROR, elapsed_time_formatted),
+    ]
+    for check in checks:
+        if check[0] <= elapsed_time < check[1]:
+            return f" {check[2]}{check[3]}{C_END}".rjust(
+                (TERMINAL_COLUMN_WIDTH + right_margin) - text_length, " "
+            )
+    return ""
 
-    return (" ") + f"{C_TIME}{elapsed_time:.1f}s{C_END}"
