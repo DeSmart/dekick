@@ -8,6 +8,7 @@ import sys
 from importlib import import_module
 from time import time
 
+from humanfriendly import format_timespan
 from rich.console import Console
 from rich.traceback import install
 
@@ -66,9 +67,9 @@ print("╰" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╯")
 
 def show_run_time():
     """Shows total the run time of the application."""
-    total_run_time = str(round(time() - get_dekick_time_start(), 1))
+    total_run_time = format_timespan(round(time() - get_dekick_time_start()))
     print(TERMINAL_COLUMN_WIDTH * "─")
-    running_time = f"{C_CMD}DeKick{C_END} was running {C_CODE}{total_run_time} s{C_END}"
+    running_time = f"{C_CMD}DeKick{C_END} was running {C_CODE}{total_run_time}{C_END}"
     print(running_time)
     logging.info(running_time)
 
