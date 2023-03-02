@@ -14,3 +14,4 @@ pytest_xdist==3.2.0
 pytest-instafail==0.4.2
 debugpy==1.6.5
 filelock==3.9.0
+humanfriendly==10.0
