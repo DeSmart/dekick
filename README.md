@@ -45,7 +45,30 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 More documentation will be available soon.
 
 # Contribution
+## Troubleshooting
+
+### docker permission denied
+
+If you get an error similar to this:
+
+```shell
+docker: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post http://%2Fvar%2Frun%2Fdocker.sock/v1.35/containers/create: dial unix /var/run/docker.sock: connect: permission denied. See 'docker run --help'.
+```
+
+It means that `docker` does not have correct permissions to run. DeKick expects that you are [managing docker as a non-root user][1] by adding it to the `docker` unix group. To create the docker group and add your user:
+
+```shell
+# Create the docker group.
+sudo groupadd docker
+# Add your user to the docker group.
+sudo usermod -aG docker $USER
+```
+
+Please refer to [post-installation steps][1] and [troubleshooting][2] sections of the Docker documentation for more details.
+
 If you want to contribute, please email dooshek@desmart.com
 
 # Licence:
 MIT
+[1]: https://docs.docker.com/engine/install/linux-postinstall/
+[2]: https://docs.docker.com/engine/install/troubleshoot/
