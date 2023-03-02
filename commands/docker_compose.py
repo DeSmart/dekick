@@ -74,7 +74,7 @@ def ui_docker_compose(**kwargs):
     return run_func(
         text=text,
         func=wrapper,
-        func_args=kwargs,
+        func_args=kwargs
     )
 
 

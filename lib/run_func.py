@@ -1,12 +1,23 @@
 import logging
+import re
 import sys
 import time
+from math import inf
 from typing import Union
 
 from rich.traceback import install
 
 from lib.logger import get_log_filename, log_exception
-from lib.settings import C_END, C_ERROR, C_FILE
+from lib.settings import (
+    C_CODE,
+    C_END,
+    C_ERROR,
+    C_FILE,
+    C_TIME,
+    TERMINAL_COLUMN_WIDTH,
+    get_seconds_since_dekick_start,
+    is_profiler_mode,
+)
 from lib.spinner import DEFAULT_SPINNER_MODE, create_spinner
 
 install()
@@ -29,7 +40,6 @@ def run_func(
     Returns:
         bool: _description_
     """
-
     logging.debug(locals())
 
     logging.info(text)
@@ -42,13 +52,26 @@ def run_func(
         spinner.succeed()
         return True
 
-    out = None
+    out = {}
 
     try:
+        function_start = get_seconds_since_dekick_start()
         if func_args is not None:
             out = func(**func_args)
         else:
             out = func()
+        if out is None: # pylint: disable=using-constant-test
+            out = {}
+        if "text" not in out:
+            out["text"] = text
+        if "text" in out and out["text"] == "":
+            out["text"] = text
+        function_end = get_seconds_since_dekick_start()
+        elapsed_time = function_end - function_start
+        if is_profiler_mode() :
+            logging.debug("function elapsed time: %s", f"{elapsed_time:.2f}")
+            out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
+
     except Exception as error:  # pylint: disable=broad-except
 
         log_file = get_log_filename()
@@ -71,7 +94,7 @@ def run_func(
         if terminate is True:
             sys.exit(1)
 
-    if out is not None and out["success"] is not True:
+    if "success" in out and out["success"] is not True:
         logging.debug(out)
 
         if "type" in out and out["type"] == "warn":
@@ -102,3 +125,25 @@ def run_func(
         return out["func"]()
 
     return True
+
+
+def get_elapsed_time(text: str, elapsed_time: int) -> str:
+    """Show elapsed time"""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    elapsed_time_formatted = f"{elapsed_time}s"
+    result = ansi_escape.sub('', text)
+    text_length = len(result)
+    right_margin = 5
+    checks = [
+        (0, 1, C_TIME, "< 1s"),
+        (1, 10, C_TIME, elapsed_time_formatted),
+        (10, 30, C_CODE, elapsed_time_formatted),
+        (30, inf, C_ERROR, elapsed_time_formatted),
+    ]
+    for check in checks:
+        if check[0] <= elapsed_time < check[1]:
+            return f" {check[2]}{check[3]}{C_END}".rjust(
+                (TERMINAL_COLUMN_WIDTH + right_margin) - text_length, " "
+            )
+    return ""
+
