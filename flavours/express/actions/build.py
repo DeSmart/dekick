@@ -12,6 +12,7 @@ from flavours.shared import (
     yarn_build,
     yarn_install,
 )
+from lib.misc import check_file
 
 install()
 console = Console()
@@ -19,6 +20,7 @@ console = Console()
 
 def main():
     """Main"""
+    check_file(".env")
     pull_and_build_images()
     setup_permissions()
     yarn_install()
