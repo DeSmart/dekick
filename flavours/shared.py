@@ -2,6 +2,7 @@
 Shared functions for all flavours
 """
 import logging
+from os import path
 
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
@@ -61,6 +62,20 @@ def composer_install():
 def yarn_install():
     """Run yarn install command"""
     ui_yarn(args=["install"])
+    artifacts_dir = ["node_modules/", ".yarn/cache", ".yarn/install-state.gz"]
+
+    def run_copy_from_dind():
+        copy_from_dind(artifacts_dir)
+    if is_ci():
+        if path.exists(".yarn"):
+            artifacts_dir = [".yarn/cache", ".yarn/install-state.gz"]
+        else:
+            artifacts_dir = "node_modules/"
+
+        run_func(
+            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
+            func=run_copy_from_dind,
+        )
 
 
 def yarn_build():
