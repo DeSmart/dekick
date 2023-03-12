@@ -1,20 +1,18 @@
+![version 2.1.0](https://img.shields.io/badge/version-v2.1.0-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+
 **Table of Contents**
-
 - [What's DeKick?](#whats-dekick)
-    - [What is our goal?](#what-is-our-goal)
-    - [Common problems DeKick can help with:](#common-problems-dekick-can-help-with)
-    - [How DeKick helps your team?](#how-dekick-helps-your-team)
-    - [Getting started](#getting-started)
-        - [System requirements](#system-requirements)
-        - [Usage](#usage)
-    - [This project is still under development](#this-project-is-still-under-development)
-    - [Troubleshooting](#troubleshooting)
-        - [docker permission denied](#docker-permission-denied)
-    - [Contributing](#contributing)
-
+  - [What is our goal?](#what-is-our-goal)
+  - [Common problems DeKick can help with:](#common-problems-dekick-can-help-with)
+  - [How DeKick helps your team?](#how-dekick-helps-your-team)
+  - [System requirements](#system-requirements)
+    - [Usage](#usage)
+  - [This project is still under development](#this-project-is-still-under-development)
+  - [Troubleshooting](#troubleshooting)
+    - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
+  - [Contributing](#contributing)
 
 # What's DeKick?
-
 DeKick /də kɪk/ is a tool which supports and improves the work of dev team, by provisioning and building unified environments using [Docker](https://docker.com) without being an expert. It relieves the pain of running projects locally on different platforms (Linux, macOS with Intel and ARM based CPUs) and prevents many common problems faced by developers when dockerizing their projects.
 
 DeKick goes even further and helps to build target Docker images which can be deployed on a test, beta or even production environment with ease.
@@ -49,13 +47,10 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 - Starts local database and seeds it with pre-set data (as specified by the chosen flavour)
 - Runs backend and frontend simultaneously, at the same device, even if using different versions of, e.g. Node.
 
-## Getting started
-
-### System requirements
-
-- Linux / macOS, both Intel and ARM CPUs are supported
-- Docker on Linux and/or Docker Desktop on macOS installed
-- Terminal with `bash` or `zsh` shell
+## System requirements
+- Linux or macOS (both Intel and ARM CPUs are supported)
+- [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) on Linux or [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) on macOS installed
+- Terminal with `bash` or `zsh` shell (other shell like `fish` are not supported for now)
 
 ### Usage
 
@@ -67,15 +62,14 @@ More documentation will be available soon.
 
 ## Troubleshooting
 
-### docker permission denied
+### Docker permission denied ("Got permission denied while trying to connect...")
 
 If you get an error similar to this:
-
 ```shell
 docker: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post http://%2Fvar%2Frun%2Fdocker.sock/v1.35/containers/create: dial unix /var/run/docker.sock: connect: permission denied. See 'docker run --help'.
 ```
 
-It means that `docker` does not have correct permissions to run. DeKick expects that you are [managing docker as a non-root user][1] by adding it to the `docker` unix group. To create the docker group and add your user:
+It means that `docker` daemon does not have correct permissions to run. DeKick expects that you are [managing docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/) by adding it to the `docker` unix group. To create the docker group and add your user:
 
 ```shell
 # Create the docker group.
@@ -84,11 +78,7 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
 
-Please refer to [post-installation steps][1] and [troubleshooting][2] sections of the Docker documentation for more details.
+Please refer to [post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/) and [troubleshooting](https://docs.docker.com/engine/install/troubleshoot/) sections of the Docker documentation for more details.
 
 ## Contributing
-
 If you want to contribute, please email dooshek@desmart.com
-
-[1]: https://docs.docker.com/engine/install/linux-postinstall/
-[2]: https://docs.docker.com/engine/install/troubleshoot/
