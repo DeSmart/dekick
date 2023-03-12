@@ -8,11 +8,9 @@
   - [System requirements](#system-requirements)
 - [How it works?](#how-it-works)
 - [Usage](#usage)
-- [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-  - [Command `dekick local`](#command-dekick-local)
-  - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
-- [Installing DeKick into your project](#installing-dekick-into-your-project)
-  - [Install](#install)
+  - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
+    - [Command `dekick local`](#command-dekick-local)
+    - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
   - [This project is still under development](#this-project-is-still-under-development)
   - [Troubleshooting](#troubleshooting)
     - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
@@ -63,10 +61,10 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
 # Usage
 
-# Running DeKick in **local** environment
+## Running DeKick in **local** environment
 A **local** environment is this one that's run on developer's machine. One uses local version mostly for **development** of the application, so the tool provides an environment that closely mimics the production environment, allowing developers to test and debug their code under realistic conditions.
 
-## Command `dekick local`
+### Command `dekick local`
 Assuming that you already have DeKick installed run following commands to start local environment:
 ```shell
 cd [YOUR_PROJECT_BASE_DIRECTORY]
@@ -86,7 +84,9 @@ dekick local
 
 ![dekick local command](docs/files/dekick-local.gif)
 
-## How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
+DeKick will start the development enviromnent which depends on specific flavour. Typically, depending on the project size, project is ready to be developed in a matter of a couple of minutes (sometimes even under a minute).
+
+### How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
 Hence DeKick is dockerized (runs inside a Docker container), in order to run commands like `yarn` (for **react** flavour) or `composer` (for **laravel** flavour) you have to run it using `dekick` command. For example if you want to add `lodash` package using `yarn` then just run:
 
 ```shell
@@ -97,12 +97,6 @@ This will run `yarn` inside a proper container which your application is build w
 ![dekick yarn install command](docs/files/dekick-yarn-add-lodash.gif)
 
 > Note that above will only work with some flavours like `react`, running `dekick yarn` command on `laravel` flavour won't work because there is no `yarn` command inside a node image.
-
-# Installing DeKick into your project
-## Install
-
-
-…that's it 🙂 Happy DeKicking!
 
 ## This project is still under development
 
