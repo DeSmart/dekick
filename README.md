@@ -9,6 +9,7 @@
   - [How DeKick helps your team?](#how-dekick-helps-your-team)
   - [System requirements](#system-requirements)
 - [How it works?](#how-it-works)
+- [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
     - [Command dekick local](#command-dekick-local)
@@ -53,8 +54,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 - Maintains consistency between team members' local setups and target environments.
 - Allows you to run a project on a computer that has almost nothing on it, runs in dockerized environment as well, so it requires only Docker to operate and making it easy and fast to start (in minutes).
 - Allows people who are not proficient in Docker commands to take advantage of the dockerized project.
-- Eases onboarding for new team members and reduces dependence on senior developers.
-- Simplifies switching between projects with varying environment requirements. Work on multiple projects or revisit old ones seamlessly, without the need for constant local environment adjustments.
+- Eases onboarding for new team members and reduces dependence on senior deveSimplifies switching between projects with varying environment requirements. Work on multiple projects or revisit old ones seamlessly, without the need for constant local environment adjustments.
 - Uses built in boilerplates to create basic file structure needed to quickly start your project, at the same time bringing standardization.
 - Starts local database and seeds it with pre-set data (as specified by the chosen flavour)
 - Runs backend and frontend simultaneously, at the same device, even if using different versions of, e.g. Node.
@@ -69,6 +69,28 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 <a id="markdown-how-it-works%3F" name="how-it-works%3F"></a>
  - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.1.0`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
+
+# Quick start
+<a id="markdown-quick-start" name="quick-start"></a>
+
+- clone DeKick to your project's `dekick/` directory
+- in your terminal:
+```shell
+cd [YOUR_PROJECT_BASE_DIRECTORY]`
+source dekick/dev`
+dekick install
+```
+(the `install` command is planned for future releases, soon :slightly_smiling_face:)
+- answer some questions about the **project**, **flavour**, **boilerplate** etc.
+- some new files should appear in your project (i.e. `.dekickrc.yml`, `docker-compose.yml`, `.gitlab-ci.yml`, depdends on the flavour and boilerplate you've chosen) 
+- run
+```shell
+cd [YOUR_PROJECT_BASE_DIRECTORY]
+source dekick/dev
+dekick local
+```
+- commit everything
+
 # Usage
 <a id="markdown-usage" name="usage"></a>
 
