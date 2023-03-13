@@ -6,6 +6,7 @@ import logging
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
 from commands.yarn import ui_yarn
+from lib.dekickrc import get_dekickrc_value
 from lib.dind import copy_from_dind
 from lib.dotenv import get_dotenv_var
 from lib.logger import log_exception
@@ -21,8 +22,6 @@ def composer_install():
 
     if args is None:
         args = []
-
-    artifacts_dir = "vendor/"
 
     def check_app_env():
 
@@ -45,22 +44,30 @@ def composer_install():
     def run_composer_install():
         composer(["install", *args])
 
-    def run_copy_from_dind():
-        copy_from_dind(artifacts_dir)
-
     run_func(text="Getting APP_ENV from .env", func=check_app_env)
     run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
 
-    if is_ci():
-        run_func(
-            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
-            func=run_copy_from_dind,
-        )
 
 
 def yarn_install():
     """Run yarn install command"""
     ui_yarn(args=["install"])
+
+
+def copy_artifacts_from_dind():
+    """Copy artifacts from dind container to host"""
+    artifacts_dir = get_dekickrc_value("project.artifacts")
+
+    def run_copy_from_dind():
+        for artifact_dir in artifacts_dir:
+            dir_path = artifact_dir["path"]
+            copy_from_dind(dir_path)
+
+    if is_ci() and artifacts_dir is not None:
+        run_func(
+            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
+            func=run_copy_from_dind,
+        )
 
 
 def yarn_build():

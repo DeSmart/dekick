@@ -78,7 +78,6 @@ def check_command_git():
 
 
 def update() -> bool:
-
     check_command_git()
 
     if not compare_versions():
@@ -86,11 +85,9 @@ def update() -> bool:
 
     if not ask_for_update():
         return False
-
     tmpdir = make_tmpdir()
     clone_dekick(tmpdir)
     copy_files(tmpdir)
-
     return True
 
 

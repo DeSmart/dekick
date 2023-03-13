@@ -1,7 +1,7 @@
+import time
 from getpass import getuser
 from os import get_terminal_size, getcwd, getenv, getuid
 from sys import stdout
-from time import time
 
 from lib.terminal_colors import TerminalColors
 
@@ -53,6 +53,7 @@ C_FILE = colors.fg("lightcyan")
 C_BOLD = colors.bold()
 C_ERROR = colors.fg("red")
 C_WARN = colors.fg("yellow")
+C_TIME = colors.fg("green")
 
 PROJECT_ROOT = getenv("PROJECT_ROOT") or f"{getcwd()}"
 DEKICK_PATH = getenv("DEKICK_PATH") or f"{getcwd()}/dekick"
@@ -81,21 +82,22 @@ DEKICK_PYTEST_MODE = False
 
 DEKICK_CI_MODE = False
 
+DEKICK_PROFILER_MODE = False
+
 
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""
     global DEKICK_TIME_START  # pylint: disable=global-statement
-    DEKICK_TIME_START = time()
+    DEKICK_TIME_START = time.time()
 
 
 def get_dekick_time_start() -> float:
     """Get DEKICK_TIME_START"""
     return DEKICK_TIME_START
 
-
 def get_seconds_since_dekick_start() -> int:
     """Get seconds since dekick start"""
-    return int(round(time() - get_dekick_time_start()))
+    return int(round(time.time() - get_dekick_time_start()))
 
 
 def is_dekick_dockerized() -> bool:
@@ -123,3 +125,12 @@ def set_ci_mode(mode: bool):
 def is_ci() -> bool:
     """Check if DeKick is running in CI/CD environment"""
     return DEKICK_CI_MODE
+
+def set_profiler_mode(mode: bool):
+    """Sets DEKICK_PROFILER_MODE to True"""
+    global DEKICK_PROFILER_MODE  # pylint: disable=global-statement
+    DEKICK_PROFILER_MODE = mode
+
+def is_profiler_mode() -> bool:
+    """Check if DeKick is running in profiler mode"""
+    return DEKICK_PROFILER_MODE

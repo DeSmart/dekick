@@ -92,7 +92,6 @@ def check_command(
 
 def check_file(file) -> None:
     """Check file"""
-
     spinner = create_spinner(f"Checking file {C_FILE}{basename(file)}{C_END} exists")
     spinner.start()
 
@@ -101,6 +100,8 @@ def check_file(file) -> None:
     else:
         spinner.fail()
         sys.exit(1)
+
+
 
 
 def default_env(override_env: Union[dict, None] = None) -> dict:

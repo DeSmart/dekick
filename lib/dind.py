@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from logging import debug, warning
 from os import getcwd
+from typing import List, Union
 
 from lib.dekickrc import get_dekick_version
 from lib.rbash import rbash
@@ -94,7 +95,7 @@ def copy_to_dind(filename: str = ""):
     )
 
 
-def copy_from_dind(dirname: str = ""):
+def copy_from_dind(dirname: Union[str, List[str]] = ""):
     """Copy the project files (artifacts) from the DinD container back to host"""
 
     if not is_dind_running():
@@ -109,11 +110,16 @@ def copy_from_dind(dirname: str = ""):
         current_path,
     )
 
-    dirname = dirname or "."
-    rbash(
-        "Copying project from DinD container",
-        f'docker cp -aq "{dind_container_id}:{current_path}/{dirname}" "{current_path}"',
-    )
+    if isinstance(dirname, str):
+        dirname = [dirname]
+
+    dirname = dirname or ["."]
+
+    for file_name in dirname:
+        rbash(
+            f"Copying {current_path}/{file_name}  from dind container to host",
+            f'docker cp -aq "{dind_container_id}:{current_path}/{file_name}" "{current_path}/{file_name}"',
+        )
 
 
 def stop_dind_container():
