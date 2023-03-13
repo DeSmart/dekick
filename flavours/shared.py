@@ -14,9 +14,6 @@ from lib.misc import create_temporary_dir, get_flavour_container, run_shell
 from lib.run_func import run_func
 from lib.settings import C_CMD, C_CODE, C_END, C_FILE, CURRENT_UID, is_ci
 
-# from os import path
-
-
 
 def composer_install():
     """Run composer install command"""
@@ -66,18 +63,22 @@ def yarn_install():
     """Run yarn install command"""
     ui_yarn(args=["install"])
 
+
 def copy_artifacts_from_dind():
     """Copy artifacts from dind container to host"""
     artifacts_dir = get_dekickrc_value("project.artifacts")
+
     def run_copy_from_dind():
         for artifact_dir in artifacts_dir:
             dir_path = artifact_dir["path"]
             copy_from_dind(dir_path)
+
     if is_ci() and artifacts_dir is not None:
         run_func(
-                text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
-                func=run_copy_from_dind,
+            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
+            func=run_copy_from_dind,
         )
+
 
 def yarn_build():
     """Run yarn build command"""
