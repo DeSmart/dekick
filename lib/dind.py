@@ -115,10 +115,10 @@ def copy_from_dind(dirname: Union[str, List[str]] = ""):
 
     dirname = dirname or ["."]
 
-    for d in dirname:
+    for file_name in dirname:
         rbash(
             "Copying project from DinD container",
-            f'docker cp -aq "{dind_container_id}:{current_path}/{d}" "{current_path}"',
+            f'docker cp -aq "{dind_container_id}:{current_path}/{file_name}" "{current_path}/{file_name}"',
         )
 
 

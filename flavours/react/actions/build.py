@@ -5,6 +5,7 @@ from rich.traceback import install
 
 from flavours.react.shared import setup_permissions
 from flavours.shared import (
+    copy_artifacts_from_dind,
     pull_and_build_images,
     start_services,
     yarn_build,
@@ -19,5 +20,6 @@ def main():
     pull_and_build_images()
     setup_permissions()
     yarn_install()
+    copy_artifacts_from_dind()
     yarn_build()
     start_services()

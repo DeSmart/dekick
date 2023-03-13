@@ -1,6 +1,8 @@
 project:
   name: str(default=dekick,required=true)
   group: str(default=,required=false)
+  artifacts:
+    - path: str(default=,required=false)
 gitlab:
   url: str(default=,required=false)
   getenv: bool(default=false,required=false)
