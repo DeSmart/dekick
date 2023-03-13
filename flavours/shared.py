@@ -26,8 +26,6 @@ def composer_install():
     if args is None:
         args = []
 
-    artifacts_dir = "vendor/"
-
     def check_app_env():
 
         try:
@@ -49,17 +47,9 @@ def composer_install():
     def run_composer_install():
         composer(["install", *args])
 
-    def run_copy_from_dind():
-        copy_from_dind(artifacts_dir)
-
     run_func(text="Getting APP_ENV from .env", func=check_app_env)
     run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
 
-    if is_ci():
-        run_func(
-            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
-            func=run_copy_from_dind,
-        )
 
 
 def yarn_install():
