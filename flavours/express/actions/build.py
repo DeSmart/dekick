@@ -4,7 +4,6 @@ Build for Node ExpressJS (backend) application
 from rich.console import Console
 from rich.traceback import install
 
-from commands.stop import stop
 from flavours.express.shared import setup_permissions
 from flavours.shared import (
     copy_artifacts_from_dind,
