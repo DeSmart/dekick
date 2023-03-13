@@ -12,12 +12,12 @@
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [Command dekick local](#command-dekick-local)
-    - [How to run flavour specific commands like yarn, npm, npx, composer or artisan?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+    - [Command `dekick local`](#command-dekick-local)
+    - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
   - [This project is still under development](#this-project-is-still-under-development)
-  - [Troubleshooting](#troubleshooting)
-    - [Docker permission denied "Got permission denied while trying to connect..."](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
-  - [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
+  - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
+- [Contributing](#contributing)
 
 <!-- /TOC -->
 
@@ -139,10 +139,10 @@ This will run `yarn` inside a proper container which your application is build w
 
 More documentation will be available soon.
 
-## Troubleshooting
+# Troubleshooting
 <a id="markdown-troubleshooting" name="troubleshooting"></a>
 
-### Docker permission denied ("Got permission denied while trying to connect...")
+## Docker permission denied ("Got permission denied while trying to connect...")
 <a id="markdown-docker-permission-denied-%22got-permission-denied-while-trying-to-connect...%22" name="docker-permission-denied-%22got-permission-denied-while-trying-to-connect...%22"></a>
 
 If you get an error similar to this:
@@ -161,6 +161,6 @@ sudo usermod -aG docker $USER
 
 Please refer to [post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/) and [troubleshooting](https://docs.docker.com/engine/install/troubleshoot/) sections of the Docker documentation for more details.
 
-## Contributing
+# Contributing
 <a id="markdown-contributing" name="contributing"></a>
 If you want to contribute, please email dooshek@desmart.com
