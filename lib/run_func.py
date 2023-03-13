@@ -88,8 +88,8 @@ def run_func(
                 return False
         if find_text_in_error_message(error_text, authentication_error):
             fail_text = (
-            f"{C_ERROR}Failed{C_END}. You may not have permission to access this repository. "
-            + "Please, check it!"
+            f"{C_ERROR}Failed getting .env from Gitlab{C_END}. "
+            + "You may not have permission to access this repository."
         )
         else:
             fail_text = (
