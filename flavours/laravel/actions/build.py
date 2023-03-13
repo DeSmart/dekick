@@ -1,7 +1,6 @@
 """
 Build for Laravel (backend) application
 """
-import logging
 
 from rich.traceback import install
 
@@ -16,13 +15,14 @@ from flavours.shared import (
     pull_and_build_images,
     start_services,
 )
+from lib.misc import check_file
 
 install()
 
 
 def main():
     """Main"""
-
+    check_file(".env")
     laravel_nova_support()
     pull_and_build_images()
     setup_permissions()
