@@ -60,7 +60,7 @@ def delete_boilerplates() -> bool:
     )
 
 
-def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> bool:
+def copy_flavour_to_container(flavour: str, version: str, container_id: str):
     """Copies boilerplate flavour to flavour generated directory"""
     boilerplates_path = get_boilerplates_path()
     project_root = get_project_root()
