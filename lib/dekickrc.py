@@ -152,6 +152,9 @@ def version_int(version: str) -> int:
         int: integer representation of version (e.g. 100000070002)
     """
 
+    if version == "develop":
+        return sys.maxsize
+
     versions = version.split(".")
     final_version = "1"
 
