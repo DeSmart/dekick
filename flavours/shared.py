@@ -2,31 +2,72 @@
 Shared functions for all flavours
 """
 import logging
-from shutil import rmtree
 
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
 from commands.yarn import ui_yarn
+from lib.dekickrc import get_dekickrc_value
+from lib.dind import copy_from_dind
+from lib.dotenv import get_dotenv_var
 from lib.logger import log_exception
-from lib.misc import create_temporary_dir, get_flavour_container, run_func, run_shell
-from lib.settings import C_CMD, C_CODE, C_END, CURRENT_UID
+from lib.misc import create_temporary_dir, get_flavour_container, run_shell
+from lib.run_func import run_func
+from lib.settings import C_CMD, C_CODE, C_END, C_FILE, CURRENT_UID, is_ci
 
 
-def composer_install(args=None):
+def composer_install():
     """Run composer install command"""
+
+    args = []
 
     if args is None:
         args = []
 
-    def run():
+    def check_app_env():
+
+        try:
+            app_env = get_dotenv_var("APP_ENV")
+            if app_env in ("production", "beta"):
+                logging.debug(
+                    "APP_ENV is %s: running composer install in production mode",
+                    app_env,
+                )
+                args.append("--no-dev")
+                args.append("--optimize-autoloader")
+
+        except KeyError:  # pylint: disable=broad-except
+            return {
+                "status": False,
+                "text": "No key APP_ENV defined in .env file",
+            }
+
+    def run_composer_install():
         composer(["install", *args])
 
-    run_func(text=f"Running {C_CMD}composer install{C_END}", func=run)
+    run_func(text="Getting APP_ENV from .env", func=check_app_env)
+    run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
+
 
 
 def yarn_install():
     """Run yarn install command"""
     ui_yarn(args=["install"])
+
+
+def copy_artifacts_from_dind():
+    """Copy artifacts from dind container to host"""
+    artifacts_dir = get_dekickrc_value("project.artifacts")
+
+    def run_copy_from_dind():
+        for artifact_dir in artifacts_dir:
+            dir_path = artifact_dir["path"]
+            copy_from_dind(dir_path)
+
+    if is_ci() and artifacts_dir is not None:
+        run_func(
+            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
+            func=run_copy_from_dind,
+        )
 
 
 def yarn_build():
@@ -92,7 +133,13 @@ def get_all_services() -> list:
     return str(ret["stdout"]).strip().split("\n")
 
 
-def wait_for_container(search_string: str, timeout: int = 60, container=None):
+def wait_for_container(
+    search_string: str,
+    failed_string: str = "",
+    timeout: int = 60,
+    container=None,
+    terminate: bool = True,
+) -> bool:
     """Wait for container logs to contain a search_string
 
     Args:
@@ -103,7 +150,7 @@ def wait_for_container(search_string: str, timeout: int = 60, container=None):
 
     def run():
         try:
-            wait_for_log(container, search_string, timeout)
+            wait_for_log(container, search_string, failed_string, timeout)
             return {
                 "success": True,
                 "text": f"Your {C_CMD}{container}{C_END} container is ready!",
@@ -117,7 +164,7 @@ def wait_for_container(search_string: str, timeout: int = 60, container=None):
         except Exception as error:  # pylint: disable=broad-except
             error_text = (
                 f"Failed to start {C_CMD}{container}{C_END} container, check container "
-                + f" logs for more information. {error}"
+                + f"logs for more information. {error}"
             )
             logging.error(error_text)
             return {
@@ -125,9 +172,10 @@ def wait_for_container(search_string: str, timeout: int = 60, container=None):
                 "text": error_text,
             }
 
-    run_func(
+    return run_func(
         text=f"Waiting for {C_CMD}{container}{C_END} container to start",
         func=run,
+        terminate=terminate,
     )
 
 
@@ -135,6 +183,7 @@ def wait_for_database(container: str = "db"):
     """Wait for database to be ready"""
     wait_for_container(
         "database system is ready to accept connections",
+        "failed",
         60,
         container,
     )
@@ -159,7 +208,6 @@ def build_image(target_image: str):
             capture_output=True,
             raise_exception=True,
         )
-        rmtree(tmp_dir)
 
     run_func(
         text=f"Building image {C_CODE}{target_image}{C_END} using files "

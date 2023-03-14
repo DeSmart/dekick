@@ -12,12 +12,7 @@ from flavours.laravel.shared import (
     laravel_nova_support,
     setup_permissions,
 )
-from flavours.shared import (
-    composer_install,
-    pull_and_build_images,
-    start_services,
-    wait_for_database,
-)
+from flavours.shared import composer_install, pull_and_build_images, start_services
 
 install()
 console = Console()
@@ -32,7 +27,6 @@ def main():
     composer_install()
     start_services()
     fix_permissions()
-    wait_for_database()
     ui_seed()
     generate_apidoc()
     api_is_ready()

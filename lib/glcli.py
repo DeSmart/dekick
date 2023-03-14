@@ -2,7 +2,6 @@
 API for GitLab
 """
 import logging
-import os
 
 import gitlab
 from rich.console import Console
@@ -17,8 +16,7 @@ console = Console()
 def auth() -> gitlab.Gitlab:
     """Authenticates to Gitlab"""
 
-    home_path = os.getenv("HOME")
-    token_file = f"{home_path}/.gitlabrc"
+    token_file = "/tmp/.gitlabrc"
     token = open(token_file, encoding="utf-8").read().replace("token=", "").strip()
 
     logging.info("Authenticating to Gitlab with a token from %s", token_file)

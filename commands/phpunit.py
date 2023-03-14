@@ -8,17 +8,11 @@ from typing import Union
 from rich.traceback import install
 
 from commands.docker_compose import docker_compose
-from flavours.laravel.shared import db_migrate
-from flavours.shared import (
-    is_service_running,
-    start_service,
-    stop_service,
-    wait_for_database,
-)
 from lib.logger import install_logger
-from lib.misc import get_flavour_container, run_func
+from lib.misc import get_flavour_container
 from lib.parser_defaults import parser_default_args, parser_default_funcs
-from lib.settings import C_CMD, C_END
+from lib.run_func import run_func
+from lib.settings import C_CMD, C_END, CURRENT_UID
 
 install()
 
@@ -85,18 +79,12 @@ def phpunit(
     """
 
     container = get_flavour_container()
-    db_unittest_service = "db-unittest"
-
-    if is_service_running(db_unittest_service) is True:
-        stop_service(db_unittest_service, kill=True, remove=True, volumes=True)
-
-    start_service(db_unittest_service)
-    wait_for_database(db_unittest_service)
-    db_migrate(db_unittest_service)
 
     cmd = "run"
     args = [
         "--rm",
+        "--user",
+        CURRENT_UID,
         container,
         "vendor/bin/phpunit",
         "--cache-result-file=/tmp/.phpunit.result.cache",
@@ -106,17 +94,9 @@ def phpunit(
         cmd=cmd,
         args=args,
         env=env,
-        docker_env={"DB_HOST": db_unittest_service},
         raise_exception=raise_exception,
         raise_error=raise_error,
         capture_output=capture_output,
-    )
-
-    stop_service(
-        db_unittest_service,
-        kill=True,
-        remove=True,
-        volumes=True,
     )
 
     return ret

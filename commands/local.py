@@ -7,17 +7,16 @@ import re
 import sys
 from argparse import ArgumentParser, Namespace
 from importlib import import_module
-from pathlib import Path
 from shutil import move
 
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.traceback import install
 
-import lib.logger as logger
 from commands.docker_compose import docker_compose
 from commands.stop import stop
-from commands.update import get_local_version, update
+from commands.update import update
+from lib import logger
 from lib.dekickrc import compare_dekickrc_file, get_dekickrc_value
 from lib.fs import chown
 from lib.glcli import get_project_var
@@ -29,9 +28,9 @@ from lib.misc import (
     get_colored_diff,
     get_flavour,
     is_port_free,
-    run_func,
 )
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.run_func import run_func
 from lib.settings import (
     C_CMD,
     C_CODE,
@@ -42,6 +41,7 @@ from lib.settings import (
     DEKICKRC_FILE,
     DEKICKRC_PATH,
     PROJECT_ROOT,
+    is_ci,
     is_pytest,
 )
 
@@ -86,7 +86,7 @@ def local(parser: Namespace) -> int:
     )
 
     parser_default_funcs(parser)
-    install_logger(parser.log_level, parser.log_filename)
+    install_logger(parser.log_level, parser.log_filename, )
     migrate(migrate_from_version)
     check_dekickrc()
     check_flavour()
@@ -94,7 +94,6 @@ def local(parser: Namespace) -> int:
     check_command_docker_compose()
     check_ports()
     update_dekick()
-    check_gitlabrc()
     check_project_group()
     first_run_banner()
     get_env_from_gitlab()
@@ -102,10 +101,10 @@ def local(parser: Namespace) -> int:
     return flavour_action(action="local")
 
 
-def flavour_action(action: str) -> int:
+def flavour_action(action: str, *args, **kwargs) -> int:
     """Runs the specified action from the current flavour"""
     flavour = get_flavour()
-    return import_module(f"flavours.{flavour}.actions.{action}").main()
+    return import_module(f"flavours.{flavour}.actions.{action}").main( *args, **kwargs)
 
 
 def check_project_group():
@@ -118,15 +117,15 @@ def check_project_group():
     if project_name:
         names.append(f"project {C_CODE}{project_name}{C_END}")
     names_text = ", ".join(names)
-    run_func(f"Setting up {names_text}")
+    run_func(text=f"Setting up {names_text}", )
 
 
 def check_gitlabrc():
     """Checks if .gitlabrc file exists"""
     if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
         return
-    home = Path.home().absolute()
-    check_file(f"{home}/.gitlabrc")
+    token_file = "/tmp/.gitlabrc"
+    check_file(token_file)
 
 
 def check_command_docker():
@@ -180,7 +179,7 @@ def validate_dekickrc():
     """Validates .dekickrc.yml file"""
     run_func(
         text=f"Validating {C_FILE}{DEKICKRC_FILE}{C_END} file",
-        func=compare_dekickrc_file,
+        func=compare_dekickrc_file
     )
 
 
@@ -199,9 +198,10 @@ def install_logger(level, filename):
 def get_env_from_gitlab() -> bool:
     """Gets .env file from GitLab"""
 
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
+    if is_pytest() or not get_dekickrc_value("gitlab.getenv") or is_ci():
         return True
 
+    check_gitlabrc()
     gitlab_url = get_dekickrc_value("gitlab.url")
 
     def actual_get():
@@ -212,8 +212,8 @@ def get_env_from_gitlab() -> bool:
                 "text": f"GitLab URL is not set in {C_FILE}{DEKICKRC_FILE}{C_END} file",
             }
 
-        project_group = get_dekickrc_value("project.group")
-        project_name = get_dekickrc_value("project.name")
+        project_group = str(get_dekickrc_value("project.group"))
+        project_name = str(get_dekickrc_value("project.name"))
 
         project_vars = get_project_var(
             group=project_group, project=project_name, variable="ENVFILE", scope="local"

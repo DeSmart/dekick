@@ -6,7 +6,9 @@ from bash import bash
 def rbash(info_desc: str, cmd: str, expected_code: int = 0, **kwargs) -> dict:
     """Runs command in bash and returns its output"""
     info(info_desc)
-    debug("Bash command: %s", cmd)
+    debug(cmd)
+    if kwargs:
+        debug(kwargs)
     ret = bash(cmd, **kwargs)
 
     stdout = ret.stdout.decode("utf-8").replace("\r", "")

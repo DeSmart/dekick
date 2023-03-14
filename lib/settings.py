@@ -1,6 +1,7 @@
-from os import get_terminal_size, getcwd, getenv, getgid, getuid
+import time
+from getpass import getuser
+from os import get_terminal_size, getcwd, getenv, getuid
 from sys import stdout
-from time import time
 
 from lib.terminal_colors import TerminalColors
 
@@ -52,11 +53,13 @@ C_FILE = colors.fg("lightcyan")
 C_BOLD = colors.bold()
 C_ERROR = colors.fg("red")
 C_WARN = colors.fg("yellow")
+C_TIME = colors.fg("green")
 
 PROJECT_ROOT = getenv("PROJECT_ROOT") or f"{getcwd()}"
 DEKICK_PATH = getenv("DEKICK_PATH") or f"{getcwd()}/dekick"
 DEKICK_DOCKER_IMAGE = getenv("DEKICK_DOCKER_IMAGE") or None
-CURRENT_UID = getenv("CURRENT_UID") or f"{getuid()}:{getgid()}"
+CURRENT_UID = str(getenv("CURRENT_UID") or getuid())
+CURRENT_USERNAME = getenv("CURRENT_USERNAME") or getuser()
 TERMINAL_COLUMN_WIDTH = (get_terminal_size().columns - 3) if stdout.isatty() else 120
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"
@@ -77,23 +80,23 @@ DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
 
-BOILERPLATES_PATH = getcwd() + "/boilerplates/"
+DEKICK_CI_MODE = False
+
 
 
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""
     global DEKICK_TIME_START  # pylint: disable=global-statement
-    DEKICK_TIME_START = time()
+    DEKICK_TIME_START = time.time()
 
 
 def get_dekick_time_start() -> float:
     """Get DEKICK_TIME_START"""
     return DEKICK_TIME_START
 
-
 def get_seconds_since_dekick_start() -> int:
     """Get seconds since dekick start"""
-    return int(round(time() - get_dekick_time_start()))
+    return int(round(time.time() - get_dekick_time_start()))
 
 
 def is_dekick_dockerized() -> bool:
@@ -110,3 +113,14 @@ def set_pytest_mode(mode: bool):
 def is_pytest() -> bool:
     """Check if DeKick is running inside a Docker container"""
     return DEKICK_PYTEST_MODE
+
+
+def set_ci_mode(mode: bool):
+    """Sets DEKICK_CI_MODE to True"""
+    global DEKICK_CI_MODE  # pylint: disable=global-statement
+    DEKICK_CI_MODE = mode
+
+
+def is_ci() -> bool:
+    """Check if DeKick is running in CI/CD environment"""
+    return DEKICK_CI_MODE

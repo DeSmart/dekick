@@ -1,7 +1,7 @@
-FROM desmart/dind:latest
+FROM docker:23.0.1-cli-alpine3.17
 
 RUN apk update\
-  && apk add --no-cache docker-compose git bash curl ncurses net-tools jq perl gettext rsync python3 py3-pip \
+  && apk add --no-cache git bash curl ncurses net-tools jq perl gettext rsync python3 py3-pip sudo \
   && rm -rf /var/cache/apk/*
 
 COPY requirements.txt /tmp/requirements.txt

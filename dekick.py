@@ -10,13 +10,10 @@ from os import environ
 
 import debugpy
 
-from commands.setup import install_required_packages
-
 if environ.get("DEKICK_DEBUGGER") == "true":
     print("Waiting for debugger to attach on port 8753...")
     debugpy.listen(("0.0.0.0", 8753))
     debugpy.wait_for_client()
 
 
-install_required_packages()
 import_module("lib.main")
