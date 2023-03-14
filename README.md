@@ -12,11 +12,11 @@
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [Command `dekick local`](#command-dekick-local)
-    - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+    - [Command dekick local](#command-dekick-local)
+    - [How to run flavour specific commands like yarn, npm, npx, composer or artisan?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
   - [This project is still under development](#this-project-is-still-under-development)
 - [Troubleshooting](#troubleshooting)
-  - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
+  - [Docker permission denied "Got permission denied while trying to connect..."](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
 - [Contributing](#contributing)
 
 <!-- /TOC -->
