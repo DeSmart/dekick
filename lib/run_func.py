@@ -16,7 +16,6 @@ from lib.settings import (
     C_TIME,
     TERMINAL_COLUMN_WIDTH,
     get_seconds_since_dekick_start,
-    is_profiler_mode,
 )
 from lib.spinner import DEFAULT_SPINNER_MODE, create_spinner
 
@@ -68,9 +67,8 @@ def run_func(
             out["text"] = text
         function_end = get_seconds_since_dekick_start()
         elapsed_time = function_end - function_start
-        if is_profiler_mode() :
-            logging.debug("function elapsed time: %s", f"{elapsed_time:.2f}")
-            out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
+        logging.debug("function elapsed time: %s", f"{elapsed_time:.2f}")
+        out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
 
     except Exception as error:  # pylint: disable=broad-except
 
