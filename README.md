@@ -17,6 +17,7 @@
   - [This project is still under development](#this-project-is-still-under-development)
 - [Troubleshooting](#troubleshooting)
   - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
+  - [Error response from deamon: network 45677... not found](#error-response-from-deamon-network-45677-not-found)
 - [Contribution Guidelines](#contribution-guidelines)
   - [How to Contribute](#how-to-contribute)
   - [Code Standards](#code-standards)
@@ -168,6 +169,50 @@ sudo usermod -aG docker $USER
 
 Please refer to [post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/) and [troubleshooting](https://docs.docker.com/engine/install/troubleshoot/) sections of the Docker documentation for more details.
 
+## Error response from deamon: network 45677... not found
+<a id="markdown-error-response-from-deamon%3A-network-45677...-not-found" name="error-response-from-deamon%3A-network-45677...-not-found"></a>
+This error can occur when trying to start a container that is configured to use a non-existent network.
+To resolve this issue, you can try the following steps:
+1. Check the name of the network you are trying to use. Make sure you have spelled the name correctly and that the network exists. You can check the list of available networks on your system by running the command:
+```shell
+docker network ls
+```
+2. If the network does not exist, you can create it using the following command:
+```shell
+docker network create {NETWORK_NAME}
+```
+Replace `{NETWORK_NAME}` with the name you want to give to the network.
+
+However, this error can also be caused by issues with running containers or volumes as well. In this case, you may need to shut down all containers or remove unused volumes to resolve the issue. Additionally you may also restart Docker.
+
+To shut down all running containers you can use:
+```shell
+docker ps -q  | xargs docker kill
+```
+
+To remove unused volumes you can use:
+```shell
+docker system prune -a --volume
+```
+It is important to note that this command will remove all unused resources, so make sure that you don't have any important data stored in the volumes that you are removing.
+
+To restart docker you need to use one of the follow instruction:
+
+on macOS you can just restart `docker desktop`
+
+on Linux:
+```shell
+sudo systemctl restart docker
+```
+
+
+If you encounter an error and there is no specific information available, you should check the Docker container logs using the following command:
+```shell
+docker logs {CONTAINER_ID} -f
+```
+Replace `{CONTAINER_ID}` with the `ID` of the specific container you are interested in. This command will display the logs for the container, which may contain helpful information for troubleshooting the issue.
+
+
 # Contribution Guidelines
 <a id="markdown-contribution-guidelines" name="contribution-guidelines"></a>
 Thank you for your interest in contributing to DeKick! We welcome contributions from anyone, whether you are a seasoned developer or just starting out.
@@ -216,25 +261,37 @@ DEKICK_DEBUGGER=true dekick local
 ```
 This will launch DeKick in local mode and allow you to step through the code and debug any issues that may arise.
 
+DeKick uses the debugger from VS Code, which allows you to set breakpoints and step through the code line by line. Configuration for debugger you can find in a `launch.json` file.
+
+You can start the debugger by clicking on the `RUN AND DEBUG` button in the debug panel. This will start the DeKick application in debugging mode.
+
+In order to set breakpoints in the code you need to click on the left-hand margin in VS Code. When the application reaches a breakpoint, it will pause execution and you can inspect the state of the code and step through it line by line to identify any issues.
+
+Debugging is an important tool for identifying and fixing issues in your code, and using the VS Code debugger in DeKick makes it easy to do so.
+
 ## How to test DeKick
 <a id="markdown-how-to-test-dekick" name="how-to-test-dekick"></a>
-Testing DeKick is an important part of the development process, as it ensures that the code is functioning correctly and meets the project's requirements. In `DeKick` we use `pytest` to write tests. Here's how to run tests on DeKick:
+Testing DeKick is an important part of the development process, as it ensures that the code is functioning correctly and meets the project's requirements. In `DeKick` we use `pytest` with `xdist` plugin, that allows you to run tests in parallel across multiple CPUs or machines.
+
+When you run `pytest` with `xdist` enabled, it will distribute the tests across multiple workers `(processes or threads)` and execute them simultaneously. The number of workers can be specified through the `-n` option. By default, `pytest-xdist` uses 2 threads for parallel test execution. One of the benefits of using xdist is that it can significantly reduce the execution time of test suites, especially for large projects with many tests.
+
+Here's how to run tests on DeKick:
 
 1. To run tests in `DeKick`, navigate to the repository directory on your local machine.
 2. Set up your environment: Before running the tests, you will need to set up your environment. Make sure that you have a `.env` file that contains the necessary environment variables, including the `BOILERPLATES_GIT_URL` key which should contain the URL to the repository with the boilerplates connected.
-3. Run all tests: To run all tests, use the command 
+3. Run all tests: To run all tests, use the command
 ```shell
 dekick pytest
 ```
 This command will run all tests in the repository and display the results.
 
-4. Run specific tests: If you want to run a specific test, use the command 
+1. Run specific tests: If you want to run a specific test, use the command
 ```shell
 dekick pytest tests/{CHOSEN_TEST}
 ```
 Replace `{CHOSEN_TEST}` with the name of the test file or test method that you want to run.
 
-5. Analyze test results: After running the tests, analyze the results to ensure that all tests pass and that the code is functioning as expected.
+1. Analyze test results: After running the tests, analyze the results to ensure that all tests pass and that the code is functioning as expected.
 
 ## What are Boilerplates
 <a id="markdown-what-are-boilerplates" name="what-are-boilerplates"></a>
