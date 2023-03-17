@@ -71,11 +71,7 @@ def ui_docker_compose(**kwargs):
 
     del kwargs["text"]
 
-    return run_func(
-        text=text,
-        func=wrapper,
-        func_args=kwargs
-    )
+    return run_func(text=text, func=wrapper, func_args=kwargs)
 
 
 def docker_compose(
@@ -139,11 +135,13 @@ def wait_for_log(
 
     while timer < timeout:
         log = get_container_log(container_name, get_seconds_since_dekick_start())
-        if failed_string in log:
+        if failed_string and failed_string in log:
             raise Exception()
-        if failed_string in log and search_string in log:
+        if failed_string and failed_string in log and search_string in log:
             raise Exception()
-        if search_string in log and failed_string not in log:
+        if search_string in log and not failed_string:
+            return
+        if search_string in log and failed_string and failed_string not in log:
             return
         (exit_code, status) = get_container_exit_code(container_name)
 
