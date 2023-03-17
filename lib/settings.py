@@ -83,7 +83,6 @@ DEKICK_PYTEST_MODE = False
 DEKICK_CI_MODE = False
 
 
-
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""
     global DEKICK_TIME_START  # pylint: disable=global-statement
@@ -93,6 +92,7 @@ def set_dekick_time_start():
 def get_dekick_time_start() -> float:
     """Get DEKICK_TIME_START"""
     return DEKICK_TIME_START
+
 
 def get_seconds_since_dekick_start() -> int:
     """Get seconds since dekick start"""
