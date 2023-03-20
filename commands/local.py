@@ -44,6 +44,7 @@ from lib.settings import (
     is_ci,
     is_pytest,
 )
+from providers.credentials import get_envs
 
 install()
 console = Console()
@@ -86,7 +87,10 @@ def local(parser: Namespace) -> int:
     )
 
     parser_default_funcs(parser)
-    install_logger(parser.log_level, parser.log_filename, )
+    install_logger(
+        parser.log_level,
+        parser.log_filename,
+    )
     migrate(migrate_from_version)
     check_dekickrc()
     check_flavour()
@@ -96,7 +100,8 @@ def local(parser: Namespace) -> int:
     update_dekick()
     check_project_group()
     first_run_banner()
-    get_env_from_gitlab()
+    # get_env_from_gitlab()
+    get_envs("local")
 
     return flavour_action(action="local")
 
@@ -104,7 +109,7 @@ def local(parser: Namespace) -> int:
 def flavour_action(action: str, *args, **kwargs) -> int:
     """Runs the specified action from the current flavour"""
     flavour = get_flavour()
-    return import_module(f"flavours.{flavour}.actions.{action}").main( *args, **kwargs)
+    return import_module(f"flavours.{flavour}.actions.{action}").main(*args, **kwargs)
 
 
 def check_project_group():
@@ -117,7 +122,9 @@ def check_project_group():
     if project_name:
         names.append(f"project {C_CODE}{project_name}{C_END}")
     names_text = ", ".join(names)
-    run_func(text=f"Setting up {names_text}", )
+    run_func(
+        text=f"Setting up {names_text}",
+    )
 
 
 def check_gitlabrc():
@@ -179,7 +186,7 @@ def validate_dekickrc():
     """Validates .dekickrc.yml file"""
     run_func(
         text=f"Validating {C_FILE}{DEKICKRC_FILE}{C_END} file",
-        func=compare_dekickrc_file
+        func=compare_dekickrc_file,
     )
 
 
