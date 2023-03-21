@@ -1,11 +1,11 @@
 from logging import fatal, warning
-from os import getcwd, getenv, getuid
+from os import getcwd
 
 from rich.traceback import install
 
+from lib.dekickrc import get_dekick_version
 from lib.dotenv import get_dotenv_var
 from lib.rbash import rbash
-from lib.tests.dind import rbash_dind
 
 install()
 BOILERPLATES_ROOT = getcwd() + "/tmp/boilerplates/"
@@ -28,21 +28,30 @@ def get_boilerplates_git_url() -> str:
     return boilerplates_git_url
 
 
+def get_boilerplates_tag() -> str:
+    """Gets boilerplates branch"""
+    return get_dekick_version()
+
+
 def download_boilerplates() -> bool:
     """Downloads boilerplates to BOILERPLATES_BASE_PATH directory"""
     boilerplates_git_url = get_boilerplates_git_url()
     boilerplates_path = get_boilerplates_path()
+    boilerplates_tag = get_boilerplates_tag()
 
     ret = rbash(
         "Downloading boilerplates",
-        f'git clone "{boilerplates_git_url}" "{boilerplates_path}"'
-        #        + f'cd {boilerplates_path}; git config --global --add safe.directory "*"',
+        f'git clone -b master "{boilerplates_git_url}" "{boilerplates_path}"',
     )
 
     if ret["code"] == 128:
         warning("Boilerplates already exists")
         reset_boilerplates()
 
+    rbash(
+        f"Switching to tag/branch {boilerplates_tag}",
+        f"cd {boilerplates_path}; git checkout {boilerplates_tag}",
+    )
     return rbash("Checking directory exists", f"ls {boilerplates_path}")["stdout"] != ""
 
 
@@ -54,7 +63,7 @@ def delete_boilerplates() -> bool:
     )
 
 
-def copy_flavour_to_container(flavour: str, version: str, container_id: str) -> bool:
+def copy_flavour_to_container(flavour: str, version: str, container_id: str):
     """Copies boilerplate flavour to flavour generated directory"""
     boilerplates_path = get_boilerplates_path()
     project_root = get_project_root()
@@ -80,6 +89,7 @@ def get_project_root() -> str:
 def reset_boilerplates() -> bool:
     """Resets boilerplates repository to initial position"""
     boilerplates_path = get_boilerplates_path()
+
     rbash(
         "Resetting boilerplates",
         f"cd {boilerplates_path}; git pull; git reset --hard HEAD; git clean -fdx",

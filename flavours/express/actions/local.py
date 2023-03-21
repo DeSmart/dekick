@@ -10,7 +10,6 @@ from flavours.shared import (
     pull_and_build_images,
     start_services,
     wait_for_container,
-    wait_for_database,
     yarn_build,
     yarn_install,
 )
@@ -27,6 +26,5 @@ def main():
     yarn_install()
     yarn_build()
     start_services()
-    wait_for_database()
     ui_seed()
     wait_for_container(search_string="API @ port")

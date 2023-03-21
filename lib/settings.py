@@ -82,8 +82,6 @@ DEKICK_PYTEST_MODE = False
 
 DEKICK_CI_MODE = False
 
-DEKICK_PROFILER_MODE = False
-
 
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""
@@ -94,6 +92,7 @@ def set_dekick_time_start():
 def get_dekick_time_start() -> float:
     """Get DEKICK_TIME_START"""
     return DEKICK_TIME_START
+
 
 def get_seconds_since_dekick_start() -> int:
     """Get seconds since dekick start"""
@@ -125,12 +124,3 @@ def set_ci_mode(mode: bool):
 def is_ci() -> bool:
     """Check if DeKick is running in CI/CD environment"""
     return DEKICK_CI_MODE
-
-def set_profiler_mode(mode: bool):
-    """Sets DEKICK_PROFILER_MODE to True"""
-    global DEKICK_PROFILER_MODE  # pylint: disable=global-statement
-    DEKICK_PROFILER_MODE = mode
-
-def is_profiler_mode() -> bool:
-    """Check if DeKick is running in profiler mode"""
-    return DEKICK_PROFILER_MODE

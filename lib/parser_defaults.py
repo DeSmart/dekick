@@ -1,4 +1,4 @@
-from lib.settings import set_ci_mode, set_profiler_mode, set_pytest_mode
+from lib.settings import set_ci_mode, set_pytest_mode
 from lib.spinner import set_spinner_mode
 
 
@@ -52,21 +52,12 @@ def parser_default_args(parser):
             + "CI/CD pipeline, when there's no TTY, it's automatically used 'simple'",
         )
 
-    def profiler():
-        """Flag to indicate if we want to see a function time"""
-        parser.add_argument(
-            "--profiler",
-            required=False,
-            action="store_true",
-            help="used to see the duration of a function"
-        )
 
     log_level()
     log_filename()
     ci_cd()
     pytest()
     spinner()
-    profiler()
 
 
 def parser_default_funcs(parser):
@@ -83,10 +74,7 @@ def parser_default_funcs(parser):
     def spinner():
         set_spinner_mode(parser.spinner)
 
-    def profiler():
-        set_profiler_mode(parser.profiler)
 
     pytest()
     ci_cd()
     spinner()
-    profiler()
