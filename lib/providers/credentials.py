@@ -1,6 +1,6 @@
 from importlib import import_module
 
-from dekickrc import get_dekickrc_value
+from lib.dekickrc import get_dekickrc_value
 
 INIT = False
 
@@ -31,8 +31,11 @@ def _init():
 
 
 def _get_driver_module():
-    return import_module(f"providers.credentials.{_get_driver()}")
+    module_name = _get_driver()
+    get_module = import_module(f"lib.drivers.credentials.{module_name}")
+    return get_module
 
 
-def _get_driver() -> str:
-    return get_dekickrc_value(".project.providers.credentials.driver")
+def _get_driver():
+    get_name = get_dekickrc_value("project.providers.credentials.driver")
+    return get_name

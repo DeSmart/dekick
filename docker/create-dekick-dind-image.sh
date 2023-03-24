@@ -10,3 +10,4 @@ docker buildx create --use --name multiarch
 docker buildx inspect --bootstrap
 docker buildx build --pull --platform="linux/amd64,linux/arm64/v8" --tag "${IMAGE}" --push dind/
 rm dind/requirements.txt
+docker pull "${IMAGE}"

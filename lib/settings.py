@@ -23,12 +23,13 @@ DEKICK_BOILERPLATES = [
 ]
 DEKICK_FLAVOURS = ["express", "react", "laravel"]
 
+
 # Available commands to use with dekick
-# Warning! If you add a new command, you must add it to ./docker/docker-entrypoint.sh also!
 DEKICK_COMMANDS = [
     "artisan",
     "build",
     "composer",
+    "credentials",
     "docker-compose",
     "knex",
     "local",
@@ -45,6 +46,7 @@ DEKICK_COMMANDS = [
     "update",
     "yarn",
 ]
+
 
 C_CMD = colors.fg("purple")
 C_CODE = colors.fg("orange")
@@ -82,6 +84,13 @@ DEKICK_PYTEST_MODE = False
 
 DEKICK_CI_MODE = False
 
+
+def save_commands():
+    """Save commands to file for use with ./docker/dekick/docker-entrypoint.sh"""
+    with open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8") as f:
+        f.write("#!/bin/bash\n")
+        f.write("export DEKICK_COMMANDS=(\"" + '" "'.join(DEKICK_COMMANDS) + "\")")
+save_commands()
 
 def set_dekick_time_start():
     """Update DEKICK_TIME_START"""

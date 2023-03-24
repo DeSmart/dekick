@@ -44,7 +44,6 @@ from lib.settings import (
     is_ci,
     is_pytest,
 )
-from providers.credentials import get_envs
 
 install()
 console = Console()
@@ -100,8 +99,8 @@ def local(parser: Namespace) -> int:
     update_dekick()
     check_project_group()
     first_run_banner()
-    # get_env_from_gitlab()
-    get_envs("local")
+    get_env_from_gitlab()
+    # get_envs("local")
 
     return flavour_action(action="local")
 
@@ -202,7 +201,7 @@ def install_logger(level, filename):
     logging.debug(locals())
 
 
-def get_env_from_gitlab() -> bool:
+def get_env_from_gitlab(scope: str = "local") -> bool:
     """Gets .env file from GitLab"""
 
     if is_pytest() or not get_dekickrc_value("gitlab.getenv") or is_ci():
@@ -223,7 +222,7 @@ def get_env_from_gitlab() -> bool:
         project_name = str(get_dekickrc_value("project.name"))
 
         project_vars = get_project_var(
-            group=project_group, project=project_name, variable="ENVFILE", scope="local"
+            group=project_group, project=project_name, variable="ENVFILE", scope=scope
         )
 
         if not os.path.isfile(DEKICK_DOTENV_PATH):

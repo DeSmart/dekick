@@ -3,6 +3,9 @@ project:
   group: str(default=,required=false)
   artifacts:
     - path: str(default=,required=false)
+  providers:
+    credentials:
+      driver: str(default=,required=false)
 gitlab:
   url: str(default=,required=false)
   getenv: bool(default=false,required=false)
