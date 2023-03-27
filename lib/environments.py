@@ -1,6 +1,9 @@
 from lib.dekickrc import get_dekickrc_value
 
 
-def get_environments():
+def get_environments() -> list:
     """Get list of environments"""
-    return get_dekickrc_value("project.environments")
+    environments_list = []
+    for environment in get_dekickrc_value("project.environments"): # type: ignore
+        environments_list.extend(list(environment.values()))
+    return environments_list
