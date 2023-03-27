@@ -102,8 +102,6 @@ def check_file(file) -> None:
         sys.exit(1)
 
 
-
-
 def default_env(override_env: Union[dict, None] = None) -> dict:
     """
     Generate default environment for use with subshell commands

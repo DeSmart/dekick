@@ -19,7 +19,6 @@ from commands.update import update
 from lib import logger
 from lib.dekickrc import compare_dekickrc_file, get_dekickrc_value
 from lib.fs import chown
-from lib.glcli import get_project_var
 from lib.migration import migrate
 from lib.misc import (
     check_command,
@@ -30,6 +29,7 @@ from lib.misc import (
     is_port_free,
 )
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.providers.credentials import get_envs, get_info
 from lib.run_func import run_func
 from lib.settings import (
     C_CMD,
@@ -99,8 +99,7 @@ def local(parser: Namespace) -> int:
     update_dekick()
     check_project_group()
     first_run_banner()
-    get_env_from_gitlab()
-    # get_envs("local")
+    get_envs_from_credentials_provider()
 
     return flavour_action(action="local")
 
@@ -124,14 +123,6 @@ def check_project_group():
     run_func(
         text=f"Setting up {names_text}",
     )
-
-
-def check_gitlabrc():
-    """Checks if .gitlabrc file exists"""
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
-        return
-    token_file = "/tmp/.gitlabrc"
-    check_file(token_file)
 
 
 def check_command_docker():
@@ -201,46 +192,35 @@ def install_logger(level, filename):
     logging.debug(locals())
 
 
-def get_env_from_gitlab(scope: str = "local") -> bool:
-    """Gets .env file from GitLab"""
+def get_envs_from_credentials_provider():
+    """Gets environment variables from credentials provider and saves them to .env file"""
 
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv") or is_ci():
-        return True
-
-    check_gitlabrc()
-    gitlab_url = get_dekickrc_value("gitlab.url")
+    if is_pytest() or is_ci():
+        return
 
     def actual_get():
-
-        if not gitlab_url:
-            return {
-                "success": False,
-                "text": f"GitLab URL is not set in {C_FILE}{DEKICKRC_FILE}{C_END} file",
-            }
-
-        project_group = str(get_dekickrc_value("project.group"))
-        project_name = str(get_dekickrc_value("project.name"))
-
-        project_vars = get_project_var(
-            group=project_group, project=project_name, variable="ENVFILE", scope=scope
-        )
+        try:
+            dotenv = get_envs(env="local")
+        except Exception as error:  # pylint: disable=broad-except
+            return {"success": False, "text": error.args[0]}
 
         if not os.path.isfile(DEKICK_DOTENV_PATH):
-            save_dotenv(project_vars)
+            save_dotenv(dotenv)
 
         diff = get_colored_diff(
-            project_vars, open(f"{PROJECT_ROOT}/.env", encoding="utf-8").read()
+            dotenv, open(f"{PROJECT_ROOT}/.env", encoding="utf-8").read()
         )
 
         if diff is not False and not is_pytest():
             return {
                 "success": True,
                 "func": ask_overwrite,
-                "func_args": {"diff": diff, "project_vars": project_vars},
+                "func_args": {"diff": diff, "project_vars": dotenv},
             }
 
-    return run_func(
-        f"Downloading {C_FILE}.env{C_END} from GitLab {C_CMD}{gitlab_url}{C_END}",
+    credentials_driver_info = get_info()
+    run_func(
+        f"Downloading {C_FILE}.env{C_END} from {credentials_driver_info}",
         func=actual_get,
     )
 

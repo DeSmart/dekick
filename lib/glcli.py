@@ -20,7 +20,7 @@ def auth() -> gitlab.Gitlab:
     token = open(token_file, encoding="utf-8").read().replace("token=", "").strip()
 
     logging.info("Authenticating to Gitlab with a token from %s", token_file)
-    logging.debug("Token: %s", token)
+    logging.debug("Using token: %s", token.replace(token[1:-1], "**********"))
 
     gitlab_url = get_dekickrc_value("gitlab.url")
 

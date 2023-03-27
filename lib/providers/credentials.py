@@ -6,22 +6,37 @@ INIT = False
 
 
 def driver_init():
+    """Initialize driver"""
+    global INIT  # pylint: disable=global-statement
+    if INIT is True:
+        return
     module = _get_driver_module()
     module.init()
-    global INIT
     INIT = True
 
 
-def get_vars(env: str) -> dict:
+def get_info() -> str:
     _init()
     module = _get_driver_module()
-    return module.get_vars(env)
+    return module.info()
 
 
-def update_vars(env: str, vars: dict) -> dict:
+def get_envs(env: str) -> str:
     _init()
     module = _get_driver_module()
-    return module.update_vars(env, vars)
+    return module.get_envs(env)
+
+
+def update_envs(env: str, vars: dict):
+    _init()
+    module = _get_driver_module()
+    module.update_envs(env, vars)
+
+
+def parser_driver_arguments(parser):
+    _init()
+    module = _get_driver_module()
+    return module.arguments(parser)
 
 
 def _init():
