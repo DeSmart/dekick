@@ -4,10 +4,10 @@ from argparse import ArgumentParser, Namespace
 
 from halo import logging
 
+from lib.environments import get_environments
 from lib.logger import log_exception
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.providers.credentials import get_vars
-from lib.run_func import run_func
 
 
 def arguments(parser: ArgumentParser):
@@ -17,6 +17,7 @@ def arguments(parser: ArgumentParser):
         required=False,
         default="",
         help="choose environment to get credentials for",
+        choices=get_environments(), # type: ignore
         )
     parser.set_defaults(func=main)
     parser_default_args(parser)
@@ -37,4 +38,3 @@ def main(parser: Namespace, args: list): # pylint: disable=unused-argument
 def get_envs(func_param):
     """Show credentials."""
     get_vars(func_param)
- 
