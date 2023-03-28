@@ -12,15 +12,10 @@ def init():
     """Initialize this driver"""
 
 
+# pylint: disable=unused-argument
 def get_envs(*args, env: str, gitlab_token: str = "", **kwargs) -> str:
     """Get all variables from Gitlab"""
-
     return get_project_var(scope=env, token=gitlab_token)
-
-
-def update_envs(env: str, vars: dict) -> None:
-    """Updates all project variables in Gitlab"""
-    return
 
 
 def arguments(parser: ArgumentParser):
