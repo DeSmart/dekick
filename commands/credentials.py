@@ -4,7 +4,7 @@ from importlib import import_module
 
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 
-DEKICK_CREDENTIALS_SUB_COMMANDS = ["get", "update", "savedotenv"]
+DEKICK_CREDENTIALS_SUB_COMMANDS = ["get"]
 
 
 def arguments(parser: ArgumentParser):
