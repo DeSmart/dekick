@@ -7,7 +7,7 @@ project:
     credentials:
       driver: str(default=,required=false)
   environments:
-    - name: str(default=test,required=false)
+    - name: str(default=test,required=true)
 gitlab:
   url: str(default=,required=false)
   getenv: bool(default=false,required=false)

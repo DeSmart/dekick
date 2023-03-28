@@ -152,13 +152,13 @@ def version_int(version: str) -> int:
         int: integer representation of version (e.g. 100000070002)
     """
 
-    if isinstance(version, str):
+    if re.match(r"^\d+\.\d+\.\d+$", version) is None:
         return sys.maxsize
 
     versions = version.split(".")
     final_version = "1"
 
-    for item in versions: # type: ignore
+    for item in versions:  # type: ignore
         final_version += item.zfill(4)
 
     return int(final_version)

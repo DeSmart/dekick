@@ -1,6 +1,7 @@
 """Runs migrations from migrations/ directory"""
 from importlib import import_module
 from os import listdir
+from re import match
 
 from lib.dekickrc import version_int
 from lib.run_func import run_func
@@ -20,7 +21,7 @@ def migrate(migrate_from_version: str = ""):
 
         for migration_file in migration_files:
 
-            if not "__" in migration_file:
+            if not match(r"^\d+_\d+_\d+__\d+_\d+_\d+", migration_file):
                 continue
 
             migration_file_parsed = migration_file.replace(".py", "")
