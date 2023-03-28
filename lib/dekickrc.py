@@ -170,7 +170,11 @@ def dekickrc_tmpl_parse_value(value: str) -> dict:
         return {"type": "list", "default": value}
 
     match = re.findall(r"(.*)\(default=(.*),required=(true|false)\)", value)
+
     var_type = match[0][0]
+    if re.match(r"^\[.*\]$", value):
+        var_type = re.sub(r"\(default=.*\)", "", value)
+
     default_value = match[0][1]
     required = True if match[0][2] == "true" else False
 
