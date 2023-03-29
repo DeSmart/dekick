@@ -6,7 +6,7 @@ from lib.logger import install_logger
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.providers.credentials import get_envs, get_info, parser_driver_arguments
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_CODE, C_END, C_FILE, DEKICK_DOTENV_FILE
+from lib.settings import C_CMD, C_CODE, C_END, C_FILE, DEKICK_DOTENV_FILE, is_pytest
 
 
 def arguments(parser: ArgumentParser):
@@ -33,6 +33,8 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
 
 def ui_save_dotenv(**kwargs):
     """UI wrapper for docker_compose"""
+    if is_pytest():
+        return
 
     def wrapper(**kwargs):
         try:
@@ -44,7 +46,8 @@ def ui_save_dotenv(**kwargs):
     driver_info = get_info()
 
     return run_func(
-        text=f"Saving credentials to {C_FILE}{DEKICK_DOTENV_FILE}{C_END} for {C_CMD}env {env}{C_END} using {C_CODE}{driver_info}{C_END}",
+        text=f"Saving credentials to {C_FILE}{DEKICK_DOTENV_FILE}{C_END} for "
+        + f"{C_CMD}env {env}{C_END} using {C_CODE}{driver_info}{C_END}",
         func=wrapper,
         func_args=kwargs,
     )
@@ -53,7 +56,13 @@ def ui_save_dotenv(**kwargs):
 def save_dotenv(*args, **kwargs) -> int:
     """Saves credentials to .env file."""
     envs = get_envs(*args, **kwargs)
-    with open(DEKICK_DOTENV_FILE, "w", encoding="utf-8") as file:
-        file.write(envs)
+
+    try:
+        with open(DEKICK_DOTENV_FILE, "w", encoding="utf-8") as file:
+            file.write(envs)
+    except PermissionError as exception:
+        raise PermissionError(
+            f"Credentials: Permission denied while writing to file {DEKICK_DOTENV_FILE}"
+        ) from exception
 
     return 0
