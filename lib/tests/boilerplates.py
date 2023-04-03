@@ -45,6 +45,11 @@ def download_boilerplates() -> bool:
     boilerplates_path = get_boilerplates_path()
     boilerplates_tag = get_boilerplates_tag()
 
+    rbash(
+        "Adding boilerplates to safe directories",
+        f"git config --global --add safe.directory {boilerplates_path}",
+    )
+
     ret = rbash(
         "Downloading boilerplates",
         f'git clone -b master "{boilerplates_git_url}" "{boilerplates_path}"',
