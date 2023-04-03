@@ -54,7 +54,7 @@ def run_func(
     out = {}
 
     try:
-        function_start = get_seconds_since_dekick_start()
+        function_start = get_seconds_since_dekick_start(1)
         if func_args is not None:
             out = func(**func_args)
         else:
@@ -65,9 +65,9 @@ def run_func(
             out["text"] = text
         if "text" in out and out["text"] == "":
             out["text"] = text
-        function_end = get_seconds_since_dekick_start()
-        elapsed_time = function_end - function_start
-        logging.debug("function elapsed time: %s", f"{elapsed_time:.2f}")
+        function_end = get_seconds_since_dekick_start(1)
+        elapsed_time = round(function_end - function_start, 1)
+        logging.debug("function elapsed time: %s", f"{elapsed_time}")
         out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
 
     except Exception as error:  # pylint: disable=broad-except
@@ -117,7 +117,7 @@ def run_func(
     return True
 
 
-def get_elapsed_time(text: str, elapsed_time: int) -> str:
+def get_elapsed_time(text: str, elapsed_time: float) -> str:
     """Show elapsed time"""
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     elapsed_time_formatted = f"{elapsed_time}s"

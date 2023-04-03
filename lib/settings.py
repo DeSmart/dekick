@@ -106,9 +106,9 @@ def get_dekick_time_start() -> float:
     return DEKICK_TIME_START
 
 
-def get_seconds_since_dekick_start() -> int:
+def get_seconds_since_dekick_start(ndigits: int = 0) -> float:
     """Get seconds since dekick start"""
-    return int(round(time.time() - get_dekick_time_start()))
+    return round(time.time() - get_dekick_time_start(), ndigits)
 
 
 def is_dekick_dockerized() -> bool:
