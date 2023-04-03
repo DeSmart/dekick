@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DEKICK_COMMANDS=("artisan" "build" "composer" "docker-compose" "knex" "local" "logs" "node" "npm" "npx" "phpunit" "pint" "seed" "status" "stop" "test" "update" "yarn")
-
 user=$(whoami)
 
 ln -s "${DEKICK_PATH}/dekick.py" /usr/bin/dekick > /dev/null 2>&1
@@ -13,6 +11,8 @@ if [ "$user" = "root" ] && [ -n "$CURRENT_USERNAME" ] && [ -n "$CURRENT_UID" ]; 
   su -p -c "/usr/local/bin/docker-entrypoint.sh $*" "${CURRENT_USERNAME}"
   exit $?
 fi
+
+source "$DEKICK_PATH/commands.sh"
 
 export HOME=/tmp/homedir
 

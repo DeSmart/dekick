@@ -17,9 +17,8 @@ from commands.docker_compose import docker_compose
 from commands.stop import stop
 from commands.update import update
 from lib import logger
-from lib.dekickrc import compare_dekickrc_file, get_dekickrc_value
+from lib.dekickrc import get_dekickrc_value, ui_validate_dekickrc
 from lib.fs import chown
-from lib.glcli import get_project_var
 from lib.migration import migrate
 from lib.misc import (
     check_command,
@@ -30,6 +29,7 @@ from lib.misc import (
     is_port_free,
 )
 from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.providers.credentials import get_envs, get_info
 from lib.run_func import run_func
 from lib.settings import (
     C_CMD,
@@ -86,7 +86,10 @@ def local(parser: Namespace) -> int:
     )
 
     parser_default_funcs(parser)
-    install_logger(parser.log_level, parser.log_filename, )
+    install_logger(
+        parser.log_level,
+        parser.log_filename,
+    )
     migrate(migrate_from_version)
     check_dekickrc()
     check_flavour()
@@ -96,7 +99,7 @@ def local(parser: Namespace) -> int:
     update_dekick()
     check_project_group()
     first_run_banner()
-    get_env_from_gitlab()
+    get_envs_from_credentials_provider()
 
     return flavour_action(action="local")
 
@@ -104,7 +107,7 @@ def local(parser: Namespace) -> int:
 def flavour_action(action: str, *args, **kwargs) -> int:
     """Runs the specified action from the current flavour"""
     flavour = get_flavour()
-    return import_module(f"flavours.{flavour}.actions.{action}").main( *args, **kwargs)
+    return import_module(f"flavours.{flavour}.actions.{action}").main(*args, **kwargs)
 
 
 def check_project_group():
@@ -117,15 +120,9 @@ def check_project_group():
     if project_name:
         names.append(f"project {C_CODE}{project_name}{C_END}")
     names_text = ", ".join(names)
-    run_func(text=f"Setting up {names_text}", )
-
-
-def check_gitlabrc():
-    """Checks if .gitlabrc file exists"""
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
-        return
-    token_file = "/tmp/.gitlabrc"
-    check_file(token_file)
+    run_func(
+        text=f"Setting up {names_text}",
+    )
 
 
 def check_command_docker():
@@ -143,8 +140,10 @@ def check_command_docker_compose():
     check_command(
         cmd_linux=["docker", "compose"],
         cmd_osx=["docker", "compose"],
-        hint_linux="Please install docker compose plugin using this instruction https://docs.docker.com/engine/install/",
-        hint_osx="Please install Docker Desktop using this instruction https://docs.docker.com/desktop/install/mac-install/",
+        hint_linux="Please install docker compose plugin using "
+        + "this instruction https://docs.docker.com/engine/install/",
+        hint_osx="Please install Docker Desktop using this "
+        + "instruction https://docs.docker.com/desktop/install/mac-install/",
         arguments=2,
         skip_if_dockerized=True,
     )
@@ -175,18 +174,13 @@ def check_flavour():
     run_func("Checking flavour", func=run)
 
 
-def validate_dekickrc():
-    """Validates .dekickrc.yml file"""
-    run_func(
-        text=f"Validating {C_FILE}{DEKICKRC_FILE}{C_END} file",
-        func=compare_dekickrc_file
-    )
-
-
 def check_dekickrc():
     """Checks if .dekickrc.yml file exists and is valid"""
     check_file(file=DEKICKRC_PATH)
-    validate_dekickrc()
+    run_func(
+        text=f"Validating {C_FILE}{DEKICKRC_FILE}{C_END} file",
+        func=ui_validate_dekickrc,
+    )
 
 
 def install_logger(level, filename):
@@ -195,46 +189,35 @@ def install_logger(level, filename):
     logging.debug(locals())
 
 
-def get_env_from_gitlab() -> bool:
-    """Gets .env file from GitLab"""
+def get_envs_from_credentials_provider():
+    """Gets environment variables from credentials provider and saves them to .env file"""
 
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv") or is_ci():
-        return True
-
-    check_gitlabrc()
-    gitlab_url = get_dekickrc_value("gitlab.url")
+    if is_pytest() or is_ci():
+        return
 
     def actual_get():
-
-        if not gitlab_url:
-            return {
-                "success": False,
-                "text": f"GitLab URL is not set in {C_FILE}{DEKICKRC_FILE}{C_END} file",
-            }
-
-        project_group = str(get_dekickrc_value("project.group"))
-        project_name = str(get_dekickrc_value("project.name"))
-
-        project_vars = get_project_var(
-            group=project_group, project=project_name, variable="ENVFILE", scope="local"
-        )
+        try:
+            dotenv = get_envs(env="local")
+        except Exception as error:  # pylint: disable=broad-except
+            return {"success": False, "text": error.args[0]}
 
         if not os.path.isfile(DEKICK_DOTENV_PATH):
-            save_dotenv(project_vars)
+            save_dotenv(dotenv)
 
         diff = get_colored_diff(
-            project_vars, open(f"{PROJECT_ROOT}/.env", encoding="utf-8").read()
+            dotenv, open(f"{PROJECT_ROOT}/.env", encoding="utf-8").read()
         )
 
         if diff is not False and not is_pytest():
             return {
                 "success": True,
                 "func": ask_overwrite,
-                "func_args": {"diff": diff, "project_vars": project_vars},
+                "func_args": {"diff": diff, "project_vars": dotenv},
             }
 
-    return run_func(
-        f"Downloading {C_FILE}.env{C_END} from GitLab {C_CMD}{gitlab_url}{C_END}",
+    credentials_driver_info = get_info()
+    run_func(
+        f"Downloading {C_FILE}.env{C_END} from {credentials_driver_info}",
         func=actual_get,
     )
 

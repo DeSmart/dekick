@@ -1,5 +1,6 @@
 from logging import fatal, warning
 from os import getcwd
+from re import match
 
 from rich.traceback import install
 
@@ -30,7 +31,12 @@ def get_boilerplates_git_url() -> str:
 
 def get_boilerplates_tag() -> str:
     """Gets boilerplates branch"""
-    return get_dekick_version()
+    dekick_version = get_dekick_version()
+
+    if dekick_version == "develop" or match(r"^\d+\.\d+\.\d+$", dekick_version):
+        return dekick_version
+
+    return f"feature/{dekick_version}"
 
 
 def download_boilerplates() -> bool:

@@ -64,7 +64,6 @@ def dekick_test(flavour: str, version: str) -> bool:
     proc = _dekick_command_wrapper(["test"], flavour, version)
     return proc["code"] == 0
 
-
 def dekick_dotenv_replace(flavour: str, version: str, env: dict) -> bool:
     """
     Replaces .env file contents with given environment variables as env

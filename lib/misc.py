@@ -10,6 +10,7 @@ import tempfile
 import time
 from importlib import import_module
 from os.path import basename, exists
+from re import sub
 from subprocess import PIPE, CalledProcessError, Popen
 from typing import Union
 
@@ -100,8 +101,6 @@ def check_file(file) -> None:
     else:
         spinner.fail()
         sys.exit(1)
-
-
 
 
 def default_env(override_env: Union[dict, None] = None) -> dict:
@@ -346,7 +345,10 @@ def first_run_banner():
 
 def get_compose_project_name() -> str:
     """Get compose project name"""
+    regex = r"[^a-zA-Z0-9_-]"
     project_name = get_dekickrc_value("project.name")
+    project_name = sub(regex, "-", str(project_name))
     project_group = get_dekickrc_value("project.group")
+    project_group = sub(regex, "-", str(project_group))
 
     return str(f"{project_group}_{project_name}" if project_group else project_name)
