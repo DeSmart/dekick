@@ -1,6 +1,7 @@
 from importlib import import_module
 
 from lib.dekickrc import get_dekickrc_value
+from lib.settings import DEKICKRC_FILE
 
 # Public functions
 
@@ -57,5 +58,9 @@ def _get_driver_module():
 
 def _get_driver_module_name():
     """Get driver name"""
-    get_name = get_dekickrc_value("project.providers.credentials.driver")
-    return get_name
+    module_name = get_dekickrc_value("project.providers.credentials.driver")
+    if not module_name:
+        raise ValueError(
+            f"Missing key project.providers.credentials.driver in {DEKICKRC_FILE}"
+        )
+    return module_name

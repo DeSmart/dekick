@@ -17,7 +17,7 @@ from commands.docker_compose import docker_compose
 from commands.stop import stop
 from commands.update import update
 from lib import logger
-from lib.dekickrc import compare_dekickrc_file, get_dekickrc_value
+from lib.dekickrc import get_dekickrc_value, ui_validate_dekickrc
 from lib.fs import chown
 from lib.migration import migrate
 from lib.misc import (
@@ -140,8 +140,10 @@ def check_command_docker_compose():
     check_command(
         cmd_linux=["docker", "compose"],
         cmd_osx=["docker", "compose"],
-        hint_linux="Please install docker compose plugin using this instruction https://docs.docker.com/engine/install/",
-        hint_osx="Please install Docker Desktop using this instruction https://docs.docker.com/desktop/install/mac-install/",
+        hint_linux="Please install docker compose plugin using "
+        + "this instruction https://docs.docker.com/engine/install/",
+        hint_osx="Please install Docker Desktop using this "
+        + "instruction https://docs.docker.com/desktop/install/mac-install/",
         arguments=2,
         skip_if_dockerized=True,
     )
@@ -172,18 +174,13 @@ def check_flavour():
     run_func("Checking flavour", func=run)
 
 
-def validate_dekickrc():
-    """Validates .dekickrc.yml file"""
-    run_func(
-        text=f"Validating {C_FILE}{DEKICKRC_FILE}{C_END} file",
-        func=compare_dekickrc_file,
-    )
-
-
 def check_dekickrc():
     """Checks if .dekickrc.yml file exists and is valid"""
     check_file(file=DEKICKRC_PATH)
-    validate_dekickrc()
+    run_func(
+        text=f"Validating {C_FILE}{DEKICKRC_FILE}{C_END} file",
+        func=ui_validate_dekickrc,
+    )
 
 
 def install_logger(level, filename):
