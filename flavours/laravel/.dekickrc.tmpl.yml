@@ -12,7 +12,7 @@ gitlab:
 dekick:
   auto_update: type="bool",default="true",validation="bool()",required="false"
   boilerplate: type="str",default="express",validation="boilerplate()",required="true"
-  ports: type="list",default="[{'port':8080,'service':'web'},{'port':5432,'service':'db'},{'port':1080,'service':mail}]",validation="{'port':'port()','service':'name()'}",required="true"
+  ports: type="list",default="[{'port':8080,'service':'web'},{'port':5432,'service':'db'},{'port':1080,'service':'mail'}]",validation="{'port':'port()','service':'name()'}",required="true"
   flavour: type="str",default="react",validation="flavour()",required="true"
   settings:
     apidoc:
