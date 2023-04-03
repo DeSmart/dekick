@@ -15,7 +15,7 @@ def validator_url(value: str) -> bool:
 
 def validator_name(value: str) -> bool:
     """Validates if the provided string contains only English characters plus '_' and '-' signs."""
-    return bool(re.match(r"^[a-zA-Z_\-/]+$", value))
+    return bool(re.match(r"^[\w\d_\-/]+$", value))
 
 
 def validator_any(value: str) -> bool:
