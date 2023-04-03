@@ -66,16 +66,8 @@ def seed() -> bool:
         return False
 
 
-def ui_seed() -> bool:
-    """It runs yarn in a container
-
-    Args:
-        args (list): _description_
-        env (Union[dict, None], optional): additional env added on top of default one. Defaults to None.
-        raise_exception (bool, optional): raise exception if something goes wrong. Defaults to True.
-        raise_error (bool, optional): raise error if something goes wrong. Defaults to True.
-        capture_output (bool, optional): capture output to return value. Defaults to False.
-    """
+def ui_seed(force: bool = False) -> bool:
+    """UI wrapper for seed"""
 
     def run():
         if seed():
@@ -91,7 +83,7 @@ def ui_seed() -> bool:
         "Do you want to seed database? (it will overwrite all data in the database)"
     )
 
-    if is_pytest() or Confirm.ask(question, default=False) is True:
+    if is_pytest() or force is True or Confirm.ask(question, default=False) is True:
         run_func(text="Seeding database", func=run)
 
     return True

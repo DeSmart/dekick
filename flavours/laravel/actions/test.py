@@ -3,7 +3,7 @@ Build for Laravel (backend) application
 """
 from rich.traceback import install
 
-from commands.local import get_env_from_gitlab
+from commands.local import get_envs_from_credentials_provider
 from commands.phpunit import phpunit
 from flavours.laravel.shared import (
     db_migrate,
@@ -20,7 +20,7 @@ install()
 def main():
     """Main"""
 
-    get_env_from_gitlab()
+    get_envs_from_credentials_provider()
     check_file(".env")
     laravel_nova_support()
     pull_and_build_images()

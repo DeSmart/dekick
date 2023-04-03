@@ -1,0 +1,20 @@
+project:
+  name: type="str",default="dekick",validation="name()",required="true"
+  group: type="str",default="",validation="name()",required="false"
+  artifacts: type="list",default="[{'path':'vendor/'}]",validation="{'path':'rel_path()'}",required="false"
+  providers:
+    credentials:
+      driver: type="str",default="gitlab",validation="credentials_driver()",required="true"
+  environments: type="list",default="[{'name':'test'},{'name':'beta'},{'name':'production'}]",validation="{'name':'name()'}",required="true"
+gitlab:
+  url: type="str",default="",validation="url()",required="false"
+  getenv: type="bool",default="false",validation="bool()",required="false"
+dekick:
+  auto_update: type="bool",default="true",validation="bool()",required="false"
+  boilerplate: type="str",default="express",validation="boilerplate()",required="true"
+  ports: type="list",default="[{'port':8080,'service':'web'},{'port':5432,'service':'db'},{'port':1080,'service':'mail'}]",validation="{'port':'port()','service':'name()'}",required="true"
+  flavour: type="str",default="react",validation="flavour()",required="true"
+  settings:
+    apidoc:
+      generate: type="bool",default="false",validation="bool()",required="true"
+      legacy: type="bool",default="false",validation="bool()",required="false"

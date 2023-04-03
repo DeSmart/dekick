@@ -133,7 +133,7 @@ def remove_unused_networks():
 def ask_for_confirmation():
     """Asks for confirmation before using a flag --remove"""
     question = (
-        "Are you sure you want to remove all containers?"
+        "Are you sure you want to remove all containers? "
         + "This could lead to data loss. (e.g. database)"
     )
     if Confirm.ask(question, default=False) is True:

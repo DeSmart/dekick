@@ -1,4 +1,4 @@
-![version 2.1.1](https://img.shields.io/badge/version-v2.1.1-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version 2.2.0](https://img.shields.io/badge/version-2.2.0-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -12,12 +12,20 @@
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [Command dekick local](#command-dekick-local)
-    - [How to run flavour specific commands like yarn, npm, npx, composer or artisan?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+    - [Command `dekick local`](#command-dekick-local)
+    - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
   - [This project is still under development](#this-project-is-still-under-development)
 - [Troubleshooting](#troubleshooting)
-  - [Docker permission denied "Got permission denied while trying to connect..."](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
-- [Contributing](#contributing)
+  - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
+  - [Error response from deamon: network 45677... not found](#error-response-from-deamon-network-45677-not-found)
+- [Contribution Guidelines](#contribution-guidelines)
+  - [How to Contribute](#how-to-contribute)
+  - [Code Standards](#code-standards)
+  - [How to debug your code during development](#how-to-debug-your-code-during-development)
+  - [How to test DeKick](#how-to-test-dekick)
+  - [What are Boilerplates](#what-are-boilerplates)
+  - [Issue Tracker](#issue-tracker)
+  - [Communication](#communication)
 
 <!-- /TOC -->
 
@@ -67,7 +75,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 # How it works?
 <a id="markdown-how-it-works%3F" name="how-it-works%3F"></a>
- - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.1.1`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
+ - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:develop`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
 
 # Quick start
@@ -161,6 +169,155 @@ sudo usermod -aG docker $USER
 
 Please refer to [post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/) and [troubleshooting](https://docs.docker.com/engine/install/troubleshoot/) sections of the Docker documentation for more details.
 
-# Contributing
-<a id="markdown-contributing" name="contributing"></a>
-If you want to contribute, please email dooshek@desmart.com
+## Error response from deamon: network 45677... not found
+<a id="markdown-error-response-from-deamon%3A-network-45677...-not-found" name="error-response-from-deamon%3A-network-45677...-not-found"></a>
+This error can occur when trying to start a container that is configured to use a non-existent network.
+To resolve this issue, you can try the following steps:
+1. Check the name of the network you are trying to use. Make sure you have spelled the name correctly and that the network exists. You can check the list of available networks on your system by running the command:
+```shell
+docker network ls
+```
+2. If the network does not exist, you can create it using the following command:
+```shell
+docker network create {NETWORK_NAME}
+```
+Replace `{NETWORK_NAME}` with the name you want to give to the network.
+
+However, this error can also be caused by issues with running containers or volumes as well. In this case, you may need to shut down all containers or remove unused volumes to resolve the issue. Additionally you may also restart Docker.
+
+To shut down all running containers you can use:
+```shell
+docker ps -q  | xargs docker kill
+```
+
+To remove unused volumes you can use:
+```shell
+docker system prune -a --volume
+```
+It is important to note that this command will remove all unused resources, so make sure that you don't have any important data stored in the volumes that you are removing.
+
+To restart docker you need to use one of the follow instruction:
+
+on macOS you can just restart `docker desktop`
+
+on Linux:
+```shell
+sudo systemctl restart docker
+```
+
+
+If you encounter an error and there is no specific information available, you should check the Docker container logs using the following command:
+```shell
+docker logs {CONTAINER_ID} -f
+```
+Replace `{CONTAINER_ID}` with the `ID` of the specific container you are interested in. This command will display the logs for the container, which may contain helpful information for troubleshooting the issue.
+
+
+# Contribution Guidelines
+<a id="markdown-contribution-guidelines" name="contribution-guidelines"></a>
+Thank you for your interest in contributing to DeKick! We welcome contributions from anyone, whether you are a seasoned developer or just starting out.
+
+## How to Contribute
+<a id="markdown-how-to-contribute" name="how-to-contribute"></a>
+1. Fork the repository to your own GitHub account.
+2. Clone the project to your local machine.
+3. Create a new branch with a descriptive name for your feature or bug fix.
+4. Make changes to the code, documentation, or tests.
+5. Test and [debug](#how-to-debug-your-code-during-development) your changes thoroughly to ensure they work as expected.
+6. Commit your changes and push them to your fork.
+7. Open a pull request in our repository and provide a brief description of the changes you have made.
+8. Wait for feedback or approval from the project maintainers.
+9.  If the reviewing maintainer suggests any modifications to your pull request, then proceed to make those changes.
+10. Once your pull request has been merged, take the time to celebrate your accomplishment!
+
+## Code Standards
+<a id="markdown-code-standards" name="code-standards"></a>
+When contributing code to DeKick, please adhere to the following guidelines:
+
+- Use clear and descriptive variable names.
+- Write concise and well-documented code.
+- Use consistent formatting and adhere to the project's existing style.
+- Write tests for any new functionality you add.
+- Remember to [run tests](#how-to-test-dekick) regularly and to ensure that all tests pass before submitting a pull request. This will help ensure that the code is stable and meets the project's requirements.
+
+
+## How to debug your code during development
+<a id="markdown-how-to-debug-your-code-during-development" name="how-to-debug-your-code-during-development"></a>
+Debugging DeKick can be done using an independent version of the tool. This is because using an independent version makes it easier to pinpoint the source of the error and to ensure that the code being debugged is the correct version.
+
+To start debugging, follow these steps:
+
+1. Get an independent DeKick project repository that is not tied to a specific project on your local machine.
+2. Navigate to the project repository in which you can test DeKick with your changes.
+3. Run DeKick from the project repository using the command:
+```shell
+source ../../desmart-internal/dekick/dev
+```
+This command will ensure that you are running the independent version of DeKick and not the version installed in the project.
+
+4. Set the debugger flag and run DeKick using the command:
+```shell
+DEKICK_DEBUGGER=true dekick local
+```
+This will launch DeKick in local mode and allow you to step through the code and debug any issues that may arise.
+
+DeKick uses the debugger from VS Code, which allows you to set breakpoints and step through the code line by line. Configuration for debugger you can find in a `launch.json` file.
+
+You can start the debugger by clicking on the `RUN AND DEBUG` button in the debug panel. This will start the DeKick application in debugging mode.
+
+In order to set breakpoints in the code you need to click on the left-hand margin in VS Code. When the application reaches a breakpoint, it will pause execution and you can inspect the state of the code and step through it line by line to identify any issues.
+
+Debugging is an important tool for identifying and fixing issues in your code, and using the VS Code debugger in DeKick makes it easy to do so.
+
+## How to test DeKick
+<a id="markdown-how-to-test-dekick" name="how-to-test-dekick"></a>
+Testing DeKick is an important part of the development process, as it ensures that the code is functioning correctly and meets the project's requirements. In `DeKick` we use `pytest` with `xdist` plugin, that allows you to run tests in parallel across multiple CPUs or machines.
+
+When you run `pytest` with `xdist` enabled, it will distribute the tests across multiple workers `(processes or threads)` and execute them simultaneously. The number of workers can be specified through the `-n` option. By default, `pytest-xdist` uses 2 threads for parallel test execution. One of the benefits of using xdist is that it can significantly reduce the execution time of test suites, especially for large projects with many tests.
+
+Here's how to run tests on DeKick:
+
+1. To run tests in `DeKick`, navigate to the repository directory on your local machine.
+2. Set up your environment: Before running the tests, you will need to set up your environment. Make sure that you have a `.env` file that contains the necessary environment variables, including the `BOILERPLATES_GIT_URL` key which should contain the URL to the repository with the boilerplates connected.
+3. Run all tests: To run all tests, use the command
+```shell
+dekick pytest
+```
+This command will run all tests in the repository and display the results.
+
+1. Run specific tests: If you want to run a specific test, use the command
+```shell
+dekick pytest tests/{CHOSEN_TEST}
+```
+Replace `{CHOSEN_TEST}` with the name of the test file or test method that you want to run.
+
+1. Analyze test results: After running the tests, analyze the results to ensure that all tests pass and that the code is functioning as expected.
+
+## What are Boilerplates
+<a id="markdown-what-are-boilerplates" name="what-are-boilerplates"></a>
+
+Boilerplates are starter kit projects that are used to test DeKick and to provide a starting point for new projects. These boilerplates are pre-configured projects that are set up to work with specific frameworks and technologies, such as React, Express, or PHP with Laravel framework.
+
+Currently, the boilerplates used in the DeKick project are stored in a private repository. However, we plan to make these boilerplates available to all users in the future.
+
+When you run DeKick, it uses these boilerplates to create a new project or to provision a development environment. This makes it easy to get started with a new project and ensures that the project is set up correctly from the start with the specific framework or technology that you have chosen.
+
+Once the boilerplates are made public, you will be able to access them from the DeKick repository and use them for your own projects.
+
+## Issue Tracker
+<a id="markdown-issue-tracker" name="issue-tracker"></a>
+If you encounter any bugs or issues with DeKick, please report them using the project's issues. When reporting an issue, please provide as much detail as possible, including:
+
+- A description of the problem you encountered.
+- Steps to reproduce the issue.
+- The version of DeKick you are using.
+- Any relevant error messages or logs.
+
+
+## Communication
+<a id="markdown-communication" name="communication"></a>
+If you have any questions or need help with your contribution, you can reach out to the project maintainers on our mailing list (dooshek@desmart.com). 
+We are happy to help and answer any questions you may have.
+
+Thank you for your contributions and for helping to make DeKick better!
+

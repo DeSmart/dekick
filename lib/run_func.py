@@ -17,7 +17,7 @@ from lib.settings import (
     TERMINAL_COLUMN_WIDTH,
     get_seconds_since_dekick_start,
 )
-from lib.spinner import DEFAULT_SPINNER_MODE, create_spinner
+from lib.spinner import create_spinner
 
 install()
 
@@ -59,7 +59,7 @@ def run_func(
             out = func(**func_args)
         else:
             out = func()
-        if out is None: # pylint: disable=using-constant-test
+        if out is None:  # pylint: disable=using-constant-test
             out = {}
         if "text" not in out:
             out["text"] = text
@@ -71,39 +71,14 @@ def run_func(
         out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
 
     except Exception as error:  # pylint: disable=broad-except
-
         log_file = get_log_filename()
-        authentication_error = "403 Forbidden"
-        error_text = str(error.args[0])
-        def find_text_in_error_message(error_message, text_to_find):
-            """
-            This function takes an error message and a text to find, and returns True
-            if the text is present in the error message, and False otherwise.
-            """
-            if text_to_find in str(error_message):
-                return True
-            else:
-                return False
-        if find_text_in_error_message(error_text, authentication_error):
-            fail_text = (
-            f"{C_ERROR}Failed getting .env from Gitlab{C_END}. "
-            + "You may not have permission to access this repository."
-        )
-        else:
-            fail_text = (
+        fail_text = (
             f"{C_ERROR}Failed{C_END}. Please see {C_FILE}{log_file}{C_END}"
             + " for more information"
         )
-
-        if DEFAULT_SPINNER_MODE == "halo":
-            fail_text = (
-                f"{text} {C_ERROR}failed{C_END}. Please see {C_FILE}{log_file}{C_END}"
-                + " for more information"
-            )
-
         spinner.fail(text=fail_text)
 
-        logging.error("Error message: %s", error.args[0])
+        logging.error(error.args[0])
         log_exception(error)
 
         if terminate is True:
@@ -144,9 +119,9 @@ def run_func(
 
 def get_elapsed_time(text: str, elapsed_time: int) -> str:
     """Show elapsed time"""
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     elapsed_time_formatted = f"{elapsed_time}s"
-    result = ansi_escape.sub('', text)
+    result = ansi_escape.sub("", text)
     text_length = len(result)
     right_margin = 5
     checks = [
@@ -161,4 +136,3 @@ def get_elapsed_time(text: str, elapsed_time: int) -> str:
                 (TERMINAL_COLUMN_WIDTH + right_margin) - text_length, " "
             )
     return ""
-

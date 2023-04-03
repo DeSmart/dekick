@@ -48,7 +48,6 @@ def composer_install():
     run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
 
 
-
 def yarn_install():
     """Run yarn install command"""
     ui_yarn(args=["install"])
@@ -58,15 +57,15 @@ def copy_artifacts_from_dind():
     """Copy artifacts from dind container to host"""
     artifacts_dir = get_dekickrc_value("project.artifacts")
 
-    def run_copy_from_dind():
-        for artifact_dir in artifacts_dir:
-            dir_path = artifact_dir["path"]
-            copy_from_dind(dir_path)
+    if not is_ci() or artifacts_dir is None:
+        return
 
-    if is_ci() and artifacts_dir is not None:
+    for artifact_dir in artifacts_dir:
+        resource = artifact_dir["path"]
         run_func(
-            text=f"Copying {C_FILE}{artifacts_dir}{C_END} from container to host",
-            func=run_copy_from_dind,
+            text=f"Copying {C_FILE}{resource}{C_END} from container to host",
+            func=copy_from_dind,
+            func_args={"resource": resource},
         )
 
 
@@ -176,16 +175,6 @@ def wait_for_container(
         text=f"Waiting for {C_CMD}{container}{C_END} container to start",
         func=run,
         terminate=terminate,
-    )
-
-
-def wait_for_database(container: str = "db"):
-    """Wait for database to be ready"""
-    wait_for_container(
-        "database system is ready to accept connections",
-        "failed",
-        60,
-        container,
     )
 
 
