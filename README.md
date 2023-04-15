@@ -12,8 +12,9 @@
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [Command `dekick local`](#command-dekick-local)
+    - [`local` command](#local-command)
     - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+    - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
   - [This project is still under development](#this-project-is-still-under-development)
 - [Troubleshooting](#troubleshooting)
   - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
@@ -106,8 +107,8 @@ dekick local
 <a id="markdown-running-dekick-in-**local**-environment" name="running-dekick-in-**local**-environment"></a>
 A **local** environment is this one that's run on developer's machine. One uses local version mostly for **development** of the application, so the tool provides an environment that closely mimics the production environment, allowing developers to test and debug their code under realistic conditions.
 
-### Command `dekick local`
-<a id="markdown-command-dekick-local" name="command-dekick-local"></a>
+### `local` command
+<a id="markdown-local-command" name="local-command"></a>
 Assuming that you already have DeKick installed run following commands to start local environment:
 ```shell
 cd [YOUR_PROJECT_BASE_DIRECTORY]
@@ -142,6 +143,16 @@ This will run `yarn` inside a proper container which your application is build w
 
 > Note that above will only work with some flavours like `react`, running `dekick yarn` command on `laravel` flavour won't work because there is no `yarn` command inside a node image.
 
+### How to run any command inside a container?
+<a id="markdown-how-to-run-any-command-inside-a-container%3F" name="how-to-run-any-command-inside-a-container%3F"></a>
+DeKick runs in a container and you can run any command inside it. For example, if you want to run `ls` command inside a container then just run:
+```shell
+dekick ls -l
+```
+This will run `ls -l` inside a proper container which your application is build with. By default it will run `ls` in the project directory which is bind mounted inside the container in the same directory as your project. When you run `source dekick/dev` you'll "lock" your project root path which will be the project you are in during `source dekick/dev`.
+
+**Note:** DeKick's using image based on [`docker:xx.xx.xx-cli-alpine`](https://hub.docker.com/_/docker) image which is based on Alpine Linux so you can use any command that is available in Alpine Linux.
+ 
 ## This project is still under development
 <a id="markdown-this-project-is-still-under-development" name="this-project-is-still-under-development"></a>
 
