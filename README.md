@@ -86,7 +86,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 - in your terminal:
 ```shell
 cd [YOUR_PROJECT_BASE_DIRECTORY]`
-source dekick/dev`
+source dekick/dev
 dekick install
 ```
 (the `install` command is planned for future releases, soon :slightly_smiling_face:)
