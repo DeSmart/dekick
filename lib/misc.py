@@ -253,8 +253,11 @@ def run_shell(
 
         returncode = proc.returncode
 
+    stdout_debug = str(stdout).strip()
+    stderr_debug = str(stderr).strip()
+
     if int(returncode) > 0:
-        logging.info("Command %s output: %s", cmd, str(stdout).strip())
+        logging.info("Command %s output: %s", cmd, stdout_debug)
 
         if logfile != "" and raise_error is True:
             error = str(stderr).strip()
@@ -264,9 +267,9 @@ def run_shell(
             raise CalledProcessError(returncode, cmd, "", f"Failed to execute {cmd}")
 
     if stderr:
-        logging.debug("Command %s stderr:\n%s", cmd, stderr)
+        logging.debug("Command %s stderr:\n%s", cmd, stderr_debug)
     if stdout:
-        logging.debug("Command %s stdout:\n%s", cmd, stdout)
+        logging.debug("Command %s stdout:\n%s", cmd, stdout_debug)
 
     return {"stdout": stdout, "stderr": stderr, "returncode": returncode}
 

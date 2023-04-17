@@ -52,6 +52,7 @@ def run_func(
         return True
 
     out = {}
+    out_text = ""
 
     try:
         function_start = get_seconds_since_dekick_start(1)
@@ -61,14 +62,15 @@ def run_func(
             out = func()
         if out is None:  # pylint: disable=using-constant-test
             out = {}
+
         if "text" not in out:
-            out["text"] = text
-        if "text" in out and out["text"] == "":
-            out["text"] = text
+            out_text = text
+        if "text" in out and out_text == "":
+            out_text = text
+
         function_end = get_seconds_since_dekick_start(1)
         elapsed_time = round(function_end - function_start, 1)
-        logging.debug("function elapsed time: %s", f"{elapsed_time}")
-        out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
+        out_text = out_text + get_elapsed_time((out_text), elapsed_time)
 
     except Exception as error:  # pylint: disable=broad-except
         log_file = get_log_filename()
@@ -84,15 +86,17 @@ def run_func(
         if terminate is True:
             sys.exit(1)
 
+    out_text_debug = out["text"].strip().replace("\n", " ") if "text" in out else ""
+
     if "success" in out and out["success"] is not True:
-        logging.debug(out)
+        logging.debug(out_text_debug)
 
         if "type" in out and out["type"] == "warn":
-            logging.warning(out["text"])
-            spinner.warn(text=out["text"])
+            logging.warning(out_text_debug)
+            spinner.warn(text=out_text)
         else:
-            logging.error(out["text"])
-            spinner.fail(text=out["text"])
+            logging.error(out_text_debug)
+            spinner.fail(text=out_text)
 
         if terminate is True:
             logging.debug("Terminating DeKick with exit code 1")
@@ -101,8 +105,9 @@ def run_func(
             return False
 
     if out is not None and "text" in out and out["text"] != "":
-        logging.info(out["text"])
-        spinner.succeed(text=out["text"])
+        logging.info(out_text_debug)
+    if out is not None and out_text != "":
+        spinner.succeed(text=out_text)
     else:
         spinner.succeed()
 

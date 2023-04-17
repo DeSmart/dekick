@@ -10,7 +10,7 @@ from typing import Union
 from rich.console import Console
 from rich.traceback import install
 
-from lib.logger import install_logger
+from lib.logger import get_log_level, install_logger
 from lib.misc import run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.run_func import run_func
@@ -104,8 +104,11 @@ def docker_compose(
         tmp_docker_env.append(f'{key}="{value}"')
 
     shell_cmd = ["docker", "compose", cmd] + tmp_docker_env + args
-    logging.info("Running docker-compose(%s)", [cmd] + args)
-    logging.debug(locals())
+
+    if get_log_level() == "DEBUG":
+        logging.debug(locals())
+    else:
+        logging.info("Running docker-compose(%s)", [cmd] + args)
 
     return run_shell(
         cmd=shell_cmd,

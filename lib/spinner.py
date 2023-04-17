@@ -44,32 +44,39 @@ def len_valid_str(text) -> int:
     return len(text)
 
 
-def str_pad_right(text: str) -> str:
-    return (TERMINAL_COLUMN_WIDTH - 3 - len_valid_str(text)) * " "
+def str_pad_right(text: str, spare_width: int = 3) -> str:
+    return (TERMINAL_COLUMN_WIDTH - spare_width - len_valid_str(text)) * " "
 
 
 class SimpleSpinner:
+
+    initial_text: str = ""
+
     def __init__(self, text: str) -> None:
-        print(text, end=str_pad_right(text))
+        print(text, end=str_pad_right(text, 8))
+        self.initial_text = text
 
     def start(self):
         return self
 
     def succeed(self, text=None):
-        print("✔")
-        self._print_text(text)
+        self._print_text("✔", text)
 
     def warn(self, text=None):
-        print("⚠")
-        self._print_text(text)
+        self._print_text("⚠", text)
 
     def fail(self, text=None):
-        print("✖")
-        self._print_text(text)
+        self._print_text("✖", text)
 
-    def _print_text(self, text=None):
+    def _print_text(self, mark: str, text=None):
         if text is not None:
-            print(f"╰─ {text}")
+            if self.initial_text in text:
+                out_text = text.replace(self.initial_text, "").strip()
+                print(f"{out_text} {mark}")
+            else:
+                print(f"{mark}\n╰─ {text}")
+        else:
+            print(f"     {mark}")
 
 
 class NullSpinner:
