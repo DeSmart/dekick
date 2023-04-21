@@ -2,44 +2,27 @@
 Wrapper for GitLab library
 """
 import logging
-from os.path import exists
 
 import gitlab
 from rich.console import Console
 from rich.traceback import install
 
 from lib.dekickrc import get_dekickrc_value
-from lib.settings import DEKICKRC_FILE, is_pytest
+from lib.global_config import get_global_config_value
+from lib.settings import DEKICKRC_FILE, DEKICKRC_GLOBAL_HOST_PATH, is_pytest
 
 install()
 console = Console()
 
-GITLABRC_TOKEN_FILE = "/tmp/.gitlabrc"
-
 
 def auth(token: str = "") -> gitlab.Gitlab:
     """Authenticates to Gitlab"""
+    token = __get_token(token)
 
-    token = (
-        token
-        if token
-        else (
-            open(GITLABRC_TOKEN_FILE, encoding="utf-8")
-            .read()
-            .replace("token=", "")
-            .strip()
-        )
-    )
-
-    if not exists(GITLABRC_TOKEN_FILE):
-        raise FileNotFoundError(f"Gitlab: File {GITLABRC_TOKEN_FILE} does not exist")
-
-    logging.info("Authenticating to Gitlab with a token from %s", GITLABRC_TOKEN_FILE)
+    logging.info("Authenticating to Gitlab with a token")
     logging.debug("Using token: %s", token.replace(token[1:-1], "**********"))
 
-    gitlab_url = str(get_dekickrc_value("gitlab.url"))  # type: ignore
-    if not gitlab_url:
-        raise ValueError(f"Gitlab URL (gitlab.url) is not set in {DEKICKRC_FILE} file")
+    gitlab_url = __get_gitlab_url()
 
     gl_client = gitlab.Gitlab(private_token=token, url=gitlab_url)
 
@@ -47,7 +30,7 @@ def auth(token: str = "") -> gitlab.Gitlab:
         gl_client.auth()
     except gitlab.GitlabAuthenticationError as exception:
         raise gitlab.GitlabAuthenticationError(
-            "Gitlab: Authentication failed, check your token"
+            f"Gitlab: Authentication failed, check your token in {DEKICKRC_GLOBAL_HOST_PATH} file"
         ) from exception
 
     return gl_client
@@ -90,3 +73,21 @@ def get_project_var(scope: str, token: str = "") -> str:
             raise gitlab.GitlabHttpError(http_codes[http_code]) from exception
 
         raise gitlab.GitlabHttpError(error) from exception
+
+
+def __get_token(token: str) -> str:
+    """Gets a token from Gitlab"""
+    if not token:
+        token = str(get_global_config_value("gitlab.token"))
+    if not token:
+        raise ValueError(
+            f"Gitlab: Token is empty, set it in {DEKICKRC_GLOBAL_HOST_PATH} file")
+    return token
+
+
+def __get_gitlab_url() -> str:
+    gitlab_url = str(get_dekickrc_value("gitlab.url"))  # type: ignore
+    if not gitlab_url:
+        raise ValueError(
+            f"Gitlab: URL (gitlab.url) is not set in {DEKICKRC_FILE} file")
+    return gitlab_url

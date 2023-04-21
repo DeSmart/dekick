@@ -1,3 +1,4 @@
+"""Settings for DeKick"""
 import time
 from getpass import getuser
 from glob import glob
@@ -73,11 +74,15 @@ DEKICKRC_PATH = f"{PROJECT_ROOT}/{DEKICKRC_FILE}"
 DEKICK_VERSION_FILE = ".version"
 DEKICK_VERSION_PATH = f"{DEKICK_PATH}/{DEKICK_VERSION_FILE}"
 
+DEKICKRC_GLOBAL_FILE = "global.yml"
+DEKICKRC_GLOBAL_HOST_PATH = str(getenv("HOST_HOME")) + f"/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
+DEKICKRC_GLOBAL_PATH = f"/tmp/homedir/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
+
 DEKICK_MIGRATIONS_DIR = f"{DEKICK_PATH}/migrations"
 
 DEKICK_DOTENV_FILE = ".env"
 DEKICK_DOTENV_PATH = f"{PROJECT_ROOT}/{DEKICK_DOTENV_FILE}"
-
+    
 DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
@@ -87,9 +92,9 @@ DEKICK_CI_MODE = False
 
 def save_commands():
     """Save commands to file for use with ./docker/dekick/docker-entrypoint.sh"""
-    with open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8") as f:
-        f.write("#!/bin/bash\n")
-        f.write('export DEKICK_COMMANDS=("' + '" "'.join(DEKICK_COMMANDS) + '")')
+    with open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8") as commands_file:
+        commands_file.write("#!/bin/bash\n")
+        commands_file.write('export DEKICK_COMMANDS=("' + '" "'.join(DEKICK_COMMANDS) + '")')
 
 
 save_commands()

@@ -1,0 +1,4 @@
+gitlab:
+  token:
+hashicorp_vault:
+  token:

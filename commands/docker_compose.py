@@ -137,7 +137,8 @@ def wait_for_log(
     timer = 0
 
     while timer < timeout:
-        log = get_container_log(container_name, get_seconds_since_dekick_start())
+        log = get_container_log(
+            container_name, get_seconds_since_dekick_start())
         if failed_string and failed_string in log:
             raise Exception()
         if failed_string and failed_string in log and search_string in log:
@@ -185,9 +186,7 @@ def get_container_exit_code(container_name: str) -> tuple:
     return (int(inspect[0]), inspect[1])
 
 
-def get_container_log(
-    container_name: str, since: int = 0, capture_output: bool = True
-) -> str:
+def get_container_log(container_name: str, since: float = 0, capture_output: bool = True) -> str:
     """Gets container log since seconds ago, if since is 0, it will return the whole log"""
 
     since_formatted = f"{since}s"
