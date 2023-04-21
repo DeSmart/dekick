@@ -2,6 +2,7 @@
 Shared functions for all flavours
 """
 import logging
+from subprocess import CalledProcessError
 
 from commands.composer import composer
 from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
@@ -42,10 +43,15 @@ def composer_install():
             }
 
     def run_composer_install():
-        composer(["install", *args])
+        try:
+            composer(["install", *args])        
+        except CalledProcessError as error:
+            raise RuntimeError(f"{error.stderr}") from error
 
-    run_func(text="Getting APP_ENV from .env", func=check_app_env)
-    run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
+    run_func(
+        text=f"Getting APP_ENV from {C_FILE}.env{C_END}", func=check_app_env)
+    run_func(text=f"Running {C_CMD}composer install{C_END}",
+             func=run_composer_install)
 
 
 def yarn_install():
@@ -121,14 +127,16 @@ def kill_service(service: str):
     def run():
         cmd = "kill"
         args = [service]
-        docker_compose(cmd=cmd, args=args, raise_exception=True, capture_output=True)
+        docker_compose(cmd=cmd, args=args, raise_exception=True,
+                       capture_output=True)
 
     run_func(text=f"Killing {C_CMD}{service}{C_END} service", func=run)
 
 
 def get_all_services() -> list:
     """Get all services defined in docker-compose.yml file"""
-    ret = docker_compose(cmd="config", args=["--services"], capture_output=True)
+    ret = docker_compose(cmd="config", args=[
+                         "--services"], capture_output=True)
     return str(ret["stdout"]).strip().split("\n")
 
 

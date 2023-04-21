@@ -161,6 +161,29 @@ def get_platform() -> str:
     return "osx" if sys.platform == "darwin" else "linux"
 
 
+def are_all_ports_free(ports: list) -> bool:
+    """Check if any of the given ports are occupied"""
+    port_args = []
+    for port in ports:
+        port_args.append("-p")
+        port_args.append(f"{port}:{port}")
+
+    try:
+        run_shell(
+            [
+                "docker",
+                "run",
+                "--rm",
+            ] + port_args + [
+                "hello-world"
+            ],
+            raise_exception=True,
+            capture_output=True,
+        )
+        return True
+    except Exception:  # pylint: disable=broad-except
+        return False
+
 def is_port_free(port: int) -> bool:
     """Check if port is free"""
 
@@ -172,8 +195,7 @@ def is_port_free(port: int) -> bool:
                 "--rm",
                 "-p",
                 f"{port}:{port}",
-                DEKICK_DOCKER_IMAGE,
-                "ls",
+                "hello-world",
             ],
             raise_exception=True,
             capture_output=True,
@@ -181,7 +203,6 @@ def is_port_free(port: int) -> bool:
         return True
     except Exception:  # pylint: disable=broad-except
         return False
-
 
 def run_shell(
     cmd: list,
@@ -261,10 +282,10 @@ def run_shell(
 
         if logfile != "" and raise_error is True:
             error = str(stderr).strip()
-            logging.error("Error from running %s: %s", cmd, error)
+            logging.error("Failed to execute %s: %s", cmd, error)
 
         if raise_exception is True:
-            raise CalledProcessError(returncode, cmd, "", f"Failed to execute {cmd}")
+            raise CalledProcessError(returncode, cmd, stdout, stderr)
 
     if stderr:
         logging.debug("Command %s stderr:\n%s", cmd, stderr_debug)

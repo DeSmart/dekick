@@ -2,10 +2,8 @@
 import re
 import sys
 from ast import literal_eval
-from os import path
 
 import flatdict
-import yaml
 from rich.console import Console
 from rich.traceback import install
 
@@ -20,6 +18,7 @@ from lib.settings import (
     DEKICKRC_PATH,
     DEKICKRC_TMPL_FILE,
 )
+from lib.yaml.reader import read_yaml
 
 install()
 console = Console()
@@ -52,7 +51,7 @@ def get_dekickrc_value(name: str, check_with_template: bool = True):
 
 def get_dekickrc_flat() -> flatdict.FlatDict:
     """Gets flattened .dekickrc.yml file"""
-    return _get_yaml_flat(DEKICKRC_PATH)
+    return read_yaml(DEKICKRC_PATH)
 
 
 def get_dekickrc_tmpl_flat() -> flatdict.FlatDict:
@@ -60,7 +59,7 @@ def get_dekickrc_tmpl_flat() -> flatdict.FlatDict:
     Files are located in flavours directory"""
     flavour = str(get_dekickrc_value("dekick.flavour", check_with_template=False))
     tmpl_path = f"{DEKICK_PATH}/flavours/{flavour}/{DEKICKRC_TMPL_FILE}"
-    return _get_yaml_flat(tmpl_path)
+    return read_yaml(tmpl_path)
 
 
 def get_dekick_version() -> str:
@@ -158,8 +157,8 @@ def ui_validate_dekickrc():
             else:
                 value = dekickrc_flat[path]
 
-            if path_present and not _is_same_type(dekickrc_flat, tmpl_value, path):
-                cur_type = _type_of(value)
+            if path_present and not __is_same_type(dekickrc_flat, tmpl_value, path):
+                cur_type = __type_of(value)
                 return {
                     "success": False,
                     "text": f"Key of {C_CMD}{path}{C_END} has incorrect type in "
@@ -238,30 +237,16 @@ def ui_validate_dekickrc():
         }
 
 
-def _is_same_type(dekickrc_flat, tmpl_entry, target_path):
+def __is_same_type(dekickrc_flat, tmpl_entry, target_path):
     """Check if type of value is the same as in .dekickrc.yml.tmpl file"""
 
     tmpl_type = dekickrc_tmpl_parse_value(tmpl_entry)["type"]
 
-    if tmpl_type != _type_of(dekickrc_flat[target_path]):
+    if tmpl_type != __type_of(dekickrc_flat[target_path]):
         return False
     return True
 
 
-def _type_of(value):
+def __type_of(value):
     """Get type of value"""
     return type(value).__name__
-
-
-def _get_yaml_flat(file):
-    """Get flattened YAML file"""
-    if not path.exists(file):
-        print(f"File {C_FILE}{file}{C_END} does not exists")
-        sys.exit(1)
-
-    with (open(f"{file}", "r", encoding="utf-8")) as yaml_file:
-        yaml_parsed = yaml.safe_load(yaml_file)
-        ret = flatdict.FlatDict(yaml_parsed, delimiter=".")
-
-        # DEKICKRC_FLAT_CACHE[file] = ret
-        return ret

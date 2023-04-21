@@ -3,12 +3,14 @@
 unset DEKICK_PATH
 unset PROJECT_ROOT
 
+DEKICKRC_FILE=".dekickrc.yml"
 
 if [ -n "$ZSH_VERSION" ]; then
   SHELL=zsh
 elif [ -n "$BASH_VERSION" ]; then
   SHELL=bash
 fi
+
 function realpath() {
   local previouspwd=$PWD
   cd "$(dirname "$1")" || exit 1
@@ -47,6 +49,16 @@ function show_banner() {
     echo "DeKick path: ${DEKICK_PATH}"
     echo
     echo "See help by running 'dekick --help'. Happy coding!"
+  fi
+}
+
+function check_dekickrc() {
+  if [ "${PROJECT_ROOT}" = "${DEKICK_PATH}" ]; then
+    return 0
+  fi
+  if [ ! -f "${PROJECT_ROOT}/${DEKICKRC_FILE}" ]; then
+    echo "Error: No ${DEKICKRC_FILE} file found in current directory. Please 'cd' into the directory containinig ${DEKICKRC_FILE} file."
+    return 1
   fi
 }
 
@@ -90,4 +102,6 @@ fi
 
 export DEKICK_PATH PROJECT_ROOT
 
-show_banner
+if check_dekickrc; then
+  show_banner
+fi

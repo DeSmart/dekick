@@ -21,6 +21,7 @@ from lib.dekickrc import get_dekickrc_value, ui_validate_dekickrc
 from lib.fs import chown
 from lib.migration import migrate
 from lib.misc import (
+    are_all_ports_free,
     check_command,
     check_file,
     first_run_banner,
@@ -196,10 +197,7 @@ def get_envs_from_credentials_provider():
         return
 
     def actual_get():
-        try:
-            dotenv = get_envs(env="local")
-        except Exception as error:  # pylint: disable=broad-except
-            return {"success": False, "text": error.args[0]}
+        dotenv = get_envs(env="local")
 
         if not os.path.isfile(DEKICK_DOTENV_PATH):
             save_dotenv(dotenv)
@@ -285,19 +283,15 @@ def check_ports():
                 return port
         return 0
 
-    def are_all_ports_free() -> bool:
-        return bool(get_first_used_port() == 0)
-
     def ports_check(recheck: bool = False):
 
-        if are_all_ports_free() is True:
+        if are_all_ports_free(get_used_ports()) is True:
             return {"success": True, "text": "All ports available"}
 
-        first_used_port = get_first_used_port()
         text = (
-            f"\nPort {C_CODE}{first_used_port}{C_END} is still in use by another process, please use {C_CMD}docker ps{C_END} to check that"
+            f"\nPort {C_CODE}{get_first_used_port()}{C_END} is still in use by another process, please use {C_CMD}docker ps{C_END} to which container is using it"
             if recheck is True
-            else f"\nPort {C_CODE}{first_used_port}{C_END} is already in use by another service or process, will try to restart services"
+            else "\nSome ports are already in use by another service or process, will try to restart services"
         )
         return {
             "success": False,
