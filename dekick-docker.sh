@@ -51,10 +51,16 @@ if [ ! -f "${DEKICK_GLOBAL_FILE}" ]; then
   cp "${DEKICK_PATH}/global_tmpl.yml" "${DEKICK_GLOBAL_FILE}"
 fi
 
+# Compatibility with version < 2.3.0
+if [ -f "$HOST_HOME/.gitlabrc" ]; then
+  DEKICK_GITLABRC="-v $HOST_HOME/.gitlabrc:/tmp/homedir/.gitlabrc"
+fi
+
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
   ${DEKICK_DOCKER_PORTS} \
+  ${DEKICK_GITLABRC} \
   -e DEKICK_PATH="${DEKICK_PATH}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
   -e CURRENT_UID="${CURRENT_UID}" \
