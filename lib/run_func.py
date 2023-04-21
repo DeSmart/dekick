@@ -22,6 +22,8 @@ from lib.spinner import create_spinner
 install()
 
 # pylint: disable=too-many-branches
+
+
 def run_func(
     text: str,
     func=None,
@@ -47,7 +49,7 @@ def run_func(
     spinner.start()
 
     if func is None:
-        time.sleep(0.25)
+        time.sleep(0.5)
         spinner.succeed()
         return True
 
@@ -65,8 +67,8 @@ def run_func(
 
         if "text" not in out:
             out_text = text
-        if "text" in out and out_text == "":
-            out_text = text
+        if "text" in out:
+            out_text =  text if out["text"] == "" else out["text"]
 
         function_end = get_seconds_since_dekick_start(1)
         elapsed_time = round(function_end - function_start, 1)
@@ -75,7 +77,7 @@ def run_func(
     except Exception as error:  # pylint: disable=broad-except
         log_file = get_log_filename()
         fail_text = (
-            f"{C_ERROR}Failed{C_END}. Please see {C_FILE}{log_file}{C_END}"
+            f"{text} {C_ERROR}failed{C_END}\n  {error}\n  Please see {C_FILE}{log_file}{C_END}"
             + " for more information"
         )
         spinner.fail(text=fail_text)
@@ -86,10 +88,10 @@ def run_func(
         if terminate is True:
             sys.exit(1)
 
-    out_text_debug = out["text"].strip().replace("\n", " ") if "text" in out else ""
+    out_text_debug = str(out["text"]).strip().replace("\n", " ") if "text" in out else ""
 
     if "success" in out and out["success"] is not True:
-        logging.debug(out_text_debug)
+        logging.debug("%s output: %s", text, out_text_debug)
 
         if "type" in out and out["type"] == "warn":
             logging.warning(out_text_debug)
@@ -112,7 +114,8 @@ def run_func(
         spinner.succeed()
 
     if out is not None and "func" in out:
-        logging.debug("Calling another function from run_func() with args: %s", out)
+        logging.debug(
+            "Calling another function from run_func() with args: %s", out)
 
         if "func_args" in out:
             return out["func"](**out["func_args"])
