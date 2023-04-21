@@ -168,7 +168,10 @@ def ui_validate_dekickrc():
                 }
 
             # Validation
-            def call_validator(validator: str, value: str):
+            def call_validator(validator: str, value: str, is_required: bool):
+                if not is_required and value == "":
+                    return True
+
                 validator_function = getattr(
                     validators, f"validator_{validator.replace('()', '')}"
                 )
@@ -177,13 +180,15 @@ def ui_validate_dekickrc():
             validate = True
 
             if isinstance(value, (str, bool, int)):
-                validate = call_validator(tmpl_validation, str(value))
+                validate = call_validator(tmpl_validation, str(value), is_required)
 
             if isinstance(value, list):
                 for item in value:
 
                     if isinstance(item, (str, bool, int)):
-                        validate = call_validator(tmpl_validation, str(item))
+                        validate = call_validator(
+                            tmpl_validation, str(item), is_required
+                        )
                     elif isinstance(item, dict):
                         validator_value = literal_eval(tmpl_validation)
 
@@ -195,7 +200,9 @@ def ui_validate_dekickrc():
                                     + f" in {C_FILE}{DEKICKRC_FILE}{C_END}",
                                 }
 
-                            validate = call_validator(validator_value[key], str(val))
+                            validate = call_validator(
+                                validator_value[key], str(val), is_required
+                            )
 
                         for key in validator_value.keys():
                             if not key in item:

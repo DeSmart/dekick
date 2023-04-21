@@ -22,3 +22,15 @@ def get_dotenv_var(var: str, default: str = "", path: str = "") -> str:
         return default
 
     return str(config[var])
+
+
+def dict2env(env: dict) -> str:
+    """Convert dict `env` to .env format"""
+
+    def parse_value(value: str) -> str:
+        """Adds quotes to value if needed"""
+        if '"' in value:
+            value = f'"{value}"'
+        return value
+
+    return "\n".join([f"{key}={parse_value(str(value))}" for key, value in env.items()])

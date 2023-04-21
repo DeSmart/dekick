@@ -16,8 +16,11 @@ def get_info() -> str:
 def get_envs(*args, **kwargs) -> str:
     """Get all variables from driver"""
     _init()
-    module = _get_driver_module()
-    return module.get_envs(*args, **kwargs)
+    try:
+        module = _get_driver_module()
+        return module.get_envs(*args, **kwargs)
+    except Exception as exception:
+        raise ValueError(f"{get_info()}: {exception.args[0]}") from exception
 
 
 def parser_driver_arguments(parser):
@@ -45,8 +48,12 @@ def _driver_init():
     if DRIVER_INITIALIZED is True:
         return
     module = _get_driver_module()
-    module.init()
-    DRIVER_INITIALIZED = True
+
+    try:
+        module.init()
+        DRIVER_INITIALIZED = True
+    except Exception as exception:
+        raise RuntimeError(f"{get_info()}: {exception.args[0]}") from exception
 
 
 def _get_driver_module():

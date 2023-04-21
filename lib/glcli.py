@@ -32,14 +32,14 @@ def auth(token: str = "") -> gitlab.Gitlab:
     )
 
     if not exists(GITLABRC_TOKEN_FILE):
-        raise FileNotFoundError(f"Gitlab: File {GITLABRC_TOKEN_FILE} does not exist")
+        raise FileNotFoundError(f"File {GITLABRC_TOKEN_FILE} does not exist")
 
     logging.info("Authenticating to Gitlab with a token from %s", GITLABRC_TOKEN_FILE)
     logging.debug("Using token: %s", token.replace(token[1:-1], "**********"))
 
     gitlab_url = str(get_dekickrc_value("gitlab.url"))  # type: ignore
     if not gitlab_url:
-        raise ValueError(f"Gitlab URL (gitlab.url) is not set in {DEKICKRC_FILE} file")
+        raise ValueError(f"URL (gitlab.url) is not set in {DEKICKRC_FILE} file")
 
     gl_client = gitlab.Gitlab(private_token=token, url=gitlab_url)
 
@@ -47,7 +47,7 @@ def auth(token: str = "") -> gitlab.Gitlab:
         gl_client.auth()
     except gitlab.GitlabAuthenticationError as exception:
         raise gitlab.GitlabAuthenticationError(
-            "Gitlab: Authentication failed, check your token"
+            "Authentication failed, check your token"
         ) from exception
 
     return gl_client
@@ -65,9 +65,7 @@ def get_project_var(scope: str, token: str = "") -> str:
     project = str(get_dekickrc_value("project.name"))
 
     if not group or not project:
-        raise ValueError(
-            f"Gitlab: Group and/or project is not set in {DEKICKRC_FILE} file"
-        )
+        raise ValueError(f"Group and/or project is not set in {DEKICKRC_FILE} file")
 
     group_parsed = group.replace("_", "%2F").replace("/", "%2F")
     project_parsed = project.replace("_", "%2F").replace("/", "%2F")
@@ -81,8 +79,8 @@ def get_project_var(scope: str, token: str = "") -> str:
     except gitlab.GitlabHttpError as exception:
         error = f"Gitlab: {exception.args[0][4:]}"
         http_codes = {
-            "403": f"Gitlab: Access denied to project {group}/{project}. Check your permissions.",
-            "404": f"Gitlab: Project {group}/{project} does not exist.",
+            "403": f"Access denied to project {group}/{project}. Check your permissions.",
+            "404": f"Project {group}/{project} does not exist.",
         }
         http_code = exception.args[0][:3]
 
