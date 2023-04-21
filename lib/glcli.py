@@ -30,7 +30,8 @@ def auth(token: str = "") -> gitlab.Gitlab:
         gl_client.auth()
     except gitlab.GitlabAuthenticationError as exception:
         raise gitlab.GitlabAuthenticationError(
-            f"Gitlab: Authentication failed, check your token in {DEKICKRC_GLOBAL_HOST_PATH} file"
+            "Gitlab: Authentication failed, check your token "
+            + f"in {DEKICKRC_GLOBAL_HOST_PATH} or token argument"
         ) from exception
 
     return gl_client
@@ -76,18 +77,18 @@ def get_project_var(scope: str, token: str = "") -> str:
 
 
 def __get_token(token: str) -> str:
-    """Gets a token from Gitlab"""
+    """Gets a token from global config or from token argument"""
     if not token:
         token = str(get_global_config_value("gitlab.token"))
     if not token:
         raise ValueError(
-            f"Gitlab: Token is empty, set it in {DEKICKRC_GLOBAL_HOST_PATH} file")
+            f"Gitlab: Token is empty, set it in {DEKICKRC_GLOBAL_HOST_PATH} file"
+        )
     return token
 
 
 def __get_gitlab_url() -> str:
     gitlab_url = str(get_dekickrc_value("gitlab.url"))  # type: ignore
     if not gitlab_url:
-        raise ValueError(
-            f"Gitlab: URL (gitlab.url) is not set in {DEKICKRC_FILE} file")
+        raise ValueError(f"Gitlab: URL (gitlab.url) is not set in {DEKICKRC_FILE} file")
     return gitlab_url
