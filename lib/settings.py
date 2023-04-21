@@ -25,6 +25,7 @@ DEKICK_DOCKER_IMAGE = getenv("DEKICK_DOCKER_IMAGE") or None
 CURRENT_UID = str(getenv("CURRENT_UID") or getuid())
 CURRENT_USERNAME = getenv("CURRENT_USERNAME") or getuser()
 TERMINAL_COLUMN_WIDTH = (get_terminal_size().columns - 3) if stdout.isatty() else 120
+HOST_HOME = str(getenv("HOST_HOME")) or f"/home/{CURRENT_USERNAME}"
 
 DEKICK_MASTER_VERSION_URL = (
     "https://raw.githubusercontent.com/DeSmart/dekick/main/.version"
@@ -75,7 +76,7 @@ DEKICK_VERSION_FILE = ".version"
 DEKICK_VERSION_PATH = f"{DEKICK_PATH}/{DEKICK_VERSION_FILE}"
 
 DEKICKRC_GLOBAL_FILE = "global.yml"
-DEKICKRC_GLOBAL_HOST_PATH = str(getenv("HOST_HOME")) + f"/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
+DEKICKRC_GLOBAL_HOST_PATH = f"{HOST_HOME}/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
 DEKICKRC_GLOBAL_PATH = f"/tmp/homedir/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
 
 DEKICK_MIGRATIONS_DIR = f"{DEKICK_PATH}/migrations"

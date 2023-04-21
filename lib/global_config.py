@@ -10,7 +10,7 @@ from lib.settings import (
     DEKICKRC_GLOBAL_HOST_PATH,
     DEKICKRC_GLOBAL_PATH,
 )
-from lib.yaml_reader import get_yaml_flat
+from lib.yaml.reader import read_yaml
 
 
 def get_global_config_value(name: str):
@@ -31,4 +31,4 @@ def get_global_config_value(name: str):
 
 def __get_dekickrc_global_flat() -> flatdict.FlatDict:
     """Gets flattened .dekickrc.yml file"""
-    return get_yaml_flat(DEKICKRC_GLOBAL_PATH)
+    return read_yaml(DEKICKRC_GLOBAL_PATH)

@@ -18,7 +18,7 @@ from lib.settings import (
     DEKICKRC_PATH,
     DEKICKRC_TMPL_FILE,
 )
-from lib.yaml_reader import get_yaml_flat
+from lib.yaml.reader import read_yaml
 
 install()
 console = Console()
@@ -51,7 +51,7 @@ def get_dekickrc_value(name: str, check_with_template: bool = True):
 
 def get_dekickrc_flat() -> flatdict.FlatDict:
     """Gets flattened .dekickrc.yml file"""
-    return get_yaml_flat(DEKICKRC_PATH)
+    return read_yaml(DEKICKRC_PATH)
 
 
 def get_dekickrc_tmpl_flat() -> flatdict.FlatDict:
@@ -60,7 +60,7 @@ def get_dekickrc_tmpl_flat() -> flatdict.FlatDict:
     flavour = str(get_dekickrc_value(
         "dekick.flavour", check_with_template=False))
     tmpl_path = f"{DEKICK_PATH}/flavours/{flavour}/{DEKICKRC_TMPL_FILE}"
-    return get_yaml_flat(tmpl_path)
+    return read_yaml(tmpl_path)
 
 
 def get_dekick_version() -> str:
