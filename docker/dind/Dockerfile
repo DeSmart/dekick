@@ -1,4 +1,4 @@
-FROM docker:23.0.1-dind-alpine3.17
+FROM docker:23.0.4-dind-alpine3.17
 
 RUN apk update\
   && apk add --no-cache git bash curl ncurses net-tools jq perl gettext rsync python3 py3-pip sudo \
