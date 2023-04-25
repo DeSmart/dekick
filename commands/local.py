@@ -240,7 +240,6 @@ def overwrite_dotenv(project_vars: str) -> dict:
     """Overwrites the local .env file with the remote one"""
 
     try:
-
         env_file = DEKICK_DOTENV_PATH
         env_bak_file = f"{env_file}.bak"
 
@@ -284,14 +283,13 @@ def check_ports():
         return 0
 
     def ports_check(recheck: bool = False):
-
         if are_all_ports_free(get_used_ports()) is True:
             return {"success": True, "text": "All ports available"}
 
         text = (
-            f"\nPort {C_CODE}{get_first_used_port()}{C_END} is still in use by another process, please use {C_CMD}docker ps{C_END} to which container is using it"
+            f"Port {C_CODE}{get_first_used_port()}{C_END} is still in use by another process, please use {C_CMD}docker ps{C_END} to which container is using it"
             if recheck is True
-            else "\nSome ports are already in use by another service or process, will try to restart services"
+            else "Some ports are already in use by another service or process, will try to restart services"
         )
         return {
             "success": False,
