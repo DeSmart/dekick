@@ -68,7 +68,7 @@ def run_func(
         if "text" not in out:
             out_text = text
         if "text" in out:
-            out_text =  text if out["text"] == "" else out["text"]
+            out_text = text if out["text"] == "" else out["text"]
 
         function_end = get_seconds_since_dekick_start(1)
         elapsed_time = round(function_end - function_start, 1)
@@ -88,7 +88,9 @@ def run_func(
         if terminate is True:
             sys.exit(1)
 
-    out_text_debug = str(out["text"]).strip().replace("\n", " ") if "text" in out else ""
+    out_text_debug = (
+        str(out["text"]).strip().replace("\n", " ") if "text" in out else ""
+    )
 
     if "success" in out and out["success"] is not True:
         logging.debug("%s output: %s", text, out_text_debug)
@@ -114,8 +116,7 @@ def run_func(
         spinner.succeed()
 
     if out is not None and "func" in out:
-        logging.debug(
-            "Calling another function from run_func() with args: %s", out)
+        logging.debug("Calling another function from run_func() with args: %s", out)
 
         if "func_args" in out:
             return out["func"](**out["func_args"])
@@ -129,7 +130,7 @@ def get_elapsed_time(text: str, elapsed_time: float) -> str:
     """Show elapsed time"""
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     elapsed_time_formatted = f"{elapsed_time}s"
-    result = ansi_escape.sub("", text)
+    result = ansi_escape.sub("", text).replace("\n", "")
     text_length = len(result)
     right_margin = 5
     checks = [

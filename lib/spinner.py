@@ -1,3 +1,4 @@
+import re
 from sys import stdout
 
 from halo import Halo
@@ -8,10 +9,12 @@ DEFAULT_SPINNER_MODE = ""
 
 
 def get_spinner_mode() -> str:
+    """Gets current spinner mode"""
     return DEFAULT_SPINNER_MODE
 
 
 def set_spinner_mode(mode: str) -> None:
+    """Sets spinner mode"""
     if mode not in ["simple", "null", "halo"]:
         mode = "simple" if not stdout.isatty() else "halo"
 
@@ -20,6 +23,7 @@ def set_spinner_mode(mode: str) -> None:
 
 
 def create_spinner(text: str):
+    """Creates spinner"""
     if get_spinner_mode() == "halo":
         return Halo(text=text, spinner="dots4", color="white", placement="left")
     elif get_spinner_mode() == "null":
@@ -29,14 +33,7 @@ def create_spinner(text: str):
 
 
 def len_valid_str(text) -> int:
-    """Remove color control characters and return real length of string
-
-    Args:
-        text (_type_): _description_
-
-    Returns:
-        int: _description_
-    """
+    """Remove color control characters and return real length of string"""
     text = text.replace(C_CMD, "")
     text = text.replace(C_CODE, "")
     text = text.replace(C_END, "")
@@ -45,10 +42,12 @@ def len_valid_str(text) -> int:
 
 
 def str_pad_right(text: str, spare_width: int = 3) -> str:
+    """Pads string to the right with spaces and takes terminal width into account"""
     return (TERMINAL_COLUMN_WIDTH - spare_width - len_valid_str(text)) * " "
 
 
 class SimpleSpinner:
+    """Simple spinner is used when there's no tty attached to the output"""
 
     initial_text: str = ""
 
@@ -74,12 +73,18 @@ class SimpleSpinner:
                 out_text = text.replace(self.initial_text, "").strip()
                 print(f"{out_text} {mark}")
             else:
-                print(f"{mark}\n╰─ {text}")
+                bullet = " ⏵ "
+                bullet_len = len(bullet)
+                out_text = re.sub(r"\s{" + str(bullet_len) + "}(.*)$", "\\1", text)
+                print(f"\n{bullet}{out_text} {mark}")
         else:
             print(f"     {mark}")
 
 
 class NullSpinner:
+    """Null spinner is used when spinner mode is set to null,
+    defaults to not showing any spinner at all"""
+
     def __init__(self) -> None:
         return
 
