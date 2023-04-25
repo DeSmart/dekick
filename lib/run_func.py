@@ -129,19 +129,26 @@ def run_func(
 def get_elapsed_time(text: str, elapsed_time: float) -> str:
     """Show elapsed time"""
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    elapsed_time_formatted = f"{elapsed_time}s"
     result = ansi_escape.sub("", text).replace("\n", "")
     text_length = len(result)
+
+    elapsed_time_formatted = (
+        "< 1s"
+        if elapsed_time < 1
+        else f"{int(elapsed_time)}s"
+        if elapsed_time.is_integer()
+        else f"{elapsed_time:.1f}s"
+    )
+
     right_margin = 5
-    checks = [
-        (0, 1, C_TIME, "< 1s"),
-        (1, 10, C_TIME, elapsed_time_formatted),
-        (10, 30, C_CODE, elapsed_time_formatted),
-        (30, inf, C_ERROR, elapsed_time_formatted),
+    colors = [
+        (0, 10, C_TIME),
+        (10, 30, C_CODE),
+        (30, inf, C_ERROR),
     ]
-    for check in checks:
+    for check in colors:
         if check[0] <= elapsed_time < check[1]:
-            return f" {check[2]}{check[3]}{C_END}".rjust(
+            return f" {check[2]}{elapsed_time_formatted}{C_END}".rjust(
                 (TERMINAL_COLUMN_WIDTH + right_margin) - text_length, " "
             )
     return ""
