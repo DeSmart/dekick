@@ -25,7 +25,6 @@ from lib.settings import (
     C_END,
     C_FILE,
     CURRENT_UID,
-    DEKICK_DOCKER_IMAGE,
     PROJECT_ROOT,
     is_dekick_dockerized,
 )
@@ -174,15 +173,16 @@ def are_all_ports_free(ports: list) -> bool:
                 "docker",
                 "run",
                 "--rm",
-            ] + port_args + [
-                "hello-world"
-            ],
+            ]
+            + port_args
+            + ["hello-world"],
             raise_exception=True,
             capture_output=True,
         )
         return True
     except Exception:  # pylint: disable=broad-except
         return False
+
 
 def is_port_free(port: int) -> bool:
     """Check if port is free"""
@@ -203,6 +203,7 @@ def is_port_free(port: int) -> bool:
         return True
     except Exception:  # pylint: disable=broad-except
         return False
+
 
 def run_shell(
     cmd: list,
@@ -264,7 +265,6 @@ def run_shell(
         stderr=PIPE if capture_output is True else sys.stderr,
         universal_newlines=True,
     ) as proc:
-
         stderr, stdout = proc.communicate()
         returncode = proc.returncode
 

@@ -45,6 +45,11 @@ DEKICK_CREDENTIALS_DRIVERS = [
 ]
 
 # Available commands to use with dekick
+
+# Read files from ./lib/commands
+# and add them to DEKICK_COMMANDS
+open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8").close()
+
 DEKICK_COMMANDS = [
     "artisan",
     "build",
@@ -83,7 +88,7 @@ DEKICK_MIGRATIONS_DIR = f"{DEKICK_PATH}/migrations"
 
 DEKICK_DOTENV_FILE = ".env"
 DEKICK_DOTENV_PATH = f"{PROJECT_ROOT}/{DEKICK_DOTENV_FILE}"
-    
+
 DEKICK_TIME_START = 0
 
 DEKICK_PYTEST_MODE = False
@@ -95,7 +100,9 @@ def save_commands():
     """Save commands to file for use with ./docker/dekick/docker-entrypoint.sh"""
     with open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8") as commands_file:
         commands_file.write("#!/bin/bash\n")
-        commands_file.write('export DEKICK_COMMANDS=("' + '" "'.join(DEKICK_COMMANDS) + '")')
+        commands_file.write(
+            'export DEKICK_COMMANDS=("' + '" "'.join(DEKICK_COMMANDS) + '")'
+        )
 
 
 save_commands()
