@@ -60,7 +60,7 @@ def npx(
     container = get_flavour_container()
 
     cmd = "run"
-    args = ["--rm", "--user", CURRENT_UID, container, "npx"] + args
+    args = ["--rm", "-e", "HOME=/tmp", "--user", CURRENT_UID, container, "npx"] + args
 
     return docker_compose(
         cmd=cmd,
