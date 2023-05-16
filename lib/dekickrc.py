@@ -28,10 +28,9 @@ def get_dekickrc_value(name: str, check_with_template: bool = True):
     """Get value from .dekickrc.yml file"""
     dekickrc_flat = get_dekickrc_flat()
 
-    if name not in dekickrc_flat:
-        raise KeyError(f"Key {name} not found in {DEKICKRC_FILE}")
-
     if not check_with_template:
+        if name not in dekickrc_flat:
+            raise KeyError(f"Key {name} not found in {DEKICKRC_FILE}")
         return dekickrc_flat[name]
 
     dekickrc_tmpl_flat = get_dekickrc_tmpl_flat()
