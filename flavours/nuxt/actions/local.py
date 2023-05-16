@@ -1,17 +1,17 @@
 """
-Build for Node ExpressJS (backend) application
+Local run for NuxtJS flavour
 """
 from rich.console import Console
 from rich.traceback import install
 
+from commands.seed import ui_seed
+from flavours.nuxt.shared import app_is_ready
 from flavours.shared import (
-    copy_artifacts_from_dind,
     pull_and_build_images,
     start_services,
-    yarn_build,
+    wait_for_container,
     yarn_install,
 )
-from lib.misc import check_file
 
 install()
 console = Console()
@@ -19,9 +19,9 @@ console = Console()
 
 def main():
     """Main"""
-    check_file(".env")
     pull_and_build_images()
     yarn_install()
-    copy_artifacts_from_dind()
-    yarn_build()
     start_services()
+    ui_seed()
+    wait_for_container(search_string="Local:    http://")
+    app_is_ready()

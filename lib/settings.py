@@ -37,8 +37,9 @@ DEKICK_BOILERPLATES = [
     "laravel/php8_1",
     "laravel/php8_2",
     "react/default",
+    "nuxt/default",
 ]
-DEKICK_FLAVOURS = ["express", "react", "laravel"]
+DEKICK_FLAVOURS = ["express", "react", "laravel", "nuxt"]
 DEKICK_CREDENTIALS_DRIVERS = [
     path.splitext(path.basename(file))[0]
     for file in glob(DEKICK_PATH + "/lib/drivers/credentials/*.py")

@@ -3,7 +3,6 @@ from sys import stdout
 from rich.prompt import Confirm
 
 from commands.docker_compose import get_container_log
-from flavours.shared import setup_permissions as shared_setup_permissions
 from flavours.shared import wait_for_container as shared_wait_for_container
 from lib.dekickrc import get_dekickrc_value
 from lib.dotenv import get_dotenv_var
@@ -57,10 +56,6 @@ def wait_for_container():
 
     ask_for_log()
     return
-
-
-def setup_permissions():
-    shared_setup_permissions("/.cache/ /.yarn/ build/")
 
 
 def get_container() -> str:

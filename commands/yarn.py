@@ -83,7 +83,15 @@ def yarn(
     container = get_flavour_container()
 
     cmd = "run"
-    args = ["--rm", "--user", CURRENT_UID, container, "yarn"] + args
+    args = [
+        "--rm",
+        "-e",
+        "HOME=/tmp",
+        "--user",
+        CURRENT_UID,
+        container,
+        "yarn",
+    ] + args
 
     return docker_compose(
         cmd=cmd,
