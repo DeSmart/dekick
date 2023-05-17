@@ -46,9 +46,13 @@ def download_boilerplates() -> bool:
     boilerplates_tag = get_boilerplates_tag()
 
     ret = rbash(
+        "Add safe.directory to git config",
+        "git config --global --add safe.directory '*'",
+    )
+
+    ret = rbash(
         "Downloading boilerplates",
-        f"git config --global --add safe.directory {boilerplates_path};"
-        + f'git clone -b master "{boilerplates_git_url}" "{boilerplates_path}"',
+        f'git clone -b master "{boilerplates_git_url}" "{boilerplates_path}"',
     )
 
     if ret["code"] == 128:
@@ -57,9 +61,7 @@ def download_boilerplates() -> bool:
 
     rbash(
         f"Switching to tag/branch {boilerplates_tag}",
-        f"cd {boilerplates_path};"
-        + f"git config --global --add safe.directory {boilerplates_path};"
-        + f"git checkout {boilerplates_tag}",
+        f"cd {boilerplates_path};" + f"git checkout {boilerplates_tag}",
     )
     return rbash("Checking directory exists", f"ls {boilerplates_path}")["stdout"] != ""
 
