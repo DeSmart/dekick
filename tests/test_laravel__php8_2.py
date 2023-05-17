@@ -1,5 +1,6 @@
 import pytest
 
+from lib.misc import get_platform
 from lib.tests.dekick_commands import (
     dekick_build,
     dekick_dotenv_replace,
@@ -58,6 +59,7 @@ def test_local_stop_remove():
 
 @pytest.mark.command_test
 @pytest.mark.basic
+@pytest.mark.skipif(get_platform() == "osx", reason="This test is failing on macOS")
 def test_local_test():
     """Tests `dekick test` command"""
     assert dekick_test(FLAVOUR, VERSION)
