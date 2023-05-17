@@ -10,6 +10,8 @@ IMAGE="desmart/dekick:${VERSION}"
 DOCKER_FLAGS="-it"
 HOST_ARCH="$(uname -m)"
 HOST_PLATFORM="$(uname -s)"
+HOST_DOCKER_SOCK="/var/run/docker.sock"
+HOST_HOME=$HOME
 
 if ! tty > /dev/null 2>&1; then
   DOCKER_FLAGS=""
@@ -19,13 +21,6 @@ DEKICK_DOCKER_PORTS=""
 if [ "$DEKICK_DEBUGGER" ]; then
   DEKICK_DOCKER_PORTS="-p 8753:8753"
 fi
-
-# Architecture detection (arm64, amd64])
-# DOCKER_DEFAULT_PLATFORM="linux/amd64"
-# if [ "$HOST_ARCH" = "arm64" ]; then
-#   DOCKER_DEFAULT_PLATFORM="linux/arm64"
-# fi
-# export DOCKER_DEFAULT_PLATFORM
 
 VOLUME_DEKICK="-v "${DEKICK_PATH}:${DEKICK_PATH}""
 VOLUME_PROJECT="-v "${PROJECT_ROOT}:${PROJECT_ROOT}""
@@ -47,9 +42,25 @@ if [ "$CURRENT_UID" = "0" ]; then
   CURRENT_USERNAME="dekick"
 fi
 
+DEKICK_GLOBAL_PATH="${HOST_HOME}/.config/dekick"
+DEKICK_GLOBAL_FILE="${DEKICK_GLOBAL_PATH}/global.yml"
+
+# Create global config file if it doesn't exist
+if [ ! -f "${DEKICK_GLOBAL_FILE}" ]; then
+  mkdir -p "${DEKICK_GLOBAL_PATH}"
+  cp "${DEKICK_PATH}/global_tmpl.yml" "${DEKICK_GLOBAL_FILE}"
+fi
+
+# Compatibility with version < 2.3.0
+if [ -f "$HOST_HOME/.gitlabrc" ]; then
+  DEKICK_GITLABRC="-v $HOST_HOME/.gitlabrc:/tmp/homedir/.gitlabrc"
+fi
+
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
+  ${DEKICK_DOCKER_PORTS} \
+  ${DEKICK_GITLABRC} \
   -e DEKICK_PATH="${DEKICK_PATH}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
   -e CURRENT_UID="${CURRENT_UID}" \
@@ -58,10 +69,10 @@ docker run $DOCKER_FLAGS --rm \
   -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
   -e HOST_ARCH="${HOST_ARCH}" \
   -e HOST_PLATFORM="${HOST_PLATFORM}" \
+  -e HOST_HOME="${HOST_HOME}" \
   --add-host proxy:host-gateway \
-  ${DEKICK_DOCKER_PORTS} \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ~/.gitlabrc:/tmp/.gitlabrc \
+  -v "$HOST_DOCKER_SOCK:/var/run/docker.sock" \
+  -v "${DEKICK_GLOBAL_FILE}:/tmp/homedir/.config/dekick/global.yml" \
   "${IMAGE}" \
   "$@"
 

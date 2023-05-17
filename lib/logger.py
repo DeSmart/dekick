@@ -1,14 +1,35 @@
 """Logging module for Dekick""" ""
 import logging
+from os import path
 from sys import stdout
 from typing import Union
 
 from lib.fs import chown, touch
-from lib.settings import C_CMD, C_CODE, C_END, C_FILE
+from lib.settings import C_CMD, C_CODE, C_END, C_FILE, DEKICK_PATH
 from lib.spinner import create_spinner, set_spinner_mode
 
 LOG_FILE_NAME = ""
 CURRENT_LOG_LEVEL = ""
+
+
+class MyFormatter(logging.Formatter):
+    """Custom formatter to add modulefilename to log record"""
+
+    def __init__(self, fmt=None, datefmt=None, style="%"):
+        super().__init__(fmt=fmt, datefmt=datefmt, style=style)
+
+    def format(self, record):
+        if not hasattr(record, "module"):
+            record.module = ""  # Set a default value for modulefilename
+        return super().format(record)
+
+
+class LoggerFilter(logging.Filter):
+    """Custom filter to add modulefilename to log record"""
+
+    def filter(self, record):
+        record.module = path.abspath(record.pathname).replace(DEKICK_PATH + "/", "")
+        return True
 
 
 def install_logger(level: str = "", filename: str = ""):
@@ -27,23 +48,30 @@ def install_logger(level: str = "", filename: str = ""):
 
     log_format = "%(asctime)s %(levelname)s: %(message)s"
     if filename == "stdout":
-        log_format = f"{C_CMD}%(asctime)s{C_END} {C_CODE}%(levelname)s{C_END}: {C_FILE}[%(module)s:%(funcName)s:%(lineno)d]{C_END} %(message)s"
+        log_format = f"{C_CMD}%(asctime)s{C_END} {C_CODE}%(levelname)s{C_END}: {C_FILE}[%(module)s:%(lineno)d]{C_END} %(message)s"
     elif level == "DEBUG":
-        log_format = "%(asctime)s %(levelname)s: [%(module)s:%(funcName)s:%(lineno)d] %(message)s"
+        log_format = "%(asctime)s %(levelname)s: [%(module)s:%(lineno)d] %(message)s"
+
+    if filename == "stdout":
+        handler = logging.StreamHandler(stream=stdout)
+    elif filename:
+        handler = logging.FileHandler(filename, mode="w", encoding="utf-8")
+    else:
+        handler = logging.StreamHandler()
+
+    handler.addFilter(LoggerFilter())
+    formatter = MyFormatter(log_format, datefmt="[%Y-%m-%d %H:%M:%S]")
+    handler.setFormatter(formatter)
 
     config = {
-        "filename": filename,
         "force": True,
-        "encoding": "utf-8",
         "level": level,
         "format": log_format,
-        "datefmt": "[%Y-%m-%d %X]",
+        "handlers": [handler],
     }
 
     # # Special mode - log all to stdout
     if filename == "stdout":
-        config["stream"] = stdout
-        del config["filename"]
         set_spinner_mode("null")
     else:
         touch(filename)

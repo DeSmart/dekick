@@ -60,7 +60,7 @@ def node(
     container = get_flavour_container()
 
     cmd = "run"
-    args = ["--rm", "--user", CURRENT_UID, container, "node"] + args
+    args = ["--rm", "-e", "HOME=/tmp", "--user", CURRENT_UID, container, "node"] + args
 
     return docker_compose(
         cmd=cmd,

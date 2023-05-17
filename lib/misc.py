@@ -25,7 +25,6 @@ from lib.settings import (
     C_END,
     C_FILE,
     CURRENT_UID,
-    DEKICK_DOCKER_IMAGE,
     PROJECT_ROOT,
     is_dekick_dockerized,
 )
@@ -161,6 +160,30 @@ def get_platform() -> str:
     return "osx" if sys.platform == "darwin" else "linux"
 
 
+def are_all_ports_free(ports: list) -> bool:
+    """Check if any of the given ports are occupied"""
+    port_args = []
+    for port in ports:
+        port_args.append("-p")
+        port_args.append(f"{port}:{port}")
+
+    try:
+        run_shell(
+            [
+                "docker",
+                "run",
+                "--rm",
+            ]
+            + port_args
+            + ["hello-world"],
+            raise_exception=True,
+            capture_output=True,
+        )
+        return True
+    except Exception:  # pylint: disable=broad-except
+        return False
+
+
 def is_port_free(port: int) -> bool:
     """Check if port is free"""
 
@@ -172,8 +195,7 @@ def is_port_free(port: int) -> bool:
                 "--rm",
                 "-p",
                 f"{port}:{port}",
-                DEKICK_DOCKER_IMAGE,
-                "ls",
+                "hello-world",
             ],
             raise_exception=True,
             capture_output=True,
@@ -243,7 +265,6 @@ def run_shell(
         stderr=PIPE if capture_output is True else sys.stderr,
         universal_newlines=True,
     ) as proc:
-
         stderr, stdout = proc.communicate()
         returncode = proc.returncode
 
@@ -253,20 +274,23 @@ def run_shell(
 
         returncode = proc.returncode
 
+    stdout_debug = str(stdout).strip()
+    stderr_debug = str(stderr).strip()
+
     if int(returncode) > 0:
-        logging.info("Command %s output: %s", cmd, str(stdout).strip())
+        logging.info("Command %s output: %s", cmd, stdout_debug)
 
         if logfile != "" and raise_error is True:
             error = str(stderr).strip()
-            logging.error("Error from running %s: %s", cmd, error)
+            logging.error("Failed to execute %s: %s", cmd, error)
 
         if raise_exception is True:
-            raise CalledProcessError(returncode, cmd, "", f"Failed to execute {cmd}")
+            raise CalledProcessError(returncode, cmd, stdout, stderr)
 
     if stderr:
-        logging.debug("Command %s stderr:\n%s", cmd, stderr)
+        logging.debug("Command %s stderr:\n%s", cmd, stderr_debug)
     if stdout:
-        logging.debug("Command %s stdout:\n%s", cmd, stdout)
+        logging.debug("Command %s stdout:\n%s", cmd, stdout_debug)
 
     return {"stdout": stdout, "stderr": stderr, "returncode": returncode}
 

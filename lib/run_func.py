@@ -22,6 +22,8 @@ from lib.spinner import create_spinner
 install()
 
 # pylint: disable=too-many-branches
+
+
 def run_func(
     text: str,
     func=None,
@@ -47,33 +49,35 @@ def run_func(
     spinner.start()
 
     if func is None:
-        time.sleep(0.25)
+        time.sleep(0.5)
         spinner.succeed()
         return True
 
     out = {}
+    out_text = ""
 
     try:
-        function_start = get_seconds_since_dekick_start()
+        function_start = get_seconds_since_dekick_start(1)
         if func_args is not None:
             out = func(**func_args)
         else:
             out = func()
         if out is None:  # pylint: disable=using-constant-test
             out = {}
+
         if "text" not in out:
-            out["text"] = text
-        if "text" in out and out["text"] == "":
-            out["text"] = text
-        function_end = get_seconds_since_dekick_start()
-        elapsed_time = function_end - function_start
-        logging.debug("function elapsed time: %s", f"{elapsed_time:.2f}")
-        out["text"] = out["text"] + get_elapsed_time((out["text"]), elapsed_time)
+            out_text = text
+        if "text" in out:
+            out_text = text if out["text"] == "" else out["text"]
+
+        function_end = get_seconds_since_dekick_start(1)
+        elapsed_time = round(function_end - function_start, 1)
+        out_text = out_text + get_elapsed_time((out_text), elapsed_time)
 
     except Exception as error:  # pylint: disable=broad-except
         log_file = get_log_filename()
         fail_text = (
-            f"{C_ERROR}Failed{C_END}. Please see {C_FILE}{log_file}{C_END}"
+            f"{text} {C_ERROR}failed{C_END}\n  {error}\n  Please see {C_FILE}{log_file}{C_END}"
             + " for more information"
         )
         spinner.fail(text=fail_text)
@@ -84,15 +88,19 @@ def run_func(
         if terminate is True:
             sys.exit(1)
 
+    out_text_debug = (
+        str(out["text"]).strip().replace("\n", " ") if "text" in out else ""
+    )
+
     if "success" in out and out["success"] is not True:
-        logging.debug(out)
+        logging.debug("%s output: %s", text, out_text_debug)
 
         if "type" in out and out["type"] == "warn":
-            logging.warning(out["text"])
-            spinner.warn(text=out["text"])
+            logging.warning(out_text_debug)
+            spinner.warn(text=out_text)
         else:
-            logging.error(out["text"])
-            spinner.fail(text=out["text"])
+            logging.error(out_text_debug)
+            spinner.fail(text=out_text)
 
         if terminate is True:
             logging.debug("Terminating DeKick with exit code 1")
@@ -101,8 +109,9 @@ def run_func(
             return False
 
     if out is not None and "text" in out and out["text"] != "":
-        logging.info(out["text"])
-        spinner.succeed(text=out["text"])
+        logging.info(out_text_debug)
+    if out is not None and out_text != "":
+        spinner.succeed(text=out_text)
     else:
         spinner.succeed()
 
@@ -117,22 +126,29 @@ def run_func(
     return True
 
 
-def get_elapsed_time(text: str, elapsed_time: int) -> str:
+def get_elapsed_time(text: str, elapsed_time: float) -> str:
     """Show elapsed time"""
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    elapsed_time_formatted = f"{elapsed_time}s"
-    result = ansi_escape.sub("", text)
+    result = ansi_escape.sub("", text).replace("\n", "")
     text_length = len(result)
+
+    elapsed_time_formatted = (
+        "< 1s"
+        if elapsed_time < 1
+        else f"{int(elapsed_time)}s"
+        if elapsed_time.is_integer()
+        else f"{elapsed_time:.1f}s"
+    )
+
     right_margin = 5
-    checks = [
-        (0, 1, C_TIME, "< 1s"),
-        (1, 10, C_TIME, elapsed_time_formatted),
-        (10, 30, C_CODE, elapsed_time_formatted),
-        (30, inf, C_ERROR, elapsed_time_formatted),
+    colors = [
+        (0, 10, C_TIME),
+        (10, 30, C_CODE),
+        (30, inf, C_ERROR),
     ]
-    for check in checks:
+    for check in colors:
         if check[0] <= elapsed_time < check[1]:
-            return f" {check[2]}{check[3]}{C_END}".rjust(
+            return f" {check[2]}{elapsed_time_formatted}{C_END}".rjust(
                 (TERMINAL_COLUMN_WIDTH + right_margin) - text_length, " "
             )
     return ""
