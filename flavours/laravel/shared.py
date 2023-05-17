@@ -105,6 +105,7 @@ def generate_apidoc():
         except FileNotFoundError:
             pass
 
+        artisan(args=["route:clear"], capture_output=True)
         artisan(args=[f"{generator_type}:generate"], capture_output=True)
 
     run_func(text="Generating API documentation", func=run)
