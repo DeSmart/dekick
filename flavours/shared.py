@@ -3,9 +3,17 @@ Shared functions for all flavours
 """
 import logging
 from subprocess import CalledProcessError
+from sys import stdout
+
+from rich.prompt import Confirm
 
 from commands.composer import composer
-from commands.docker_compose import docker_compose, ui_docker_compose, wait_for_log
+from commands.docker_compose import (
+    docker_compose,
+    get_container_log,
+    ui_docker_compose,
+    wait_for_log,
+)
 from commands.yarn import ui_yarn
 from lib.dekickrc import get_dekickrc_value
 from lib.dind import copy_from_dind
@@ -13,7 +21,15 @@ from lib.dotenv import get_dotenv_var
 from lib.logger import log_exception
 from lib.misc import create_temporary_dir, get_flavour_container, run_shell
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_CODE, C_END, C_FILE, CURRENT_UID, is_ci
+from lib.settings import (
+    C_CMD,
+    C_CODE,
+    C_END,
+    C_FILE,
+    CURRENT_UID,
+    get_seconds_since_dekick_start,
+    is_ci,
+)
 
 
 def composer_install():
@@ -44,14 +60,12 @@ def composer_install():
 
     def run_composer_install():
         try:
-            composer(["install", *args])        
+            composer(["install", *args])
         except CalledProcessError as error:
             raise RuntimeError(f"{error.stderr}") from error
 
-    run_func(
-        text=f"Getting APP_ENV from {C_FILE}.env{C_END}", func=check_app_env)
-    run_func(text=f"Running {C_CMD}composer install{C_END}",
-             func=run_composer_install)
+    run_func(text=f"Getting APP_ENV from {C_FILE}.env{C_END}", func=check_app_env)
+    run_func(text=f"Running {C_CMD}composer install{C_END}", func=run_composer_install)
 
 
 def yarn_install():
@@ -127,16 +141,14 @@ def kill_service(service: str):
     def run():
         cmd = "kill"
         args = [service]
-        docker_compose(cmd=cmd, args=args, raise_exception=True,
-                       capture_output=True)
+        docker_compose(cmd=cmd, args=args, raise_exception=True, capture_output=True)
 
     run_func(text=f"Killing {C_CMD}{service}{C_END} service", func=run)
 
 
 def get_all_services() -> list:
     """Get all services defined in docker-compose.yml file"""
-    ret = docker_compose(cmd="config", args=[
-                         "--services"], capture_output=True)
+    ret = docker_compose(cmd="config", args=["--services"], capture_output=True)
     return str(ret["stdout"]).strip().split("\n")
 
 
@@ -336,3 +348,16 @@ def is_service_running(service: str) -> bool:
         raise_exception=False,
     )
     return bool(ret["stdout"].strip() == service)
+
+
+def ui_ask_for_log():
+    """Ask if user wants to see logs"""
+    if stdout.isatty() is False:
+        return
+
+    container = get_flavour_container()
+    question = "Do you want to see logs?"
+    if Confirm.ask(question, default=False) is True:
+        get_container_log(
+            container, get_seconds_since_dekick_start(), capture_output=False
+        )
