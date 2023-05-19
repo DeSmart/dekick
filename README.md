@@ -1,4 +1,4 @@
-![version 2.3.1](https://img.shields.io/badge/version-2.3.1-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version 2.3.2](https://img.shields.io/badge/version-2.3.2-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -76,7 +76,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 # How it works?
 <a id="markdown-how-it-works%3F" name="how-it-works%3F"></a>
- - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.3.1`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
+ - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.3.2`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
 
 # Quick start

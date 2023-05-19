@@ -10,6 +10,7 @@ from rich.traceback import install
 
 from commands.artisan import artisan
 from commands.knex import knex
+from commands.npx import npx
 from flavours.shared import is_service_running, start_service
 from lib.logger import install_logger, log_exception
 from lib.misc import get_flavour
@@ -58,6 +59,8 @@ def seed() -> bool:
             knex(["migrate:rollback"], raise_exception=True, capture_output=True)
             knex(["migrate:latest"], raise_exception=True, capture_output=True)
             knex(["seed:run"], raise_exception=True, capture_output=True)
+        elif flavour == "nuxt":
+            npx(["prisma", "db", "seed"], raise_exception=True, capture_output=True)
 
         return True
     except Exception as error:  # pylint: disable=broad-except
