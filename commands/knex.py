@@ -62,9 +62,9 @@ def knex(
     cmd = "run"
     args = [
         "--rm",
-        "--user",
         "-e",
         "HOME=/tmp",
+        "--user",
         CURRENT_UID,
         container,
         "npx",
