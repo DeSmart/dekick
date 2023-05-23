@@ -2,12 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "dekick debug",
+      "name": "dekick local",
       "type": "python",
       "request": "attach",
       "debugServer": 8753,
       "host": "localhost",
-      "justMyCode": false,
-    },
+      "justMyCode": false
+      // "preLaunchTask": "dekick local"
+    }
   ]
 }
