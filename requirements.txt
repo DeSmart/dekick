@@ -16,3 +16,4 @@ debugpy==1.6.5
 filelock==3.12.0
 humanfriendly==10.0
 hvac==1.1.0
+yamllint==1.31.0

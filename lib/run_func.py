@@ -9,6 +9,7 @@ from rich.traceback import install
 
 from lib.logger import get_log_filename, log_exception
 from lib.settings import (
+    C_CMD,
     C_CODE,
     C_END,
     C_ERROR,
@@ -77,8 +78,10 @@ def run_func(
     except Exception as error:  # pylint: disable=broad-except
         log_file = get_log_filename()
         fail_text = (
-            f"{text} {C_ERROR}failed{C_END}\n  {error}\n  Please see {C_FILE}{log_file}{C_END}"
-            + " for more information"
+            f"{text} {C_ERROR}failed{C_END}\n  {error}\n\n  "
+            + f"Enable debug mode by adding {C_CMD}--log-level DEBUG{C_END} "
+            + f"and look into {C_FILE}{log_file}{C_END} "
+            + "for more information about the error"
         )
         spinner.fail(text=fail_text)
 

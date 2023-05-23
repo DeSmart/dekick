@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dekick local",
+      "command": "dekick-docker.sh",
+      "args": ["local"],
+      "options": {
+        "env": {
+          "PROJECT_ROOT": "${input:projectRoot}",
+          "DEKICK_DEBUGGER": "true"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Waiting for debugger to attach on port 8753...",
+          "endsPattern": "DeKick was running"
+        }
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "projectRoot",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "find $HOME -name .dekickrc.yml -type f -exec dirname {} \\;",
+        "fieldSeparator": "\n",
+        "description": "Select project root to debug"
+      }
+    }
+  ]
+}

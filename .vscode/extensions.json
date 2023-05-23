@@ -10,6 +10,7 @@
     "njqdev.vscode-python-typehint",
     "evondev.indent-rainbow-palettes",
     "wayou.vscode-todo-highlight",
-    "huntertran.auto-markdown-toc"
+    "huntertran.auto-markdown-toc",
+    "augustocdias.tasks-shell-input"
   ]
 }
