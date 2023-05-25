@@ -32,7 +32,7 @@ console = Console()
 set_dekick_time_start()
 
 parser = argparse.ArgumentParser(
-    prog="DeKick",
+    prog="dekick",
     description="""
 DeKick is a provisioning and building application used to run and build applications with
 different flavours (languages, frameworks) in local, test, beta and production environments.

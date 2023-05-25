@@ -1,3 +1,4 @@
+"""Default arguments and functions for commands"""
 from lib.settings import set_ci_mode, set_pytest_mode
 from lib.spinner import set_spinner_mode
 
@@ -10,8 +11,8 @@ def parser_default_args(parser):
         parser.add_argument(
             "--log-level",
             required=False,
-            default="",
-            help="Log level to use for logging",
+            default="INFO",
+            help="Log level used for logging, default is INFO, use DEBUG to get more information",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         )
 
@@ -20,7 +21,7 @@ def parser_default_args(parser):
             "--log-filename",
             required=False,
             default="",
-            help="Log filename to use for logging, use special value 'stdout' to log to stdout",
+            help="Log filename used for logging. Use special value `stdout` to log directly to stdout.",
         )
 
     def ci_cd():
@@ -29,7 +30,7 @@ def parser_default_args(parser):
             "--ci",
             required=False,
             action="store_true",
-            help="used for running command in CI/CD environment",
+            help="Used for running command in CI/CD environment",
         )
 
     def pytest():
@@ -38,7 +39,7 @@ def parser_default_args(parser):
             "--pytest",
             required=False,
             action="store_true",
-            help="used for running command with PyTest environment",
+            help="Used for running command with PyTest environment",
         )
 
     def spinner():
@@ -48,10 +49,9 @@ def parser_default_args(parser):
             required=False,
             type=str,
             choices=["simple", "null", "halo"],
-            help="What spinner to use? Default is 'halo' but when running in a "
-            + "CI/CD pipeline, when there's no TTY, it's automatically used 'simple'",
+            help="What spinner to use? Default is `halo` but when running in a "
+            + "CI/CD pipeline, when there's no TTY, it's automatically used `simple`",
         )
-
 
     log_level()
     log_filename()
@@ -73,7 +73,6 @@ def parser_default_funcs(parser):
 
     def spinner():
         set_spinner_mode(parser.spinner)
-
 
     pytest()
     ci_cd()
