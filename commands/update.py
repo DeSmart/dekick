@@ -23,8 +23,8 @@ from lib.settings import (
     C_END,
     CURRENT_UID,
     DEKICK_GIT_URL,
-    DEKICK_MASTER_VERSION_URL,
     DEKICK_PATH,
+    DEKICK_STABLE_VERSION_URL,
     DEKICK_VERSION_PATH,
 )
 
@@ -92,7 +92,7 @@ def update() -> bool:
 
 
 def get_remote_version() -> str:
-    return requests.get(DEKICK_MASTER_VERSION_URL).text
+    return requests.get(DEKICK_STABLE_VERSION_URL).text
 
 
 DEKICK_LOCAL_VERSION = open(DEKICK_VERSION_PATH, "r", encoding="utf-8").read().strip()
