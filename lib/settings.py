@@ -27,7 +27,7 @@ CURRENT_USERNAME = getenv("CURRENT_USERNAME") or getuser()
 TERMINAL_COLUMN_WIDTH = (get_terminal_size().columns - 3) if stdout.isatty() else 120
 HOST_HOME = str(getenv("HOST_HOME")) or f"/home/{CURRENT_USERNAME}"
 
-DEKICK_MASTER_VERSION_URL = (
+DEKICK_STABLE_VERSION_URL = (
     "https://raw.githubusercontent.com/DeSmart/dekick/main/.version"
 )
 DEKICK_GIT_URL = "https://github.com/DeSmart/dekick.git"
@@ -40,38 +40,6 @@ DEKICK_BOILERPLATES = [
     "nuxt/default",
 ]
 DEKICK_FLAVOURS = ["express", "react", "laravel", "nuxt"]
-DEKICK_CREDENTIALS_DRIVERS = [
-    path.splitext(path.basename(file))[0]
-    for file in glob(DEKICK_PATH + "/lib/drivers/credentials/*.py")
-]
-
-# Available commands to use with dekick
-
-# Read files from ./lib/commands
-# and add them to DEKICK_COMMANDS
-open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8").close()
-
-DEKICK_COMMANDS = [
-    "artisan",
-    "build",
-    "composer",
-    "credentials",
-    "docker-compose",
-    "knex",
-    "local",
-    "logs",
-    "node",
-    "npm",
-    "npx",
-    "phpunit",
-    "pint",
-    "seed",
-    "status",
-    "stop",
-    "test",
-    "update",
-    "yarn",
-]
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"
 DEKICKRC_FILE = ".dekickrc.yml"
@@ -97,16 +65,38 @@ DEKICK_PYTEST_MODE = False
 DEKICK_CI_MODE = False
 
 
-def save_commands():
-    """Save commands to file for use with ./docker/dekick/docker-entrypoint.sh"""
+def get_credentials_drivers():
+    """Generate list of available credentials drivers"""
+    return [
+        path.splitext(path.basename(file))[0]
+        for file in glob(DEKICK_PATH + "/lib/drivers/credentials/*.py")
+    ]
+
+
+DEKICK_CREDENTIALS_DRIVERS = get_credentials_drivers()
+
+
+def save_commands(commands: list):
+    """Save commands to file for use in ./docker/dekick/docker-entrypoint.sh"""
     with open(DEKICK_PATH + "/commands.sh", "w", encoding="utf-8") as commands_file:
         commands_file.write("#!/bin/bash\n")
-        commands_file.write(
-            'export DEKICK_COMMANDS=("' + '" "'.join(DEKICK_COMMANDS) + '")'
-        )
+        commands_file.write('export DEKICK_COMMANDS=("' + '" "'.join(commands) + '")')
 
 
-save_commands()
+def get_dekick_commands():
+    """Get available commands to use with dekick"""
+    commands = []
+
+    for file in glob(DEKICK_PATH + "/commands/*.py"):
+        file = path.splitext(path.basename(file))[0].replace("_", "-")
+        if file != "__init__":
+            commands.append(file)
+
+    save_commands(commands)
+    return commands
+
+
+DEKICK_COMMANDS = get_dekick_commands()
 
 
 def set_dekick_time_start():
