@@ -85,15 +85,24 @@ def save_commands(commands: list):
 
 def get_dekick_commands():
     """Get available commands to use with dekick"""
-    commands = []
-
-    for file in glob(DEKICK_PATH + "/commands/*.py"):
+    commands: list = []
+    for file in glob(f"{DEKICK_PATH}/commands/*.py"):
         file = path.splitext(path.basename(file))[0].replace("_", "-")
         if file != "__init__":
             commands.append(file)
 
+    sub_commands: dict = {}
+    for command in commands:
+        for file in glob(f"{DEKICK_PATH}/commands/sub_{command}/*.py"):
+            file = path.splitext(path.basename(file))[0].replace("_", "-")
+            if file == "__init__":
+                continue
+            if command not in sub_commands:
+                sub_commands[command] = []
+            sub_commands[command].append(file)
+
     save_commands(commands)
-    return commands
+    return {"commands": commands, "sub_commands": sub_commands}
 
 
 DEKICK_COMMANDS = get_dekick_commands()

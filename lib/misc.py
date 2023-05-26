@@ -211,6 +211,7 @@ def run_shell(
     raise_exception: bool = True,
     raise_error: bool = True,
     capture_output: bool = False,
+    cwd=None,
 ) -> dict:
     """
     Run a shell command
@@ -264,6 +265,7 @@ def run_shell(
         stdout=PIPE if capture_output is True else sys.stdout,
         stderr=PIPE if capture_output is True else sys.stderr,
         universal_newlines=True,
+        cwd=cwd,
     ) as proc:
         stderr, stdout = proc.communicate()
         returncode = proc.returncode

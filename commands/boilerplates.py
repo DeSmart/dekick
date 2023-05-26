@@ -7,21 +7,21 @@ from rich.console import Console
 from rich.traceback import install
 
 from commands.local import install_logger
-from lib.parser_defaults import parser_default_args, parser_default_funcs
+from lib.parser_defaults import (
+    parser_add_subparser_for_subcommands,
+    parser_default_args,
+    parser_default_funcs,
+)
 
 install()
 console = Console()
 
 
 def arguments(parser: ArgumentParser):
-    """Sets arguments for this command
-
-    Args:
-        parser (ArgumentParser): parser object that will be used to parse arguments
-    """
-
+    """Set arguments for this command."""
+    module_name = __name__.rsplit(".", maxsplit=1)[-1]
+    parser_add_subparser_for_subcommands(parser, module_name)
     parser.set_defaults(func=main)
-
     parser_default_args(parser)
 
 

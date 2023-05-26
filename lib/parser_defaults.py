@@ -1,5 +1,8 @@
 """Default arguments and functions for commands"""
-from lib.settings import set_ci_mode, set_pytest_mode
+from argparse import ArgumentParser
+from importlib import import_module
+
+from lib.settings import DEKICK_COMMANDS, set_ci_mode, set_pytest_mode
 from lib.spinner import set_spinner_mode
 
 
@@ -77,3 +80,17 @@ def parser_default_funcs(parser):
     pytest()
     ci_cd()
     spinner()
+
+
+def parser_add_subparser_for_subcommands(parser: ArgumentParser, module_name: str):
+    """Adds subparsers for subcommands"""
+    sub_parser = parser.add_subparsers(
+        dest="subcommand", required=True, metavar="subcommand"
+    )
+    for sub_command in DEKICK_COMMANDS["sub_commands"][module_name]:
+        sub_module_name = sub_command.replace("-", "_")  # pylint: disable=invalid-name
+        module = import_module(f"commands.sub_{module_name}.{sub_module_name}")
+        sub_command_parser = sub_parser.add_parser(
+            sub_command, help=module.parser_help()
+        )
+        module.arguments(sub_command_parser)

@@ -1,25 +1,17 @@
 import sys
 from argparse import ArgumentParser, Namespace
-from importlib import import_module
 
-from lib.parser_defaults import parser_default_args, parser_default_funcs
-
-DEKICK_CREDENTIALS_SUB_COMMANDS = ["get"]
+from lib.parser_defaults import (
+    parser_add_subparser_for_subcommands,
+    parser_default_args,
+    parser_default_funcs,
+)
 
 
 def arguments(parser: ArgumentParser):
     """Set arguments for this command."""
-    sub_parser = parser.add_subparsers(
-        dest="subcommand", required=True, metavar="subcommand"
-    )
-    for sub_command in DEKICK_CREDENTIALS_SUB_COMMANDS:
-        sub_command_parser = sub_parser.add_parser(
-            sub_command, help=f"{sub_command.capitalize()} credentials"
-        )
-        module_name = sub_command.replace("-", "_")  # pylint: disable=invalid-name
-        module = import_module(f"commands.sub_credentials.{module_name}")
-        module.arguments(sub_command_parser)
-
+    module_name = __name__.rsplit(".", maxsplit=1)[-1]
+    parser_add_subparser_for_subcommands(parser, module_name)
     parser.set_defaults(func=main)
     parser_default_args(parser)
 

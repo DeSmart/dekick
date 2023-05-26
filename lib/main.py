@@ -40,7 +40,7 @@ different flavours (languages, frameworks) in local, test, beta and production e
 )
 sub_parser = parser.add_subparsers(required=True, dest="command", help="command to run")
 
-for command in DEKICK_COMMANDS:
+for command in DEKICK_COMMANDS["commands"]:
     command_parser = sub_parser.add_parser(command, help=f"{command} help")
     module_name = command.replace("-", "_")  # pylint: disable=invalid-name
     module = import_module(f"commands.{module_name}")
