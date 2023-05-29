@@ -12,10 +12,10 @@ from rich.console import Console
 from rich.traceback import install
 
 from lib.logger import get_log_level, install_logger
-from lib.misc import get_compose_project_name, get_flavour_container, run_shell
+from lib.misc import run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_END, get_seconds_since_dekick_start
+from lib.settings import C_CMD, C_CODE, C_END, C_ERROR, get_seconds_since_dekick_start
 
 install()
 console = Console()
@@ -140,7 +140,6 @@ def docker_compose(
                 raise_error=False,
                 capture_output=True,
             )
-
             # Retry docker-compose command
             return docker_compose(
                 cmd=cmd,
@@ -151,6 +150,7 @@ def docker_compose(
                 raise_error=raise_error,
                 capture_output=capture_output,
             )
+
         raise CalledProcessError(
             returncode=error.returncode,
             cmd=error.cmd,
