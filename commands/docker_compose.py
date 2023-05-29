@@ -4,6 +4,7 @@ Runs docker-compose
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
+from subprocess import CalledProcessError
 from time import sleep
 from typing import Union
 
@@ -11,10 +12,10 @@ from rich.console import Console
 from rich.traceback import install
 
 from lib.logger import get_log_level, install_logger
-from lib.misc import run_shell
+from lib.misc import get_compose_project_name, get_flavour_container, run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_CODE, C_END, C_ERROR, get_seconds_since_dekick_start
+from lib.settings import C_CMD, C_END, get_seconds_since_dekick_start
 
 install()
 console = Console()
@@ -110,13 +111,52 @@ def docker_compose(
     else:
         logging.info("Running docker-compose(%s)", [cmd] + args)
 
-    return run_shell(
-        cmd=shell_cmd,
-        env=env,
-        raise_exception=raise_exception,
-        raise_error=raise_error,
-        capture_output=capture_output,
-    )
+    # Catching docker compose `network not found` error
+    try:
+        ret = run_shell(
+            cmd=shell_cmd,
+            env=env,
+            raise_exception=raise_exception,
+            raise_error=raise_error,
+            capture_output=capture_output,
+        )
+        return ret
+    except CalledProcessError as error:  # pylint: disable=broad-except
+
+        if "network" in str(error.stdout) and "not found" in str(error.stdout):
+            # Go down with services if network not found, should fix
+            # the issue with `network not found` docker-compose error
+            logging.warning(
+                "Catched `network not found` error, going down with services and retrying"
+            )
+            run_shell(
+                cmd=[
+                    "docker",
+                    "compose",
+                    "down",
+                ],
+                env=env,
+                raise_exception=False,
+                raise_error=False,
+                capture_output=True,
+            )
+
+            # Retry docker-compose command
+            return docker_compose(
+                cmd=cmd,
+                args=args,
+                env=env,
+                docker_env=docker_env,
+                raise_exception=raise_exception,
+                raise_error=raise_error,
+                capture_output=capture_output,
+            )
+        raise CalledProcessError(
+            returncode=error.returncode,
+            cmd=error.cmd,
+            output=error.output,
+            stderr=error.stderr,
+        ) from error
 
 
 def wait_for_log(
@@ -137,8 +177,7 @@ def wait_for_log(
     timer = 0
 
     while timer < timeout:
-        log = get_container_log(
-            container_name, get_seconds_since_dekick_start())
+        log = get_container_log(container_name, get_seconds_since_dekick_start())
         if failed_string and failed_string in log:
             raise Exception()
         if failed_string and failed_string in log and search_string in log:
@@ -186,7 +225,9 @@ def get_container_exit_code(container_name: str) -> tuple:
     return (int(inspect[0]), inspect[1])
 
 
-def get_container_log(container_name: str, since: float = 0, capture_output: bool = True) -> str:
+def get_container_log(
+    container_name: str, since: float = 0, capture_output: bool = True
+) -> str:
     """Gets container log since seconds ago, if since is 0, it will return the whole log"""
 
     since_formatted = f"{since}s"
