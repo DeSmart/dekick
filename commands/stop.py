@@ -99,9 +99,12 @@ def remove_all_volumes():  # pylint: disable=inconsistent-return-statements
 
 def stop_all_services() -> dict:
     """Stops all services"""
-    cmd = "kill"
     docker_compose(
-        cmd=cmd, raise_exception=False, raise_error=False, capture_output=True
+        cmd="down",
+        args=["--timeout", "5", "--remove-orphans"],
+        raise_exception=False,
+        raise_error=False,
+        capture_output=True,
     )
 
     return {"success": True, "text": ""}
