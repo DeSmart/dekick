@@ -9,7 +9,6 @@ from shutil import copyfile
 from tempfile import mkdtemp
 
 from lib.dekickrc import get_dekick_version, get_dekickrc_value
-from lib.environments import get_environments
 from lib.global_config import get_global_config_value
 from lib.logger import install_logger
 from lib.misc import run_shell
@@ -32,13 +31,6 @@ def parser_help() -> str:
 
 def arguments(parser: ArgumentParser):
     """Set arguments for this command."""
-    parser.add_argument(
-        "--env",
-        required=False,
-        default="",
-        help="Set specific environment to get credentials for",
-        choices=get_environments(),
-    )
     parser.set_defaults(func=main)
     parser_default_args(parser)
     parser_driver_arguments(parser)
