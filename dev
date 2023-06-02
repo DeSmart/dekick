@@ -41,7 +41,12 @@ function show_banner() {
     echo "██║  ██║██╔══╝  ██╔═██╗ ██║██║     ██╔═██╗ ";
     echo "██████╔╝███████╗██║  ██╗██║╚██████╗██║  ██╗";
     echo "╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝";
-    echo "${dekick_version} installed!"
+
+    if [ "$PROJECT_ROOT" = "$DEKICK_PATH" ]; then
+      echo -e "\033[38;5;231;48;5;196m${dekick_version} in test mode installed\033[0m"
+    else
+      echo "${dekick_version} installed!"
+    fi
     echo
     if [ "$PROJECT_ROOT" ]; then
       echo "Project path: ${PROJECT_ROOT}"
@@ -57,7 +62,7 @@ function check_dekickrc() {
     return 0
   fi
   if [ ! -f "${PROJECT_ROOT}/${DEKICKRC_FILE}" ]; then
-    echo "Error: No ${DEKICKRC_FILE} file found in current directory. Please 'cd' into the directory containinig ${DEKICKRC_FILE} file."
+    echo -e "\033[31mError:\033[0m No ${DEKICKRC_FILE} file found in current directory. Please 'cd' into the directory containing ${DEKICKRC_FILE} file."
     return 1
   fi
 }
