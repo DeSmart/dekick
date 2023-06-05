@@ -55,6 +55,8 @@ DEKICKRC_GLOBAL_PATH = f"/tmp/homedir/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
 
 DEKICK_MIGRATIONS_DIR = f"{DEKICK_PATH}/migrations"
 
+DEKICK_BOILERPLATES_INSTALL_PATH = getenv("DEKICK_BOILERPLATES_INSTALL_PATH") or ""
+
 DEKICK_DOTENV_FILE = ".env"
 DEKICK_DOTENV_PATH = f"{PROJECT_ROOT}/{DEKICK_DOTENV_FILE}"
 
@@ -84,7 +86,7 @@ def save_commands(commands: list):
 
 
 def get_dekick_commands():
-    """Get available commands to use with dekick"""
+    """Generate available commands to use with dekick"""
     commands: list = []
     for file in sorted(glob(f"{DEKICK_PATH}/commands/*.py")):
         file = path.splitext(path.basename(file))[0].replace("_", "-")

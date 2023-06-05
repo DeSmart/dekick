@@ -13,7 +13,6 @@ from lib.global_config import get_global_config_value
 from lib.logger import install_logger
 from lib.misc import run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
-from lib.providers.credentials import parser_driver_arguments
 from lib.run_func import run_func
 from lib.settings import C_CODE, C_END, C_FILE, DEKICKRC_GLOBAL_HOST_PATH, PROJECT_ROOT
 from lib.yaml.reader import read_yaml
@@ -33,13 +32,12 @@ def arguments(parser: ArgumentParser):
     """Set arguments for this command."""
     parser.set_defaults(func=main)
     parser_default_args(parser)
-    parser_driver_arguments(parser)
 
 
 def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     """Main entry point for this command."""
     parser_default_funcs(parser)
-    install_logger(parser.log_level, parser.log_filename)
+    install_logger(parser.log_level, parser.log_filename or "/dev/null", False)
     exit_code = ui_update()
     sys.exit(exit_code)
 
@@ -112,7 +110,8 @@ def ui_download_boilerplate(boilerplate: str):
         return {
             "success": False,
             "text": "Please add URL to boilerplates Git repository "
-            + f"using {C_CODE}boilerplates.git_url{C_END} key in your {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}",
+            + f"using {C_CODE}boilerplates.git_url{C_END} "
+            + f"key in your {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}",
         }
 
 
@@ -139,3 +138,8 @@ def ui_update_local_files(boilerplate: str):
                 continue
 
             copyfile(file_from, file_to)
+
+    return {
+        "success": True,
+        "text": "Files copied successfully. Please review and commit changes into your project.",
+    }

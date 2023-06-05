@@ -62,8 +62,13 @@ function check_dekickrc() {
     return 0
   fi
   if [ ! -f "${PROJECT_ROOT}/${DEKICKRC_FILE}" ]; then
-    echo -e "\033[31mError:\033[0m No ${DEKICKRC_FILE} file found in current directory. Please 'cd' into the directory containing ${DEKICKRC_FILE} file."
-    return 1
+    echo -e "\n\033[33mWarning:\033[0m No ${DEKICKRC_FILE} file found in current directory."
+    echo -ne "\nDo you want to install boilerplate in the current directory? (Y/n) "
+    read -r answer
+    if [ "$answer" = "${answer#[nN]}" ]; then
+      dekick boilerplates install --force
+    fi
+    return 0
   fi
 }
 
@@ -107,6 +112,5 @@ fi
 
 export DEKICK_PATH PROJECT_ROOT
 
-if check_dekickrc; then
-  show_banner
-fi
+show_banner
+check_dekickrc

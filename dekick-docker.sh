@@ -56,20 +56,30 @@ if [ -f "$HOST_HOME/.gitlabrc" ]; then
   DEKICK_GITLABRC="-v $HOST_HOME/.gitlabrc:/tmp/homedir/.gitlabrc"
 fi
 
+# Boilerplate install - bind mount current directory
+if [ "$1" = "boilerplates" ] && [ "$2" = "install" ]; then
+  cd - >/dev/null 2>&1 || exit 1
+  DEKICK_BOILERPLATES_INSTALL_PATH=$(readlink -f "$PWD")
+  cd - >/dev/null 2>&1 || exit 1
+  VOLUME_BOILERPLATES="-v "${DEKICK_BOILERPLATES_INSTALL_PATH}:${DEKICK_BOILERPLATES_INSTALL_PATH}""
+fi
+
 docker run $DOCKER_FLAGS --rm \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
+  ${VOLUME_BOILERPLATES} \
   ${DEKICK_DOCKER_PORTS} \
   ${DEKICK_GITLABRC} \
-  -e DEKICK_PATH="${DEKICK_PATH}" \
-  -e PROJECT_ROOT="${PROJECT_ROOT}" \
+  -e DEKICK_BOILERPLATES_INSTALL_PATH="${DEKICK_BOILERPLATES_INSTALL_PATH}" \
   -e CURRENT_UID="${CURRENT_UID}" \
   -e CURRENT_USERNAME="${CURRENT_USERNAME}" \
-  -e DEKICK_DOCKER_IMAGE="${IMAGE}" \
   -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
+  -e DEKICK_DOCKER_IMAGE="${IMAGE}" \
+  -e DEKICK_PATH="${DEKICK_PATH}" \
   -e HOST_ARCH="${HOST_ARCH}" \
-  -e HOST_PLATFORM="${HOST_PLATFORM}" \
   -e HOST_HOME="${HOST_HOME}" \
+  -e HOST_PLATFORM="${HOST_PLATFORM}" \
+  -e PROJECT_ROOT="${PROJECT_ROOT}" \
   --add-host proxy:host-gateway \
   -v "$HOST_DOCKER_SOCK:/var/run/docker.sock" \
   -v "${DEKICK_GLOBAL_FILE}:/tmp/homedir/.config/dekick/global.yml" \

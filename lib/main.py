@@ -40,29 +40,49 @@ different flavours (languages, frameworks) in local, test, beta and production e
 )
 sub_parser = parser.add_subparsers(required=True, dest="command", help="command to run")
 
-for command in DEKICK_COMMANDS["commands"]:
-    command_parser = sub_parser.add_parser(command, help=f"{command} help")
-    module_name = command.replace("-", "_")  # pylint: disable=invalid-name
+ARG_COMMAND = sys.argv[1] if len(sys.argv) > 1 else None
+ARG_SUBCOMMAND = sys.argv[2] if len(sys.argv) > 2 else None
+
+# Help support - if no command is given, show help, thus load all commands
+if ARG_COMMAND is None or ARG_COMMAND not in DEKICK_COMMANDS["commands"]:
+    for command in DEKICK_COMMANDS["commands"]:
+        command_parser = sub_parser.add_parser(command, help=f"{command} help")
+        module_name = command.replace("-", "_")  # pylint: disable=invalid-name
+        module = import_module(f"commands.{module_name}")
+        module.arguments(command_parser)
+# Load only one command
+else:
+    command_parser = sub_parser.add_parser(ARG_COMMAND, help=f"{ARG_COMMAND} help")
+    module_name = ARG_COMMAND.replace("-", "_")  # pylint: disable=invalid-name
     module = import_module(f"commands.{module_name}")
     module.arguments(command_parser)
 
 namespace, args = parser.parse_known_args()
 
-version = (
-    f"docker:{DEKICK_DOCKER_IMAGE}" if is_dekick_dockerized() else get_dekick_version()
-)
-print("╭" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╮")
 
-dekick_str_len = len(f"DeKick {namespace.command}")
-version_str_len = len(f"version: {version}")
+def show_banner():
+    """Shows a banner with the current version of DeKick."""
+    version = (
+        f"docker:{DEKICK_DOCKER_IMAGE}"
+        if is_dekick_dockerized()
+        else get_dekick_version()
+    )
+    print("╭" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╮")
 
-print(
-    f"│ {C_CMD}DeKick{C_END} {C_FILE}{namespace.command}"
-    + (((TERMINAL_COLUMN_WIDTH - 5) - version_str_len - dekick_str_len) * " ")
-    + f"{C_END} version: {C_CODE}{version}{C_END}"
-    + " │"
-)
-print("╰" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╯")
+    dekick_str_len = len(f"DeKick {namespace.command}")
+    version_str_len = len(f"version: {version}")
+
+    print(
+        f"│ {C_CMD}DeKick{C_END} {C_FILE}{namespace.command}"
+        + (((TERMINAL_COLUMN_WIDTH - 5) - version_str_len - dekick_str_len) * " ")
+        + f"{C_END} version: {C_CODE}{version}{C_END}"
+        + " │"
+    )
+    print("╰" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╯")
+
+
+if ARG_COMMAND != "boilerplates" and ARG_SUBCOMMAND != "install":
+    show_banner()
 
 
 def show_run_time():
