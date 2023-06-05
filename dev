@@ -42,11 +42,8 @@ function show_banner() {
     echo "██████╔╝███████╗██║  ██╗██║╚██████╗██║  ██╗";
     echo "╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝";
 
-    if [ "$PROJECT_ROOT" = "$DEKICK_PATH" ]; then
-      echo -e "\033[38;5;231;48;5;196m${dekick_version} in test mode installed\033[0m"
-    else
-      echo "${dekick_version} installed!"
-    fi
+    echo "${dekick_version} installed!"
+
     echo
     if [ "$PROJECT_ROOT" ]; then
       echo "Project path: ${PROJECT_ROOT}"
@@ -70,6 +67,31 @@ function check_dekickrc() {
     fi
     return 0
   fi
+}
+
+function check_test_mode() {
+    if [ "$PROJECT_ROOT" != "$DEKICK_PATH" ]; then
+      return 0
+    fi
+
+    local dekick_version
+    dekick_version=$(cat "${DEKICK_PATH}/.version")
+
+    echo -e "\n\033[38;5;231;48;5;196m${dekick_version} in test mode installed\033[0m"
+    echo -ne "\nDo you want to start tests using PyTest? (Y/n) "
+    read -r answer
+
+    if [ "$answer" = "${answer#[nN]}" ]; then
+      HOST_PLATFORM=$(uname -s)
+      PYTEST_ARGS=""
+
+      if [ "${HOST_PLATFORM}" = "Linux" ]; then
+        PYTEST_ARGS="-n6"
+      fi
+
+      dekick pytest ${PYTEST_ARGS}
+    fi
+    return 0
 }
 
 function dekick() {
@@ -114,3 +136,4 @@ export DEKICK_PATH PROJECT_ROOT
 
 show_banner
 check_dekickrc
+check_test_mode
