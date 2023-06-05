@@ -103,6 +103,8 @@ def get_local_version() -> str:
 
 
 def compare_versions() -> bool:
+    """Compare local and remote version of DeKick"""
+
     def run():
 
         local_version = get_local_version()
@@ -163,6 +165,8 @@ def clone_dekick(tmpdir: str):
 
 
 def copy_files(tmpdir: str):
+    """Copies files from tmpdir to DEKICK_PATH"""
+
     def run():
         try:
             run_shell(["rm", "-rf", f"{DEKICK_PATH}*", f"{DEKICK_PATH}.*"], {})
@@ -187,4 +191,5 @@ def copy_files(tmpdir: str):
 
 
 def make_tmpdir() -> str:
+    """Makes temporary directory"""
     return mkdtemp()
