@@ -3,8 +3,9 @@ import sys
 from argparse import ArgumentParser, Namespace
 from glob import glob
 from os.path import dirname
+from re import match
 
-from beaupy import confirm, prompt, select
+from beaupy import ValidationError, confirm, prompt, select
 from rich.console import Console
 
 from lib.dekickrc import get_dekick_version
@@ -16,6 +17,7 @@ from lib.run_func import run_func
 from lib.settings import (
     C_CODE,
     C_END,
+    C_ERROR,
     C_FILE,
     DEKICK_BOILERPLATES,
     DEKICK_BOILERPLATES_INSTALL_PATH,
@@ -23,6 +25,7 @@ from lib.settings import (
     DEKICKRC_GLOBAL_HOST_PATH,
 )
 from lib.yaml.reader import read_yaml
+from lib.yaml.saver import save_flat
 
 console = Console()
 
@@ -62,12 +65,31 @@ def ui_choose(force: bool = False):
 
     console.print("\nChoose a boilerplate to install:")
     boilerplate = select(list(DEKICK_BOILERPLATES), cursor="🢧", cursor_style="cyan")
+
     run_func(
         text=f"Installing {C_CODE}{boilerplate}{C_END} to "
         + f"{C_FILE}{DEKICK_BOILERPLATES_INSTALL_PATH}{C_END}",
         func=ui_install,
         func_args={"boilerplate": boilerplate},
     )
+
+    if confirm(
+        "Do you want to initialize Git repository?",
+        default_is_yes=True,
+    ):
+        print("Choose default branch:")
+        default_branch = select(
+            ["develop", "master", "main"],
+            cursor="🢧",
+            cursor_style="cyan",
+        )
+        rbash(
+            "Initialize Git repository",
+            f'cd "{DEKICK_BOILERPLATES_INSTALL_PATH}"; git init --initial-branch={default_branch}',
+        )
+
+    dekickrc_project_group, dekickrc_project_name = ui_get_dekick_group_name()
+    update_dekickrc(dekickrc_project_group, dekickrc_project_name)
 
 
 def ui_install(boilerplate: str):
@@ -76,10 +98,9 @@ def ui_install(boilerplate: str):
     download_boilerplate(boilerplate)
     download_dekick()
     cleanup(boilerplate)
-
     return {
         "success": True,
-        "text": f"Boilerplate installed successfully, DeKick "
+        "text": "Boilerplate installed successfully, DeKick "
         + f"installed into {C_FILE}dekick/{C_END} directory",
     }
 
@@ -137,6 +158,44 @@ def download_dekick():
     )
 
 
+def ui_get_dekick_group_name() -> tuple:
+    """Get group and name for the project"""
+    try:
+
+        def validator(text: str):
+            return match(r"^[a-zA-Z0-9-\/\_]+$", text) is not None
+
+        dekickrc_project_group = prompt(
+            "What would be the group for the project?",
+            target_type=str,
+            initial_value="group",
+            validator=validator,
+        )
+        dekickrc_project_name = prompt(
+            "What would be the name of the project?",
+            target_type=str,
+            initial_value="name",
+            validator=validator,
+        )
+    except ValidationError:
+        print(
+            f"{C_ERROR}Error:{C_END} Group and name should contain only "
+            + "small/capital letters, numbers and -_/ (regex '^[a-zA-Z0-9-/_]+$')."
+        )
+        return ui_get_dekick_group_name()
+
+    return (dekickrc_project_group, dekickrc_project_name)
+
+
+def update_dekickrc(dekickrc_project_group, dekickrc_project_name):
+    """Update .dekickrc file with project group and name"""
+    dekickrc_path = f"{DEKICK_BOILERPLATES_INSTALL_PATH}/.dekickrc.yml"
+    dekickrc_flat = read_yaml(dekickrc_path)
+    dekickrc_flat["project"]["group"] = dekickrc_project_group
+    dekickrc_flat["project"]["name"] = dekickrc_project_name
+    save_flat(dekickrc_path, dekickrc_flat)
+
+
 def cleanup(boilerplate: str):
     """Clean up boilerplate files"""
     boilerplate_flat = read_yaml(
@@ -159,6 +218,7 @@ def cleanup(boilerplate: str):
         "Move boilerplate files to the root directory",
         f"mv {DEKICK_BOILERPLATES_INSTALL_PATH}/{boilerplate}/* {DEKICK_BOILERPLATES_INSTALL_PATH}/;"
         + f"mv {DEKICK_BOILERPLATES_INSTALL_PATH}/{boilerplate}/.* {DEKICK_BOILERPLATES_INSTALL_PATH}/",
+        expected_code=1,
     )
 
     boilerplate_basedir = dirname(boilerplate)

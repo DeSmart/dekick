@@ -81,10 +81,6 @@ def show_banner():
     print("╰" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╯")
 
 
-if ARG_COMMAND != "boilerplates" and ARG_SUBCOMMAND != "install":
-    show_banner()
-
-
 def show_run_time():
     """Shows total the run time of the application."""
     total_run_time = format_timespan(round(time() - get_dekick_time_start()))
@@ -94,7 +90,9 @@ def show_run_time():
     logging.info(running_time)
 
 
-atexit.register(show_run_time)
+if ARG_COMMAND != "boilerplates" and ARG_SUBCOMMAND != "install":
+    show_banner()
+    atexit.register(show_run_time)
 
 try:
     namespace.func(namespace, args)
