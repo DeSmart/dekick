@@ -32,7 +32,7 @@ class LoggerFilter(logging.Filter):
         return True
 
 
-def install_logger(level: str = "", filename: str = ""):
+def install_logger(level: str = "", filename: str = "", show_spinner: bool = True):
     """Installs the logger and sets the log level and filenam"""
 
     filename = "dekick.log" if filename == "" else filename
@@ -40,15 +40,19 @@ def install_logger(level: str = "", filename: str = ""):
 
     set_log_level(level)
     set_log_filename(filename)
-    spinner = create_spinner(
-        f"Logging to {C_CODE}{filename}{C_END} (level {C_CMD}{level}{C_END})"
-    )
 
-    spinner.start()
+    if show_spinner is True:
+        spinner = create_spinner(
+            f"Logging to {C_CODE}{filename}{C_END} (level {C_CMD}{level}{C_END})"
+        )
+        spinner.start()
 
     log_format = "%(asctime)s %(levelname)s: %(message)s"
     if filename == "stdout":
-        log_format = f"{C_CMD}%(asctime)s{C_END} {C_CODE}%(levelname)s{C_END}: {C_FILE}[%(module)s:%(lineno)d]{C_END} %(message)s"
+        log_format = (
+            f"{C_CMD}%(asctime)s{C_END} {C_CODE}%(levelname)s{C_END}: "
+            + f"{C_FILE}[%(module)s:%(lineno)d]{C_END} %(message)s"
+        )
     elif level == "DEBUG":
         log_format = "%(asctime)s %(levelname)s: [%(module)s:%(lineno)d] %(message)s"
 
@@ -79,7 +83,8 @@ def install_logger(level: str = "", filename: str = ""):
 
     logging.basicConfig(**config)
 
-    spinner.succeed()
+    if show_spinner is True:
+        spinner.succeed()
 
 
 def set_log_filename(filename: Union[str, None]):

@@ -70,7 +70,6 @@ def _hvac_create_client(vault_token: str = "") -> hvac.Client:
     global HVAC_CLIENT  # pylint: disable=global-statement
 
     if not HVAC_CLIENT:
-        HVAC_CLIENT = hvac.Client(
-            url=VAULT_ADDR, token=vault_token or VAULT_TOKEN)
+        HVAC_CLIENT = hvac.Client(url=VAULT_ADDR, token=vault_token or VAULT_TOKEN)
 
     return HVAC_CLIENT

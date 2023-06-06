@@ -9,13 +9,21 @@ from lib.run_func import run_func
 from lib.settings import C_CMD, C_CODE, C_END, C_FILE, DEKICK_DOTENV_FILE, is_pytest
 
 
+def parser_help() -> str:
+    """Set description for this command, used in arguments parser"""
+    return (
+        "Get credentials from credentials provider "
+        + f"defined in {C_FILE}.dekickrc.yml{C_END} and save it to {C_FILE}.env{C_END} file"
+    )
+
+
 def arguments(parser: ArgumentParser):
     """Set arguments for this command."""
     parser.add_argument(
         "--env",
         required=False,
         default="",
-        help="choose environment to get credentials for",
+        help="Set specific environment to get credentials for",
         choices=get_environments(),
     )
     parser.set_defaults(func=main)

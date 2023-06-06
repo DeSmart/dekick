@@ -1,10 +1,8 @@
 """Global DeKick settings, stored in user's home directory"""
-import sys
-
 import flatdict
 
 from lib.settings import (
-    C_CMD,
+    C_CODE,
     C_END,
     C_FILE,
     DEKICKRC_GLOBAL_HOST_PATH,
@@ -20,7 +18,7 @@ def get_global_config_value(name: str):
     try:
         if not name in dekickrc_flat:
             raise TypeError(
-                f"Key {name} does not exists in "
+                f"{C_CODE}Key{C_END} {name} does not exists in "
                 + f"{C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}"
             )
         value = dekickrc_flat[name]
@@ -29,7 +27,7 @@ def get_global_config_value(name: str):
         return value
     except TypeError as exception:
         raise TypeError(
-            f"Key {name} does not exists in "
+            f"Key {C_CODE}{name}{C_END} does not exists in "
             + f"{C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}"
         ) from exception
 

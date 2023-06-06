@@ -25,7 +25,8 @@ def api_is_ready():
             app_url = get_dotenv_var("APP_URL")
             return {
                 "success": True,
-                "text": f"API should be available at {app_url}/api/healthcheck?HEALTHCHECK_KEY={healtcheck_key}",
+                "text": "API should be available at "
+                + f"{app_url}/api/healthcheck?HEALTHCHECK_KEY={healtcheck_key}",
             }
         except KeyError as error:
             return {
@@ -41,8 +42,13 @@ def setup_permissions(fix: bool = False):
     """Setup permissions for the Laravel project."""
 
     def run():
-        dirs_chown = "bootstrap/cache/ storage/ storage/app/ storage/app/public/ storage/app/scribe/ storage/framework/ storage/framework/cache/ storage/framework/testing/ storage/framework/sessions/ storage/framework/views/ storage/app/apidoc storage/logs/ vendor/ /.cache/"
-        dirs_chmod = "bootstrap/cache/ storage/ vendor/ /.cache/"
+        dirs_chown = (
+            "bootstrap/cache/ storage/ storage/app/ storage/app/public/ storage/app/scribe/ "
+            + "storage/framework/ storage/framework/cache/ storage/framework/testing/ "
+            + "storage/framework/sessions/ storage/framework/views/ storage/app/apidoc "
+            + "storage/logs/ vendor/"
+        )
+        dirs_chmod = "bootstrap/cache/ storage/ vendor/"
         cmd = "run"
         args = [
             "-T",
@@ -51,7 +57,8 @@ def setup_permissions(fix: bool = False):
             get_container(),
             "sh",
             "-c",
-            f"mkdir -p {dirs_chown}; chown {CURRENT_UID} {dirs_chown}; chmod oug+rwX {dirs_chmod} -R",
+            f"mkdir -p {dirs_chown}; chown {CURRENT_UID} {dirs_chown}; "
+            + f"chmod oug+rwX {dirs_chmod} -R",
         ]
 
         docker_compose(cmd=cmd, args=args, env={})

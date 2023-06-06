@@ -1,19 +1,20 @@
 # ! IMPORTANT !
 # After updating requirements, please generate the Docker image with the following command:
 # cd docker && ./create-docker-images.sh
-halo==0.0.31
-colorama==0.4.6
-rich==13.3.5
-python-gitlab==3.14.0
-python-dotenv==1.0.0
-flatdict==4.0.1
-pyyaml==6.0
-bash==0.6
-pytest==7.3.1
-pytest_xdist==3.2.1
-pytest-instafail==0.4.2
-debugpy==1.6.5
-filelock==3.12.0
-humanfriendly==10.0
-hvac==1.1.0
-yamllint==1.31.0
+halo
+colorama
+rich
+python-gitlab
+python-dotenv
+flatdict
+pyyaml
+bash
+pytest
+pytest_xdist
+pytest-instafail
+debugpy
+filelock
+humanfriendly
+hvac
+yamllint
+beaupy
