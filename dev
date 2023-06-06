@@ -42,11 +42,8 @@ function show_banner() {
     echo "██████╔╝███████╗██║  ██╗██║╚██████╗██║  ██╗";
     echo "╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝";
 
-    if [ "$PROJECT_ROOT" = "$DEKICK_PATH" ]; then
-      echo -e "\033[38;5;231;48;5;196m${dekick_version} in test mode installed\033[0m"
-    else
-      echo "${dekick_version} installed!"
-    fi
+    echo "${dekick_version} installed!"
+
     echo
     if [ "$PROJECT_ROOT" ]; then
       echo "Project path: ${PROJECT_ROOT}"
@@ -62,9 +59,39 @@ function check_dekickrc() {
     return 0
   fi
   if [ ! -f "${PROJECT_ROOT}/${DEKICKRC_FILE}" ]; then
-    echo -e "\033[31mError:\033[0m No ${DEKICKRC_FILE} file found in current directory. Please 'cd' into the directory containing ${DEKICKRC_FILE} file."
-    return 1
+    echo -e "\n\033[33mWarning:\033[0m No ${DEKICKRC_FILE} file found in current directory."
+    echo -ne "\nDo you want to install boilerplate in the current directory? (Y/n) "
+    read -r answer
+    if [ "$answer" = "${answer#[nN]}" ]; then
+      dekick boilerplates install --force
+    fi
+    return 0
   fi
+}
+
+function check_test_mode() {
+    if [ "$PROJECT_ROOT" != "$DEKICK_PATH" ]; then
+      return 0
+    fi
+
+    local dekick_version
+    dekick_version=$(cat "${DEKICK_PATH}/.version")
+
+    echo -e "\n\033[38;5;231;48;5;196m${dekick_version} in test mode installed\033[0m"
+    echo -ne "\nDo you want to start tests using PyTest? (Y/n) "
+    read -r answer
+
+    if [ "$answer" = "${answer#[nN]}" ]; then
+      HOST_PLATFORM=$(uname -s)
+      PYTEST_ARGS=""
+
+      if [ "${HOST_PLATFORM}" = "Linux" ]; then
+        PYTEST_ARGS="-n6"
+      fi
+
+      dekick pytest ${PYTEST_ARGS}
+    fi
+    return 0
 }
 
 function dekick() {
@@ -107,6 +134,6 @@ fi
 
 export DEKICK_PATH PROJECT_ROOT
 
-if check_dekickrc; then
-  show_banner
-fi
+show_banner
+check_dekickrc
+check_test_mode
