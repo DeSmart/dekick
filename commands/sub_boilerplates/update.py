@@ -127,7 +127,7 @@ def ui_update_local_files(boilerplate: str):
 
     for pattern in patterns:
         glob_pattern = f"{BOILERPLATES_TMP_PATH}/{boilerplate}/{pattern}"
-        for file_from in glob(glob_pattern):
+        for file_from in glob(glob_pattern, recursive=True):
             file_to = file_from.replace(
                 f"{BOILERPLATES_TMP_PATH}/{boilerplate}", PROJECT_ROOT
             )
