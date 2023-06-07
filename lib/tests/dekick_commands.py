@@ -59,8 +59,9 @@ def dekick_build(flavour: str, version: str) -> bool:
     return proc["code"] == 0
 
 
-def dekick_test(flavour: str, version: str, args: list = None) -> bool:
+def dekick_test(flavour: str, version: str, args=None) -> bool:
     """Runs dekick test command with given flavour and version of the boilerplate used"""
+    args = args or []
     proc = _dekick_command_wrapper(["test"] + args, flavour, version)
     return proc["code"] == 0
 
