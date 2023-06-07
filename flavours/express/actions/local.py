@@ -12,6 +12,7 @@ from flavours.shared import (
     yarn_build,
     yarn_install,
 )
+from lib.dekickrc import get_dekickrc_value
 
 install()
 console = Console()
@@ -23,5 +24,6 @@ def main():
     yarn_install()
     yarn_build()
     start_services()
-    ui_seed()
+    if get_dekickrc_value("dekick.settings.seed.local") is True:
+        ui_seed()
     wait_for_container(search_string="API @ port", timeout=60)

@@ -18,3 +18,6 @@ dekick:
   boilerplate: type="str",default="express",validation="boilerplate()",required="true"
   ports: type="list",default="[{'port':3000,'service':'web'}]",validation="{'port':'port()','service':'name()'}",required="true"
   flavour: type="str",default="react",validation="flavour()",required="true"
+  settings:
+    seed:
+      local: type="bool",default="true",validation="bool()",required="false"

@@ -20,16 +20,16 @@ def wait_for_container(search_string: str, timeout: int = 30):
 def app_is_ready():
     def run():
         try:
-            api_url = get_dotenv_var("API_URL")
+            api_url = get_dotenv_var("API_URL") or get_dotenv_var("APP_URL")
             return {
                 "success": True,
-                "text": f"API should be available at {api_url}",
+                "text": f"App should be available at {api_url}",
             }
         except KeyError as error:
             return {
                 "success": False,
                 "type": "warn",
-                "text": f"Warning! API may not work properly. Reason: {error.args[0]}",
+                "text": f"Warning! App may not work properly. Reason: {error.args[0]}",
             }
 
     run_func(text="Checking if app is ready", func=run)

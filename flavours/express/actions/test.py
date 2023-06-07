@@ -7,6 +7,7 @@ from rich.traceback import install
 from commands.seed import ui_seed
 from commands.yarn import ui_yarn
 from flavours.shared import copy_artifacts_from_dind, yarn_install
+from lib.dekickrc import get_dekickrc_value
 
 install()
 console = Console()
@@ -16,5 +17,6 @@ def main(args):
     """Main"""
     yarn_install()
     copy_artifacts_from_dind()
-    ui_seed(force=True)
+    if get_dekickrc_value("dekick.settings.seed.local") is True:
+        ui_seed(force=True)
     ui_yarn(args=["test"] + args)
