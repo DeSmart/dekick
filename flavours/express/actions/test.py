@@ -6,24 +6,15 @@ from rich.traceback import install
 
 from commands.seed import ui_seed
 from commands.yarn import ui_yarn
-from flavours.shared import (
-    copy_artifacts_from_dind,
-    pull_and_build_images,
-    start_services,
-    yarn_build,
-    yarn_install,
-)
+from flavours.shared import copy_artifacts_from_dind, yarn_install
 
 install()
 console = Console()
 
 
-def main():
+def main(args):
     """Main"""
-    pull_and_build_images()
     yarn_install()
     copy_artifacts_from_dind()
-    yarn_build()
-    start_services()
     ui_seed(force=True)
-    ui_yarn(args=["test"])
+    ui_yarn(args=["test"] + args)
