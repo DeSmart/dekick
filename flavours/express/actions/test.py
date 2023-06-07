@@ -13,6 +13,8 @@ from flavours.shared import (
     yarn_build,
     yarn_install,
 )
+from lib.dekickrc import get_dekickrc_value
+
 
 install()
 console = Console()
@@ -25,5 +27,6 @@ def main():
     copy_artifacts_from_dind()
     yarn_build()
     start_services()
-    ui_seed(force=True)
+    if get_dekickrc_value("dekick.settings.seed.local") is True:
+        ui_seed(force=True)
     ui_yarn(args=["test"])
