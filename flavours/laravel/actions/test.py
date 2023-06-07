@@ -22,7 +22,7 @@ from lib.misc import check_file
 install()
 
 
-def main():
+def main(args: list):
     """Main"""
 
     get_envs_from_credentials_provider()
@@ -35,4 +35,4 @@ def main():
     start_services()
     fix_permissions()
     db_migrate()
-    phpunit(raise_exception=True, capture_output=False)
+    phpunit(raise_exception=True, capture_output=False, args=args)

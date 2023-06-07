@@ -18,7 +18,7 @@ install()
 console = Console()
 
 
-def main():
+def main(args: list):
     """Main"""
     pull_and_build_images()
     yarn_install()
