@@ -20,6 +20,6 @@ def main():
     check_file(".env")
     pull_and_build_images()
     yarn_install()
-    copy_artifacts_from_dind()
     yarn_build()
+    copy_artifacts_from_dind()
     start_services()
