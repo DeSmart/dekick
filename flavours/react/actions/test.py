@@ -15,9 +15,9 @@ install()
 console = Console()
 
 
-def main():
+def main(args: list):
     """Main"""
     pull_and_build_images()
     yarn_install()
     copy_artifacts_from_dind()
-    ui_yarn(args=["test", "--ci", "--watchAll=false", "--forceExit"])
+    ui_yarn(args=["test", "--ci", "--watchAll=false", "--forceExit"] + args)

@@ -5,6 +5,7 @@ from lib.tests.dekick_commands import (
     dekick_local,
     dekick_status,
     dekick_stop,
+    dekick_test,
 )
 from lib.tests.docker import any_container_running, no_container_running
 from lib.tests.misc import parse_flavour_version
@@ -59,3 +60,19 @@ def test_local_stop_remove():
 def test_build():
     """Tests `dekick build` command"""
     assert dekick_build(FLAVOUR, VERSION)
+
+
+@pytest.mark.command_test
+@pytest.mark.basic
+def test_local_test():
+    """Tests `dekick test` command"""
+    assert dekick_test(FLAVOUR, VERSION)
+
+
+@pytest.mark.command_test
+@pytest.mark.basic
+def test_local_test_file():
+    """Tests `dekick test file.ts` command"""
+    assert dekick_test(
+        FLAVOUR, VERSION, ["./utils/datetime/__tests__/adjust-time-zone.test.ts"]
+    )
