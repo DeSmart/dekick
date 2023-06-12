@@ -20,9 +20,7 @@ def wait_for_container(search_string: str, timeout: int = 30):
 def app_is_ready():
     def run():
         try:
-            api_url = get_dotenv_var(
-                "API_URL", raise_exception=False
-            ) or get_dotenv_var("APP_URL")
+            api_url = get_dotenv_var("API_URL") or get_dotenv_var("APP_URL")
             return {
                 "success": True,
                 "text": f"App should be available at {api_url}",
