@@ -59,12 +59,9 @@ def test_local_stop_remove():
 
 @pytest.mark.command_test
 @pytest.mark.basic
-@pytest.mark.skipif(get_platform() == "osx", reason="This test is failing on macOS")
 def test_local_test():
     """Tests `dekick test` command"""
     assert dekick_test(FLAVOUR, VERSION)
-    assert dekick_stop(FLAVOUR, VERSION, ["--remove"])
-    assert no_container_running()
 
 
 @pytest.mark.command_build

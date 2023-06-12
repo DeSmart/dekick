@@ -37,12 +37,13 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
         test(
             log_level=parser.log_level or "INFO",
             log_filename=parser.log_filename or "dekick-test.log",
+            args=args,
         )
     )
 
 
 # pylint: disable=too-many-arguments
-def test(log_level: str, log_filename: str) -> int:
+def test(log_level: str, log_filename: str, args: list) -> int:
     """
     Run unit test for specific flavour
     """
@@ -50,7 +51,7 @@ def test(log_level: str, log_filename: str) -> int:
 
     try:
         with dind_container():
-            flavour_action("test")
+            flavour_action("test", args=args)
             return 0
     except Exception as err:  # pylint: disable=broad-except
         logging.error("Error running tests")

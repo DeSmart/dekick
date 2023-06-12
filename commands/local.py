@@ -127,6 +127,7 @@ def check_project_group():
 
 
 def check_command_docker():
+    """Checks if docker is installed"""
     check_command(
         cmd_linux=["docker"],
         cmd_osx=["docker"],

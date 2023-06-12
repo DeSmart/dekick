@@ -38,17 +38,26 @@ def api_is_ready():
     run_func(text="Checking if app is ready", func=run)
 
 
-def setup_permissions(fix: bool = False):
+def setup_permissions():
     """Setup permissions for the Laravel project."""
 
     def run():
-        dirs_chown = (
-            "bootstrap/cache/ storage/ storage/app/ storage/app/public/ storage/app/scribe/ "
-            + "storage/framework/ storage/framework/cache/ storage/framework/testing/ "
-            + "storage/framework/sessions/ storage/framework/views/ storage/app/apidoc "
-            + "storage/logs/ vendor/"
+        dirs_create_chown = (
+            "bootstrap/cache/ "
+            + "storage/ "
+            + "storage/app/ "
+            + "storage/app/public/ "
+            + "storage/app/scribe/ "
+            + "storage/framework/ "
+            + "storage/framework/cache/ "
+            + "storage/framework/testing/ "
+            + "storage/framework/sessions/ "
+            + "storage/framework/views/ "
+            + "storage/app/apidoc "
+            + "storage/logs/ "
+            + "vendor/ "
         )
-        dirs_chmod = "bootstrap/cache/ storage/ vendor/"
+        dirs_chmod = "bootstrap/cache/"
         cmd = "run"
         args = [
             "-T",
@@ -57,7 +66,9 @@ def setup_permissions(fix: bool = False):
             get_container(),
             "sh",
             "-c",
-            f"mkdir -p {dirs_chown}; chown {CURRENT_UID} {dirs_chown}; "
+            f"mkdir -p {dirs_create_chown};"
+            + f"chown {CURRENT_UID} {dirs_create_chown}; "
+            + f"chmod oug+rwX {dirs_create_chown};"
             + f"chmod oug+rwX {dirs_chmod} -R",
         ]
 
@@ -66,16 +77,9 @@ def setup_permissions(fix: bool = False):
         return {"success": True, "text": ""}
 
     run_func(
-        text="Creating required directories and setting permissions"
-        if fix is False
-        else "Fixing permissions",
+        text="Creating required directories and setting permissions",
         func=run,
     )
-
-
-def fix_permissions():
-    """Fix permissions for the Laravel project."""
-    return setup_permissions(fix=True)
 
 
 def db_migrate():

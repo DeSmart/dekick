@@ -24,7 +24,6 @@ def main():
     """Main"""
     check_file(".env")
     laravel_nova_support()
-    pull_and_build_images()
     setup_permissions()
     composer_install()
     copy_artifacts_from_dind()

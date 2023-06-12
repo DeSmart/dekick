@@ -39,7 +39,7 @@ DEKICK_BOILERPLATES = [
     "react/default",
     "nuxt/default",
 ]
-DEKICK_FLAVOURS = ["express", "react", "laravel", "nuxt"]
+DEKICK_FLAVOURS = ["express", "react", "laravel", "nuxt", "next"]
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"
 DEKICKRC_FILE = ".dekickrc.yml"

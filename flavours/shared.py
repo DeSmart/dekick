@@ -29,6 +29,7 @@ from lib.settings import (
     CURRENT_UID,
     get_seconds_since_dekick_start,
     is_ci,
+    is_pytest,
 )
 
 
@@ -77,7 +78,7 @@ def copy_artifacts_from_dind():
     """Copy artifacts from dind container to host"""
     artifacts_dir = get_dekickrc_value("project.artifacts")
 
-    if not is_ci() or artifacts_dir is None:
+    if not is_ci() or is_pytest() or artifacts_dir is None:
         return
 
     for artifact_dir in artifacts_dir:

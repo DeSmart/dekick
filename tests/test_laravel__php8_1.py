@@ -61,8 +61,6 @@ def test_local_stop_remove():
 def test_local_test():
     """Tests `dekick test` command"""
     assert dekick_test(FLAVOUR, VERSION)
-    assert dekick_stop(FLAVOUR, VERSION, ["--remove"])
-    assert no_container_running()
 
 
 @pytest.mark.command_build
