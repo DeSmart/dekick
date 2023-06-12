@@ -43,12 +43,15 @@ def setup_permissions(fix: bool = False):
 
     def run():
         dirs_chown = (
-            "bootstrap/cache/ storage/ storage/app/ storage/app/public/ storage/app/scribe/ "
-            + "storage/framework/ storage/framework/cache/ storage/framework/testing/ "
-            + "storage/framework/sessions/ storage/framework/views/ storage/app/apidoc "
-            + "storage/logs/ vendor/"
+            "bootstrap/cache/"
+            + "storage/app/scribe/ "
+            + "storage/framework/testing/ "
+            + "storage/framework/sessions/"
+            + "storage/framework/views/"
+            + "storage/app/apidoc "
+            + "storage/logs/"
         )
-        dirs_chmod = "bootstrap/cache/ storage/ vendor/"
+        dirs_chmod = "bootstrap/cache/"
         cmd = "run"
         args = [
             "-T",
@@ -66,16 +69,9 @@ def setup_permissions(fix: bool = False):
         return {"success": True, "text": ""}
 
     run_func(
-        text="Creating required directories and setting permissions"
-        if fix is False
-        else "Fixing permissions",
+        text="Creating required directories and setting permissions",
         func=run,
     )
-
-
-def fix_permissions():
-    """Fix permissions for the Laravel project."""
-    return setup_permissions(fix=True)
 
 
 def db_migrate():
