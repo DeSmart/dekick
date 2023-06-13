@@ -2,28 +2,22 @@
   "python.linting.pylintEnabled": true,
   "python.linting.flake8Enabled": false,
   "python.linting.enabled": true,
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.analysis.typeCheckingMode": "basic",
-  "python.autoComplete.extraPaths": [
-    "./",
-    "./commands",
-  ],
+  "python.autoComplete.extraPaths": ["./", "./commands"],
   "editor.codeActionsOnSave": {
     "source.organizeImports": true
   },
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
+  "isort.args": ["--profile", "black"],
   "[python]": {
     "editor.tabSize": 4,
     "editor.formatOnPaste": false,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSaveMode": "file",
+    "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "[shellscript]": {
     "editor.defaultFormatter": "timonwong.shellcheck"
   },
-  "peacock.color": "#5e7dbc",
   "python.linting.pylamaEnabled": false,
   "editor.detectIndentation": false,
   "indentRainbow.colors": [
@@ -38,10 +32,7 @@
     "rgba(63, 55, 201,0.05)",
     "rgba(63, 55, 201,0.025)"
   ],
-  "python.analysis.extraPaths": [
-    "./",
-    "./commands"
-  ],
+  "python.analysis.extraPaths": ["./", "./commands"],
   "docwriter.style": "NumPy",
   "docwriter.progress.trackFunctions": true,
   "docwriter.progress.trackMethods": true,
@@ -62,14 +53,8 @@
     "titleBar.inactiveForeground": "#e7e7e799"
   },
   "python.testing.pytestPath": "DEKICK_PATH=$(pwd) dekick pytest",
-  "python.testing.pytestArgs": [
-    "-vv",
-    "tests",
-    "--durations=5",
-    "--instafail"
-  ],
+  "python.testing.pytestArgs": ["-vv", "tests", "--durations=5", "--instafail"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "peacock.remoteColor": "#04e618",
   "markdown-toc.insertAnchor": true
 }
