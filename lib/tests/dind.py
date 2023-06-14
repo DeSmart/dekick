@@ -1,6 +1,7 @@
 from logging import debug, warning
 from os import mkdir
 from os.path import exists
+from posix import unlink
 
 from lib.rbash import rbash
 from lib.settings import DEKICK_PATH, DEKICK_VERSION_PATH
@@ -78,6 +79,7 @@ def stop_dind_container():
         f'docker kill "{dind_container_id}"; exit 0',
     )
     DIND_CONTAINER_ID = ""
+    unlink(f"{DEKICK_PATH}/tmp/dind_containers/{dind_container_id}")
     return True
 
 
