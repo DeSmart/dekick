@@ -279,11 +279,14 @@ def run_shell(
     stdout_debug = str(stdout).strip()
     stderr_debug = str(stderr).strip()
 
+    if capture_output is True:
+        stderr_debug = stdout_debug
+
     if int(returncode) > 0:
         logging.info("Command %s output: %s", cmd, stdout_debug)
 
         if logfile != "" and raise_error is True:
-            error = str(stderr).strip()
+            error = stderr_debug
             logging.error("Failed to execute %s: %s", cmd, error)
 
         if raise_exception is True:

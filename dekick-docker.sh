@@ -64,7 +64,45 @@ if [ "$1" = "boilerplates" ] && [ "$2" = "install" ]; then
   VOLUME_BOILERPLATES="-v "${DEKICK_BOILERPLATES_INSTALL_PATH}:${DEKICK_BOILERPLATES_INSTALL_PATH}""
 fi
 
+DOCKER_CONTAINER_NAME=""
+if [ "$1" == "pytest" ]; then
+
+  function pytest_stop() {
+    echo "Stopping PyTest..."
+    docker kill pytest > /dev/null 2>&1
+    sleep 2
+    docker rm -f pytest > /dev/null 2>&1
+    sleep 2
+    rm -f "${DEKICK_PATH}/tmp/pytest.lock" > /dev/null 2>&1
+    if [ -d "${DEKICK_PATH}/tmp/dind_containers" ]; then
+      echo "Cleaning up dangling dind containers..."
+      for file in "${DEKICK_PATH}"/tmp/dind_containers/*; do
+        docker rm -f "$(basename "$file")" > /dev/null 2>&1
+        rm -f "$file" > /dev/null 2>&1
+      done
+    fi
+  }
+
+  DOCKER_CONTAINER_NAME="--name pytest"
+  if docker ps --filter "name=pytest" --format '{{.Names}}' | grep -q pytest; then
+  
+    if [[ -t 1 ]]; then
+      echo -n "PyTest already running, should I kill it? [y/N] "
+      read -r answer
+      if [ "$answer" = "${answer#[nN]}" ]; then
+        pytest_stop
+      else
+        echo -e "\nOk, another PyTest is still running, exiting..."
+        exit 0
+      fi
+    else
+      pytest_stop
+    fi
+  fi
+fi
+
 docker run $DOCKER_FLAGS --rm \
+  ${DOCKER_CONTAINER_NAME} \
   ${VOLUME_DEKICK} \
   ${VOLUME_PROJECT} \
   ${VOLUME_BOILERPLATES} \

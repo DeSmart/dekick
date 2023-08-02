@@ -1,7 +1,10 @@
 from logging import debug, warning
+from os import mkdir
+from os.path import exists
+from posix import unlink
 
 from lib.rbash import rbash
-from lib.settings import DEKICK_VERSION_PATH
+from lib.settings import DEKICK_PATH, DEKICK_VERSION_PATH
 
 DIND_CONTAINER_ID = ""
 
@@ -9,8 +12,18 @@ DIND_CONTAINER_ID = ""
 def start_dind_container(count: int = 0) -> str:
     """Start a Docker-in-Docker container"""
 
-    def create_dind_container():
+    def save_dind_container_id():
+        """Saves DinD container ID to file"""
+        if not exists(f"{DEKICK_PATH}/tmp/dind_containers"):
+            mkdir(f"{DEKICK_PATH}/tmp/dind_containers")
+        with open(
+            f"{DEKICK_PATH}/tmp/dind_containers/{DIND_CONTAINER_ID}",
+            "w",
+            encoding="utf-8",
+        ) as file:
+            file.write(DIND_CONTAINER_ID)
 
+    def create_dind_container():
         global DIND_CONTAINER_ID  # pylint: disable=global-statement
         dekick_version = get_dekick_version()
         container_id = rbash(
@@ -18,6 +31,7 @@ def start_dind_container(count: int = 0) -> str:
             f"docker run --privileged -d --rm --add-host proxy:host-gateway -v $(pwd):$(pwd) -w $(pwd) desmart/dekick-dind:{dekick_version}",
         )["stdout"].strip()
         DIND_CONTAINER_ID = container_id
+        save_dind_container_id()
 
     def wait_for_dind():
         dind_container_id = get_dind_container_id()
@@ -65,6 +79,7 @@ def stop_dind_container():
         f'docker kill "{dind_container_id}"; exit 0',
     )
     DIND_CONTAINER_ID = ""
+    unlink(f"{DEKICK_PATH}/tmp/dind_containers/{dind_container_id}")
     return True
 
 

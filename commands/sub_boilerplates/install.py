@@ -156,6 +156,7 @@ def download_dekick():
         "Download newest version of DeKick to dekick/ directory",
         f"git clone --branch main {DEKICK_GIT_URL} dekick",
     )
+    rbash("Remove .git directory from dekick/", "rm -rf dekick/.git")
 
 
 def ui_get_dekick_group_name() -> tuple:

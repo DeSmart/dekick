@@ -4,3 +4,4 @@ __pycache__/
 boilerplates/
 .env
 logs/*
+tmp/dind_containers/*

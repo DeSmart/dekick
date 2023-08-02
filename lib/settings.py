@@ -33,6 +33,7 @@ DEKICK_STABLE_VERSION_URL = (
 DEKICK_GIT_URL = "https://github.com/DeSmart/dekick.git"
 DEKICK_BOILERPLATES = [
     "express/default",
+    "express/socket-server",
     "laravel/php7_4",
     "laravel/php8_1",
     "laravel/php8_2",
