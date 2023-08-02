@@ -3,6 +3,7 @@ import re
 import sys
 import time
 from math import inf
+from subprocess import CalledProcessError
 from typing import Union
 
 from rich.traceback import install
@@ -74,6 +75,22 @@ def run_func(
         function_end = get_seconds_since_dekick_start(1)
         elapsed_time = round(function_end - function_start, 1)
         out_text = out_text + get_elapsed_time((out_text), elapsed_time)
+
+    except CalledProcessError as error:
+        log_file = get_log_filename()
+        lines = error.output.rstrip().splitlines()
+        lines = [
+            "  " + line
+            for line in lines
+            if not re.match("\\s+Container .* Running", line)
+        ]
+        output_formatted = "\n".join(lines)
+        fail_text = f"{text} {C_ERROR}failed{C_END}\n\n{output_formatted}\n\n  "
+        spinner.fail(text=fail_text)
+        log_exception(error)
+
+        if terminate is True:
+            sys.exit(1)
 
     except Exception as error:  # pylint: disable=broad-except
         log_file = get_log_filename()
