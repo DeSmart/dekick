@@ -288,9 +288,9 @@ def check_ports():
             return {"success": True, "text": "All ports available"}
 
         text = (
-            f"Port {C_CODE}{get_first_used_port()}{C_END} is still in use by another process, please use {C_CMD}docker ps{C_END} to which container is using it"
+            f"Port {C_CODE}{get_first_used_port()}{C_END} is still in use by another process, please use {C_CMD}docker ps{C_END} to see which container is using this port"
             if recheck is True
-            else "Some ports are already in use by another service or process, will try to restart services"
+            else "Some ports are already in use by another service or process, trying to restart services"
         )
         return {
             "success": False,
