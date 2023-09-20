@@ -22,3 +22,5 @@ dekick:
     apidoc:
       generate: type="bool",default="false",validation="bool()",required="true"
       legacy: type="bool",default="false",validation="bool()",required="false"
+    seed:
+      local: type="bool",default="true",validation="bool()",required="false"

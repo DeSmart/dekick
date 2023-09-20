@@ -12,6 +12,7 @@ from flavours.shared import (
     wait_for_container,
     yarn_install,
 )
+from lib.dekickrc import get_dekickrc_value
 
 install()
 console = Console()
@@ -22,6 +23,7 @@ def main():
     pull_and_build_images()
     yarn_install()
     start_services()
-    ui_seed()
+    if get_dekickrc_value("dekick.settings.seed.local") is True:
+        ui_seed(force=False, check_with_global_config=True)
     wait_for_container(search_string="Local:    http://")
     app_is_ready()

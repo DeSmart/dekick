@@ -12,11 +12,19 @@ from commands.artisan import artisan
 from commands.knex import knex
 from commands.npx import npx
 from flavours.shared import is_service_running, start_service
+from lib.global_config import get_global_config_value
 from lib.logger import install_logger, log_exception
 from lib.misc import get_flavour
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.run_func import run_func
-from lib.settings import is_pytest
+from lib.settings import (
+    C_CMD,
+    C_CODE,
+    C_END,
+    C_FILE,
+    DEKICKRC_GLOBAL_HOST_PATH,
+    is_pytest,
+)
 
 install()
 
@@ -69,7 +77,7 @@ def seed() -> bool:
         return False
 
 
-def ui_seed(force: bool = False) -> bool:
+def ui_seed(force: bool = False, check_with_global_config: bool = False) -> bool:
     """UI wrapper for seed"""
 
     def run():
@@ -82,11 +90,36 @@ def ui_seed(force: bool = False) -> bool:
     if not is_service_running(db_service):
         start_service(db_service)
 
+    disable_seed_ask = False
+    if check_with_global_config is True:
+        try:
+            disable_seed_ask = get_global_config_value("dekick.local.disable_seed_ask")
+        except TypeError:
+            disable_seed_ask = False
+
     question = (
         "Do you want to seed database? (it will overwrite all data in the database)"
     )
 
-    if is_pytest() or force is True or Confirm.ask(question, default=False) is True:
+    if (
+        is_pytest()
+        or force is True
+        or (disable_seed_ask is False and Confirm.ask(question, default=False) is True)
+    ):
         run_func(text="Seeding database", func=run)
+    elif disable_seed_ask is True:
+        msg = (
+            f"Skipped database seed: {C_CMD}disable_seed_ask{C_END} "
+            + f"in {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} set to {C_CODE}true{C_END}"
+        )
+
+        def run_none():
+            return {
+                "success": False,
+                "text": msg,
+                "type": "warn",
+            }
+
+        run_func(text=msg, func=run_none, terminate=False)
 
     return True

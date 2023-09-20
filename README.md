@@ -13,6 +13,7 @@
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
     - [`local` command](#local-command)
+    - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
     - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
     - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
   - [This project is still under development](#this-project-is-still-under-development)
@@ -28,6 +29,7 @@
   - [Issue Tracker](#issue-tracker)
   - [Communication](#communication)
 
+<!-- /TOC -->
 <!-- /TOC -->
 
 # What's DeKick?
@@ -129,6 +131,21 @@ dekick local
 ![dekick local command](docs/files/dekick-local.gif)
 
 DeKick will start the development enviromnent which depends on specific flavour. Typically, depending on the project size, project is ready to be developed in a matter of a couple of minutes (sometimes even under a minute).
+
+### Global config (`~/.config/dekick/global.yml`)
+<a id="markdown-global-config-~%2F.config%2Fdekick%2Fglobal.yml" name="global-config-~%2F.config%2Fdekick%2Fglobal.yml"></a>
+You can create global config file in your home directory in `.config/dekick/global.yml` file. This file will be used as a default config for all projects. The structure is following:
+
+```yaml
+boilerplates:
+  git_url: [string, default: "" - URL to git repository with boilerplates]
+gitlab:
+  token: [string, default: "" - Gitlab token with API access, needed for getting .env file from Gitlab]
+dekick:
+  local:
+    disable_seed_ask: [boolean, default: false - if true then running `dekick local` will ommit the question about seeding database]
+```
+If the file doesn't exist then DeKick will use default values.
 
 ### How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
 <a id="markdown-how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F" name="how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F"></a>
