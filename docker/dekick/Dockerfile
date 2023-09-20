@@ -1,4 +1,4 @@
-FROM docker:24.0.5-cli-alpine3.18
+FROM docker:24.0.6-cli-alpine3.18
 
 RUN apk update\
   && apk add --no-cache git bash curl ncurses net-tools jq perl gettext rsync python3 py3-pip sudo \
