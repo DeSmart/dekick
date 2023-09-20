@@ -11,6 +11,7 @@ from flavours.laravel.shared import (
     setup_permissions,
 )
 from flavours.shared import composer_install, start_services
+from lib.dekickrc import get_dekickrc_value
 
 install()
 
@@ -21,6 +22,7 @@ def main():
     setup_permissions()
     composer_install()
     start_services()
-    ui_seed()
+    if get_dekickrc_value("dekick.settings.seed.local") is True:
+        ui_seed(force=False, check_with_global_config=True)
     generate_apidoc()
     api_is_ready()

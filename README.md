@@ -1,4 +1,4 @@
-![version 2.5.1](https://img.shields.io/badge/version-2.5.1-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version 2.5.2](https://img.shields.io/badge/version-develop-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -13,6 +13,7 @@
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
     - [`local` command](#local-command)
+    - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
     - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
     - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
   - [This project is still under development](#this-project-is-still-under-development)
@@ -28,6 +29,7 @@
   - [Issue Tracker](#issue-tracker)
   - [Communication](#communication)
 
+<!-- /TOC -->
 <!-- /TOC -->
 
 # What's DeKick?
@@ -76,7 +78,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 # How it works?
 <a id="markdown-how-it-works%3F" name="how-it-works%3F"></a>
- - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.5.1`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
+ - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.5.2`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
 
 # Quick start
@@ -129,6 +131,21 @@ dekick local
 ![dekick local command](docs/files/dekick-local.gif)
 
 DeKick will start the development enviromnent which depends on specific flavour. Typically, depending on the project size, project is ready to be developed in a matter of a couple of minutes (sometimes even under a minute).
+
+### Global config (`~/.config/dekick/global.yml`)
+<a id="markdown-global-config-~%2F.config%2Fdekick%2Fglobal.yml" name="global-config-~%2F.config%2Fdekick%2Fglobal.yml"></a>
+You can create global config file in your home directory in `.config/dekick/global.yml` file. This file will be used as a default config for all projects. The structure is following:
+
+```yaml
+boilerplates:
+  git_url: [string, default: "" - URL to git repository with boilerplates]
+gitlab:
+  token: [string, default: "" - Gitlab token with API access, needed for getting .env file from Gitlab]
+dekick:
+  local:
+    disable_seed_ask: [boolean, default: false - if true then running `dekick local` will ommit the question about seeding database]
+```
+If the file doesn't exist then DeKick will use default values.
 
 ### How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
 <a id="markdown-how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F" name="how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F"></a>

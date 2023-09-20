@@ -25,5 +25,5 @@ def main():
     yarn_build()
     start_services()
     if get_dekickrc_value("dekick.settings.seed.local") is True:
-        ui_seed()
+        ui_seed(force=False, check_with_global_config=True)
     wait_for_container(search_string="API @ port", timeout=60)
