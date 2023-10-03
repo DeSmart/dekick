@@ -7,6 +7,7 @@ from rich.traceback import install
 from lib.dekickrc import get_dekick_version
 from lib.dotenv import get_dotenv_var
 from lib.rbash import rbash
+from lib.settings import DEKICKRC_GLOBAL_PATH
 
 install()
 BOILERPLATES_ROOT = getcwd() + "/tmp/boilerplates/"
@@ -89,6 +90,17 @@ def copy_flavour_to_container(flavour: str, version: str, container_id: str):
     rbash(
         "Changing permissions",
         f'docker exec {container_id} bash -c "chmod -R oug+rw {project_root}; chown -R 1000 {project_root}"',
+    )
+
+
+def copy_global_config_to_container(container_id: str):
+    rbash(
+        f"Create {DEKICKRC_GLOBAL_PATH}",
+        f'docker exec {container_id} mkdir -p $(dirname "{DEKICKRC_GLOBAL_PATH}")',
+    )
+    rbash(
+        f"Copying {DEKICKRC_GLOBAL_PATH} to DinD container {container_id}",
+        f"docker cp -aq {DEKICKRC_GLOBAL_PATH} {container_id}:{DEKICKRC_GLOBAL_PATH}",
     )
 
 

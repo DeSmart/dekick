@@ -2,9 +2,15 @@ from logging import debug, warning
 from os import mkdir
 from os.path import exists
 from posix import unlink
+from time import sleep
 
 from lib.rbash import rbash
-from lib.settings import DEKICK_PATH, DEKICK_VERSION_PATH
+from lib.settings import (
+    DEKICK_PATH,
+    DEKICK_VERSION_PATH,
+    DEKICKRC_GLOBAL_PATH,
+    DEKICKRC_GLOBAL_TMPL_PATH,
+)
 
 DIND_CONTAINER_ID = ""
 
@@ -46,6 +52,15 @@ def start_dind_container(count: int = 0) -> str:
             + ';"',
         )
 
+        rbash(
+            f"Create {DEKICKRC_GLOBAL_PATH}, dir",
+            f'docker exec --user=root {dind_container_id} mkdir -p $(dirname "{DEKICKRC_GLOBAL_PATH}")',
+        )
+        rbash(
+            f"Create {DEKICKRC_GLOBAL_PATH}, file",
+            f'cat "{DEKICKRC_GLOBAL_TMPL_PATH}" | docker exec --user=root -i {dind_container_id} tee -a "{DEKICKRC_GLOBAL_PATH}"',
+        )
+
         if ret["code"] == 137:
             return False
         return True
@@ -60,7 +75,7 @@ def start_dind_container(count: int = 0) -> str:
         return start_dind_container(count)
 
     if not dind_started and count >= max_retries:
-        raise Exception("DinD didn't start properly")
+        raise RuntimeError("DinD didn't start properly")
 
     return DIND_CONTAINER_ID
 

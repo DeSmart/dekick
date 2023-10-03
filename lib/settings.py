@@ -2,7 +2,7 @@
 import time
 from getpass import getuser
 from glob import glob
-from os import get_terminal_size, getcwd, getenv, getuid, path
+from os import get_terminal_size, getcwd, getenv, getuid, listdir, path
 from sys import stdout
 
 from lib.terminal_colors import TerminalColors
@@ -40,7 +40,6 @@ DEKICK_BOILERPLATES = [
     "react/default",
     "nuxt/default",
 ]
-DEKICK_FLAVOURS = ["express", "react", "laravel", "nuxt", "next"]
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"
 DEKICKRC_FILE = ".dekickrc.yml"
@@ -53,6 +52,7 @@ DEKICK_VERSION_PATH = f"{DEKICK_PATH}/{DEKICK_VERSION_FILE}"
 DEKICKRC_GLOBAL_FILE = "global.yml"
 DEKICKRC_GLOBAL_HOST_PATH = f"{HOST_HOME}/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
 DEKICKRC_GLOBAL_PATH = f"/tmp/homedir/.config/dekick/{DEKICKRC_GLOBAL_FILE}"
+DEKICKRC_GLOBAL_TMPL_PATH = f"{DEKICK_PATH}/global_tmpl.yml"
 
 DEKICK_MIGRATIONS_DIR = f"{DEKICK_PATH}/migrations"
 
@@ -77,6 +77,19 @@ def get_credentials_drivers():
 
 
 DEKICK_CREDENTIALS_DRIVERS = get_credentials_drivers()
+
+
+def get_flavours():
+    """Generate list of available flavours"""
+    directory = DEKICK_PATH + "/flavours"
+    return [
+        subdir
+        for subdir in listdir(directory)
+        if path.isdir(path.join(directory, subdir)) and subdir != "__pycache__"
+    ]
+
+
+DEKICK_FLAVOURS = get_flavours()
 
 
 def save_commands(commands: list):

@@ -6,6 +6,7 @@ RUN apk update\
 
 COPY requirements.txt /tmp/requirements.txt
 COPY dockerd-entrypoint.sh /usr/local/bin/
+COPY base/* /
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
