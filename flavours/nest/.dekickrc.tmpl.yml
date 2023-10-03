@@ -1,0 +1,23 @@
+project:
+  name: type="str",default="dekick",validation="name()",required="true"
+  group: type="str",default="",validation="name()",required="false"
+  artifacts: type="list",default="[{'path':'.yarn/cache/'},{'path':'.yarn/install-state.gz'}]",validation="{'path':'rel_path()'}",required="false"
+  providers:
+    credentials:
+      driver: type="str",default="gitlab",validation="credentials_driver()",required="true"
+  environments: type="list",default="[{'name':'test'},{'name':'beta'},{'name':'production'}]",validation="{'name':'name()'}",required="true"
+hashicorp_vault:
+  url: type="str",default="",validation="url()",required="false"
+  path: type="str",default="",validation="rel_path()",required="false"
+  mount_point: type="str",default="",validation="any()",required="false"
+gitlab:
+  url: type="str",default="",validation="url()",required="false"
+  getenv: type="bool",default="false",validation="bool()",required="false"
+dekick:
+  auto_update: type="bool",default="true",validation="bool()",required="false"
+  boilerplate: type="str",default="express",validation="boilerplate()",required="true"
+  ports: type="list",default="[{'port':3000,'service':'web'}]",validation="{'port':'port()','service':'name()'}",required="true"
+  flavour: type="str",default="react",validation="flavour()",required="true"
+  settings:
+    seed:
+      local: type="bool",default="true",validation="bool()",required="false"

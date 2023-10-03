@@ -121,6 +121,7 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
     env["PROJECT_ROOT"] = PROJECT_ROOT
     env["CURRENT_UID"] = str(CURRENT_UID)
     env["PATH"] = os.getenv("PATH")
+    env["HOME"] = os.getenv("HOME")
 
     # Override environment variables
     for var in list(env):
