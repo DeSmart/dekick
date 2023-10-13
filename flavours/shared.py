@@ -42,7 +42,6 @@ def composer_install():
         args = []
 
     def check_app_env():
-
         try:
             app_env = get_dotenv_var("APP_ENV")
             if app_env in ("production", "beta"):
@@ -231,7 +230,6 @@ def retrieve_files_from_container(container: str) -> str:
     tmp_dir = create_temporary_dir()
 
     def run():
-
         try:
             image_id = find_image_id_by_container(container)
         except Exception as err:  # pylint: disable=broad-except
@@ -311,6 +309,62 @@ def pull_and_build_images():
 
     run_func(
         text="Pulling and building images",
+        func=run,
+    )
+
+
+def save_image_to_dind(image_name: str) -> str:
+    """Save image to tar file"""
+
+    image_file = f"{image_name}.tar"
+
+    def run():
+        run_shell(["docker", "save", "-o", image_file, image_name])
+
+    run_func(
+        text=f"Saving image {C_CODE}{image_name}{C_END} to {C_FILE}{image_file}{C_END}",
+        func=run,
+    )
+
+    return image_file
+
+
+def copy_image_to_host(image_path: str):
+    """Copy image from dind container to host"""
+
+    def run():
+        copy_from_dind(resource=image_path)
+
+    run_func(
+        text=f"Copying image {C_FILE}{image_path}{C_END} from container to host",
+        func=run,
+    )
+
+
+def load_image_to_host(image_path: str):
+    """Load image from tar file"""
+
+    def run():
+        run_shell(
+            ["docker", "load", "-i", image_path],
+            capture_output=True,
+            raise_exception=True,
+        )
+
+    run_func(
+        text=f"Loading Docker image to host from {C_FILE}{image_path}{C_END}",
+        func=run,
+    )
+
+
+def remove_image_file(image_path: str):
+    """Remove image file"""
+
+    def run():
+        run_shell(["rm", "-f", image_path])
+
+    run_func(
+        text=f"Removing image file {C_FILE}{image_path}{C_END}",
         func=run,
     )
 

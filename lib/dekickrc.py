@@ -139,7 +139,6 @@ def ui_validate_dekickrc():
         dekickrc_flat = get_dekickrc_flat()
 
         for path, tmpl_value in tmpl_flat.items():
-
             parsed_tmpl = dekickrc_tmpl_parse_value(str(tmpl_value))
             tmpl_type = parsed_tmpl["type"]
             tmpl_validation = parsed_tmpl["validation"]
@@ -185,7 +184,6 @@ def ui_validate_dekickrc():
 
             if isinstance(value, list):
                 for item in value:
-
                     if isinstance(item, (str, bool, int)):
                         validate = call_validator(
                             tmpl_validation, str(item), is_required
