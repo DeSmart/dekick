@@ -14,4 +14,4 @@ def main():
     pull_and_build_images()
     yarn_install()
     start_services()
-    wait_for_container(search_string="ready started server on", timeout=60)
+    wait_for_container(search_string="Ready in", timeout=60)

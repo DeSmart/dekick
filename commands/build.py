@@ -8,7 +8,14 @@ from logging import debug, error
 from rich.traceback import install
 
 from commands.local import flavour_action, install_logger
-from flavours.shared import build_image, push_image
+from flavours.shared import (
+    build_image,
+    copy_image_to_host,
+    load_image_to_host,
+    push_image,
+    remove_image_file,
+    save_image_to_dind,
+)
 from lib.dind import dind_container
 from lib.misc import check_argparse_arg
 from lib.parser_defaults import parser_default_args, parser_default_funcs
@@ -45,6 +52,9 @@ def arguments(parser: ArgumentParser):
         required=False,
         help="password to login to docker registry",
     )
+    docker_parser.add_argument(
+        "--save", action="store_true", help="should image saved to hosts Docker daemon"
+    )
 
 
 def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
@@ -63,6 +73,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
             docker_login_password=parser.docker_login_password,
             docker_registry=parser.docker_registry,
             push=parser.push,
+            save=parser.save,
             log_level=parser.log_level or "INFO",
             log_filename=parser.log_filename or "dekick-build.log",
         )
@@ -76,6 +87,7 @@ def build(
     docker_login_password: str,
     docker_registry: str,
     push: bool,
+    save: bool,
     log_level: str,
     log_filename: str,
 ) -> int:
@@ -90,6 +102,7 @@ def build(
         check_argparse_arg(docker_login_user, "--docker-login-user")
 
     try:
+        image_path = ""
         with dind_container():
             flavour_action("build")
             build_image(target_image)
@@ -101,6 +114,15 @@ def build(
                     docker_login_password,
                     docker_registry,
                 )
+
+            if save is True:
+                image_path = save_image_to_dind(target_image)
+                copy_image_to_host(image_path)
+
+        if save is True and image_path != "":
+            load_image_to_host(image_path)
+            remove_image_file(image_path)
+
     except Exception as err:  # pylint: disable=broad-except
         error("Error running build")
         debug("Error: %s", err)

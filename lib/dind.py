@@ -22,7 +22,6 @@ def dind_container():
         return
 
     def create_dind_container():
-
         global DIND_CONTAINER_ID  # pylint: disable=global-statement
         dekick_version = get_dekick_version()
         container_id = rbash(
