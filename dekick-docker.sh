@@ -66,7 +66,6 @@ fi
 
 # Add xhost authorization if running e2e
 if [ "${HOST_PLATFORM}" = "Darwin" ]; then
-
     for i in {0..9}; do
       HOST_IP=$(ifconfig "en${i}" | grep -w inet | awk '{print $2}')
       if [ -n "$HOST_IP" ]; then
@@ -84,22 +83,18 @@ if [ "$1" = "e2e" ]; then
   fi
 
   if [ "${HOST_PLATFORM}" = "Darwin" ]; then
+    for i in {0..9}; do
+      HOST_IP=$(ifconfig "en${i}" | grep -w inet | awk '{print $2}')
+      if [ -n "$HOST_IP" ]; then
+        break
+      fi
+    done
 
-      for i in {0..9}; do
-        HOST_IP=$(ifconfig "en${i}" | grep -w inet | awk '{print $2}')
-        if [ -n "$HOST_IP" ]; then
-          break
-        fi
-      done
-
-      xhost + "$HOST_IP" > /dev/null 2>&1
-    elif [ "${HOST_PLATFORM}" = "Linux" ]; then
-      xhost + > /dev/null 2>&1
-    fi
     xhost + "$HOST_IP" > /dev/null 2>&1
   elif [ "${HOST_PLATFORM}" = "Linux" ]; then
-    xhost + > /dev/null 2>&1
+      xhost + > /dev/null 2>&1
   fi
+
 fi
 
 DOCKER_CONTAINER_NAME=""
