@@ -109,8 +109,9 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
             nonlocal cypress_args
             cypress_args += f" --spec {spec}"
 
-        if platform == "linux":
-            cmd += f"{docker_cmd} {cypress_envs} {cypress_image} {cypress_cmd} {cypress_args}"
+        cmd += (
+            f"{docker_cmd} {cypress_envs} {cypress_image} {cypress_cmd} {cypress_args}"
+        )
 
         out = rbash(
             info_desc="Running e2e tests",
