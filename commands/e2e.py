@@ -89,12 +89,11 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
 
         if platform == "linux":
             cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY "
-            cmd += f"{cypress_image} {cypress_cmd} {args}"
         elif platform == "osx":
             host_ip = getenv("HOST_IP")
             cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY={host_ip}:0 "
-            cmd += f"{cypress_image} {cypress_cmd} {args}"
 
+        cmd += f"{cypress_image} {cypress_cmd} {cypress_args}"
         rbash(
             info_desc="Opening Cypress GUI",
             cmd=cmd,
