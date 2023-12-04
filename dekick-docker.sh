@@ -74,6 +74,8 @@ if [ "${HOST_PLATFORM}" = "Darwin" ]; then
     done
 fi
 
+X11SOCKET="-v /tmp/.X11-unix:/tmp/.X11-unix"
+
 if [ "$1" = "e2e" ]; then
 
   # Detect if there's a xhost command available and if not prompt to install XQuartz
@@ -141,6 +143,7 @@ docker run $DOCKER_FLAGS --rm \
   ${VOLUME_BOILERPLATES} \
   ${DEKICK_DOCKER_PORTS} \
   ${DEKICK_GITLABRC} \
+  ${X11SOCKET} \
   -e DEKICK_BOILERPLATES_INSTALL_PATH="${DEKICK_BOILERPLATES_INSTALL_PATH}" \
   -e CURRENT_UID="${CURRENT_UID}" \
   -e CURRENT_USERNAME="${CURRENT_USERNAME}" \
