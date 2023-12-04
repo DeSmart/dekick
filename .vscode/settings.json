@@ -14,7 +14,6 @@
   "[shellscript]": {
     "editor.defaultFormatter": "timonwong.shellcheck"
   },
-  "python.linting.pylamaEnabled": false,
   "editor.detectIndentation": false,
   "indentRainbow.colors": [
     "rgba(247, 37, 133,0.15)",

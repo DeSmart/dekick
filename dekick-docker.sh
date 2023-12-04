@@ -64,6 +64,23 @@ if [ "$1" = "boilerplates" ] && [ "$2" = "install" ]; then
   VOLUME_BOILERPLATES="-v "${DEKICK_BOILERPLATES_INSTALL_PATH}:${DEKICK_BOILERPLATES_INSTALL_PATH}""
 fi
 
+# Add xhost authorization if running e2e
+if [ "$1" = "e2e" ]; then
+
+  # Detect if there's a xhost command available and if not prompt to install XQuartz
+  if [ "${HOST_PLATFORM}" = "Darwin" ] && ! command -v xhost > /dev/null 2>&1; then
+    echo -e "Please install XQuartz XServer first! https://www.xquartz.org/.\n\nAfter installing, please remember to check 'Allow connections from network clients' in XQuartz settings."
+    exit 1
+  fi
+
+  if [ "${HOST_PLATFORM}" = "Darwin" ]; then
+    HOST_IP=$(ifconfig | grep "inet " | grep -v "127.0.0.1" | awk '{print $2}')
+    xhost + "$HOST_IP" > /dev/null 2>&1
+  elif [ "${HOST_PLATFORM}" = "Linux" ]; then
+    xhost + > /dev/null 2>&1
+  fi
+fi
+
 DOCKER_CONTAINER_NAME=""
 if [ "$1" == "pytest" ]; then
 
@@ -108,18 +125,20 @@ docker run $DOCKER_FLAGS --rm \
   ${VOLUME_BOILERPLATES} \
   ${DEKICK_DOCKER_PORTS} \
   ${DEKICK_GITLABRC} \
-  -e DEKICK_BOILERPLATES_INSTALL_PATH="${DEKICK_BOILERPLATES_INSTALL_PATH}" \
-  -e CURRENT_UID="${CURRENT_UID}" \
-  -e CURRENT_USERNAME="${CURRENT_USERNAME}" \
-  -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
+  -e DEKICK_BOILERPLATES_INSTALL_PATH \
+  -e CURRENT_UID \
+  -e CURRENT_USERNAME \
+  -e DEKICK_DEBUGGER \
   -e DEKICK_DOCKER_IMAGE="${IMAGE}" \
-  -e DEKICK_PATH="${DEKICK_PATH}" \
-  -e HOST_ARCH="${HOST_ARCH}" \
-  -e HOST_HOME="${HOST_HOME}" \
-  -e HOST_PLATFORM="${HOST_PLATFORM}" \
-  -e PROJECT_ROOT="${PROJECT_ROOT}" \
+  -e DEKICK_PATH \
+  -e HOST_ARCH \
+  -e HOST_HOME \
+  -e HOST_PLATFORM \
+  -e PROJECT_ROOT \
+  -e DISPLAY \
+  -e HOST_IP \
   --add-host proxy:host-gateway \
-  -v "$HOST_DOCKER_SOCK:/var/run/docker.sock" \
+  -v "${HOST_DOCKER_SOCK}:/var/run/docker.sock" \
   -v "${DEKICK_GLOBAL_FILE}:/tmp/homedir/.config/dekick/global.yml" \
   "${IMAGE}" \
   "$@"
