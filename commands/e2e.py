@@ -6,7 +6,7 @@ import logging
 import re
 import sys
 from argparse import ArgumentParser, Namespace
-from os import getcwd
+from os import getcwd, getenv
 from os.path import isfile
 
 from rich.traceback import install
@@ -92,16 +92,7 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
             cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY "
             cmd += f"{cypress_image} {cypress_cmd} {args}"
         elif platform == "osx":
-            host_ip = rbash(
-                info_desc="Getting host IP",
-                cmd="ifconfig | grep \"inet \" | grep -v 127.0.0.1 | awk '{print $2}'",
-            )["stdout"].strip()
-
-            try:
-                ipaddress.ip_address(host_ip)
-            except ValueError:
-                return {"success": False, "text": "Unable to get host IP address"}
-
+            host_ip = getenv("HOST_IP")
             cmd += f"xhost + {host_ip}; "
             cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY={host_ip}:0 "
             cmd += f"{cypress_image} {cypress_cmd} {args}"
