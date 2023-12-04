@@ -65,6 +65,16 @@ if [ "$1" = "boilerplates" ] && [ "$2" = "install" ]; then
 fi
 
 # Add xhost authorization if running e2e
+if [ "${HOST_PLATFORM}" = "Darwin" ]; then
+
+    for i in {0..9}; do
+      HOST_IP=$(ifconfig "en${i}" | grep -w inet | awk '{print $2}')
+      if [ -n "$HOST_IP" ]; then
+        break
+      fi
+    done
+fi
+
 if [ "$1" = "e2e" ]; then
 
   # Detect if there's a xhost command available and if not prompt to install XQuartz
