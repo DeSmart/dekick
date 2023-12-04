@@ -88,12 +88,10 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
         cypress_cmd = "cypress open"
 
         if platform == "linux":
-            cmd += "xhost +; "
             cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY "
             cmd += f"{cypress_image} {cypress_cmd} {args}"
         elif platform == "osx":
             host_ip = getenv("HOST_IP")
-            cmd += f"xhost + {host_ip}; "
             cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY={host_ip}:0 "
             cmd += f"{cypress_image} {cypress_cmd} {args}"
 

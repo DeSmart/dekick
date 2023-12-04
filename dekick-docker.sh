@@ -125,20 +125,20 @@ docker run $DOCKER_FLAGS --rm \
   ${VOLUME_BOILERPLATES} \
   ${DEKICK_DOCKER_PORTS} \
   ${DEKICK_GITLABRC} \
-  -e DEKICK_BOILERPLATES_INSTALL_PATH \
-  -e CURRENT_UID \
-  -e CURRENT_USERNAME \
-  -e DEKICK_DEBUGGER \
+  -e DEKICK_BOILERPLATES_INSTALL_PATH="${DEKICK_BOILERPLATES_INSTALL_PATH}" \
+  -e CURRENT_UID="${CURRENT_UID}" \
+  -e CURRENT_USERNAME="${CURRENT_USERNAME}" \
+  -e DEKICK_DEBUGGER="${DEKICK_DEBUGGER}" \
   -e DEKICK_DOCKER_IMAGE="${IMAGE}" \
-  -e DEKICK_PATH \
-  -e HOST_ARCH \
-  -e HOST_HOME \
-  -e HOST_PLATFORM \
-  -e PROJECT_ROOT \
-  -e DISPLAY \
-  -e HOST_IP \
+  -e DEKICK_PATH="${DEKICK_PATH}" \
+  -e HOST_ARCH="${HOST_ARCH}" \
+  -e HOST_HOME="${HOST_HOME}" \
+  -e HOST_PLATFORM="${HOST_PLATFORM}" \
+  -e PROJECT_ROOT="${PROJECT_ROOT}" \
+  -e DISPLAY="${DISPLAY}" \
+  -e HOST_IP="${HOST_IP}" \
   --add-host proxy:host-gateway \
-  -v "${HOST_DOCKER_SOCK}:/var/run/docker.sock" \
+  -v "$HOST_DOCKER_SOCK:/var/run/docker.sock" \
   -v "${DEKICK_GLOBAL_FILE}:/tmp/homedir/.config/dekick/global.yml" \
   "${IMAGE}" \
   "$@"
