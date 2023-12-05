@@ -152,7 +152,9 @@ def get_cpu_arch() -> str:
 
 
 def get_platform() -> str:
-    """Detects system (OS X or Linux)"""
+    """Detects system (OS X or Linux)
+    Returns: osx or linux
+    """
     host_platform = os.getenv("HOST_PLATFORM")
 
     if host_platform is not None:

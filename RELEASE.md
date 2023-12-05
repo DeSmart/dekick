@@ -24,7 +24,7 @@ git push --all
 git flow release start {VERSION}
 ```
 - Change the version in `.version` file from `develop` to `{VERSION}` ensure it matches our release. 
-- Generate images by navigating to the docker directory and running the following scripts: 
+- Generate Docker images by navigating to the `docker/` directory and running the following scripts: 
 ```shell
 cd docker; ./create-dekick-dind-image.sh && ./create-dekick-image.sh
 ```

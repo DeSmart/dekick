@@ -5,3 +5,4 @@ boilerplates/
 .env
 logs/*
 tmp/dind_containers/*
+tmp/pytest.lock

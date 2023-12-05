@@ -64,6 +64,31 @@ if [ "$1" = "boilerplates" ] && [ "$2" = "install" ]; then
   VOLUME_BOILERPLATES="-v "${DEKICK_BOILERPLATES_INSTALL_PATH}:${DEKICK_BOILERPLATES_INSTALL_PATH}""
 fi
 
+# Add xhost authorization and other things needed for Cypress to run e2e tests or open GUI apps
+if [ "$1" = "e2e" ]; then
+
+  X11SOCKET="-v /tmp/.X11-unix:/tmp/.X11-unix"
+
+  # Detect if there's a xhost command available and if not prompt to install XQuartz
+  if [ "${HOST_PLATFORM}" = "Darwin" ] && ! command -v xhost > /dev/null 2>&1; then
+    echo -e "Please install XQuartz XServer first! https://www.xquartz.org/.\n\nAfter installing, please remember to check 'Allow connections from network clients' in XQuartz settings."
+    exit 1
+  fi
+
+  if [ "${HOST_PLATFORM}" = "Darwin" ]; then
+    for i in {0..9}; do
+      HOST_IP=$(ifconfig "en${i}" | grep -w inet | awk '{print $2}')
+      if [ -n "$HOST_IP" ]; then
+        break
+      fi
+    done
+    xhost + "$HOST_IP" > /dev/null 2>&1
+  elif [ "${HOST_PLATFORM}" = "Linux" ]; then
+      xhost + > /dev/null 2>&1
+  fi
+
+fi
+
 DOCKER_CONTAINER_NAME=""
 if [ "$1" == "pytest" ]; then
 
@@ -108,6 +133,7 @@ docker run $DOCKER_FLAGS --rm \
   ${VOLUME_BOILERPLATES} \
   ${DEKICK_DOCKER_PORTS} \
   ${DEKICK_GITLABRC} \
+  ${X11SOCKET} \
   -e DEKICK_BOILERPLATES_INSTALL_PATH="${DEKICK_BOILERPLATES_INSTALL_PATH}" \
   -e CURRENT_UID="${CURRENT_UID}" \
   -e CURRENT_USERNAME="${CURRENT_USERNAME}" \
@@ -118,6 +144,8 @@ docker run $DOCKER_FLAGS --rm \
   -e HOST_HOME="${HOST_HOME}" \
   -e HOST_PLATFORM="${HOST_PLATFORM}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
+  -e DISPLAY="${DISPLAY}" \
+  -e HOST_IP="${HOST_IP}" \
   --add-host proxy:host-gateway \
   -v "$HOST_DOCKER_SOCK:/var/run/docker.sock" \
   -v "${DEKICK_GLOBAL_FILE}:/tmp/homedir/.config/dekick/global.yml" \

@@ -1,4 +1,4 @@
-![version 2.5.4](https://img.shields.io/badge/version-develop-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version 2.6.0](https://img.shields.io/badge/version-develop-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -12,7 +12,9 @@
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [`local` command](#local-command)
+    - [Using `local` command](#using-local-command)
+  - [DeKick commands](#dekick-commands)
+    - [`e2e` command](#e2e-command)
     - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
     - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
     - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
@@ -28,6 +30,8 @@
   - [What are Boilerplates](#what-are-boilerplates)
   - [Issue Tracker](#issue-tracker)
   - [Communication](#communication)
+
+<!-- /TOC -->
 
 <!-- /TOC -->
 <!-- /TOC -->
@@ -78,7 +82,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 # How it works?
 <a id="markdown-how-it-works%3F" name="how-it-works%3F"></a>
- - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.5.4`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
+ - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.6.0`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
 
 # Quick start
@@ -109,8 +113,8 @@ dekick local
 <a id="markdown-running-dekick-in-**local**-environment" name="running-dekick-in-**local**-environment"></a>
 A **local** environment is this one that's run on developer's machine. One uses local version mostly for **development** of the application, so the tool provides an environment that closely mimics the production environment, allowing developers to test and debug their code under realistic conditions.
 
-### `local` command
-<a id="markdown-local-command" name="local-command"></a>
+### Using `local` command
+<a id="markdown-using-local-command" name="using-local-command"></a>
 Assuming that you already have DeKick installed run following commands to start local environment:
 ```shell
 cd [YOUR_PROJECT_BASE_DIRECTORY]
@@ -131,6 +135,71 @@ dekick local
 ![dekick local command](docs/files/dekick-local.gif)
 
 DeKick will start the development enviromnent which depends on specific flavour. Typically, depending on the project size, project is ready to be developed in a matter of a couple of minutes (sometimes even under a minute).
+
+## DeKick commands
+<a id="markdown-dekick-commands" name="dekick-commands"></a>
+
+### `e2e` command
+<a id="markdown-e2e-command" name="e2e-command"></a>
+This command is used to run end-to-end tests using popular Cypress image (right now, it's our [own Docker image based on Cypress included](https://hub.docker.com/r/desmart/cypress-included/tags) version). It runs `cypress` tests inside a container. 
+
+> For now, we support opening Cypress GUI and running tests on **Linux** and **macOS** only.
+
+You need to have `cypress/` directory with all the tests and typical Cypress directory structure inside your project. You can read more about Cypress [here](https://www.cypress.io/).
+
+Also, there's a special `cypress/cypress.config.template.js` file which is, when starting the container copied to `cypress/cypress.config.js` file. You can use it to configure your Cypress tests and inject environment variables to them. Just add needed variables to `.env` file in the root of your project and they will be available in `cypress/cypress.config.js` file after starting the container. 
+
+For example file `cypress/cypress.config.template.js` can look like this:
+
+```javascript
+const { defineConfig } = require('cypress')
+
+module.exports = defineConfig({
+  env: {
+    LOGIN_EMAIL: '${CYPRESS_LOGIN_EMAIL}',
+    LOGIN_PASSWORD: '${CYPRESS_LOGIN_PASSWORD}',
+  },
+  e2e: {
+    baseUrl: '${CYPRESS_BASE_URL}',
+    testIsolation: false,
+    chromeWebSecurity: false,
+  }
+})
+```
+
+and `.env` file can look like this:
+
+```shell
+CYPRESS_LOGIN_EMAIL=someuser@some-url.com
+CYPRESS_LOGIN_PASSWORD=some-very-long-password
+CYPRESS_BASE_URL=https://some-url.com
+```
+
+
+To run tests in **headless** mode (without opening Cypress GUI) run:
+```shell
+dekick e2e
+```
+
+this is equivalent to:
+```shell
+dekick e2e --mode run
+```
+
+To open Cypress GUI and run tests in **interactive** mode run:
+```shell
+dekick e2e --mode open
+```
+
+If you need to run (in headless mode) only specific test file then run:
+
+```shell
+dekick e2e --mode run --spec cypress/e2e/your-test.cy.js
+```
+
+> Note that `--mode` option is optional, if you don't provide it then `run` mode will be used by default.
+
+> Running tests on macOS will require to install `xquartz` package. You can install it using `brew install xquartz` command or by downloading it from [here](https://www.xquartz.org/).
 
 ### Global config (`~/.config/dekick/global.yml`)
 <a id="markdown-global-config-~%2F.config%2Fdekick%2Fglobal.yml" name="global-config-~%2F.config%2Fdekick%2Fglobal.yml"></a>
