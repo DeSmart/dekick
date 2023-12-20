@@ -122,7 +122,6 @@ def docker_compose(
         )
         return ret
     except CalledProcessError as error:  # pylint: disable=broad-except
-
         if "network" in str(error.stdout) and "not found" in str(error.stdout):
             # Go down with services if network not found, should fix
             # the issue with `network not found` docker-compose error
@@ -160,14 +159,17 @@ def docker_compose(
 
 
 def wait_for_log(
-    container_name: str, search_string: str, failed_string: str, timeout: int = 60
+    container_name: str,
+    search_string: Union[str, list],
+    failed_string: str,
+    timeout: int = 60,
 ):
     """Reads container logs every second and returns True if the log contains
     search_string within specified timeout time
 
     Args:
         container (): Container name
-        search_string (str): String to search for in the container logs
+        search_string (Union[str, list]): String or list of strings to search for in the container logs
         timeout (int, optional): Timeout. Defaults to 60.
 
     Returns:
@@ -176,16 +178,19 @@ def wait_for_log(
 
     timer = 0
 
+    # If search_string is a string, make it a list
+    if isinstance(search_string, str):
+        search_string = [search_string]
+
     while timer < timeout:
         log = get_container_log(container_name, get_seconds_since_dekick_start())
         if failed_string and failed_string in log:
             raise Exception()
-        if failed_string and failed_string in log and search_string in log:
-            raise Exception()
-        if search_string in log and not failed_string:
-            return
-        if search_string in log and failed_string and failed_string not in log:
-            return
+        if any(string in log for string in search_string):
+            if failed_string and failed_string in log:
+                raise Exception()
+            elif not failed_string or failed_string not in log:
+                return
         (exit_code, status) = get_container_exit_code(container_name)
 
         if status == "exited" and exit_code != 0:
