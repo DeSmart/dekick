@@ -4,6 +4,7 @@ Shared functions for all flavours
 import logging
 from subprocess import CalledProcessError
 from sys import stdout
+from typing import Union
 
 from rich.prompt import Confirm
 
@@ -153,7 +154,7 @@ def get_all_services() -> list:
 
 
 def wait_for_container(
-    search_string: str,
+    search_string: Union[str, list],
     failed_string: str = "",
     timeout: int = 60,
     container=None,

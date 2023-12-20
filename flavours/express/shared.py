@@ -1,3 +1,5 @@
+from typing import Union
+
 from flavours.shared import ui_ask_for_log
 from flavours.shared import wait_for_container as shared_wait_for_container
 from lib.dotenv import get_dotenv_var
@@ -8,7 +10,7 @@ def get_container() -> str:
     return "web"
 
 
-def wait_for_container(search_string: str, timeout: int = 30):
+def wait_for_container(search_string: Union[str, list], timeout: int = 30):
     if shared_wait_for_container(search_string, timeout=timeout, terminate=False):
         app_is_ready()
         return
