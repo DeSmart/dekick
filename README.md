@@ -1,4 +1,4 @@
-![version 2.6.0](https://img.shields.io/badge/version-develop-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version 2.6.1](https://img.shields.io/badge/version-develop-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -15,10 +15,9 @@
     - [Using `local` command](#using-local-command)
   - [DeKick commands](#dekick-commands)
     - [`e2e` command](#e2e-command)
-    - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
-    - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
-    - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
-  - [This project is still under development](#this-project-is-still-under-development)
+  - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
+  - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+  - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
 - [Troubleshooting](#troubleshooting)
   - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
   - [Error response from deamon: network 45677... not found](#error-response-from-deamon-network-45677-not-found)
@@ -32,7 +31,6 @@
   - [Communication](#communication)
 
 <!-- /TOC -->
-
 <!-- /TOC -->
 <!-- /TOC -->
 
@@ -82,7 +80,7 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 # How it works?
 <a id="markdown-how-it-works%3F" name="how-it-works%3F"></a>
- - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.6.0`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
+ - DeKick uses small script (`dekick-docker.sh`) to run [`desmart/dekick:2.6.1`](https://hub.docker.com/r/desmart/dekick) image that has already installed Python with the proper version as well as Python's packages neccessary to run DeKick.
  - Projects `dekick/` directory is mounted inside this image so current project's DeKick version is used. This allows to have different DeKick versions in different projects. DeKick images won't be deleted after release of the current version from Docker Hub so you can use older versions of DeKick if you like. You can even modify your local (project's) DeKick to whatever suits you and this one would be used.
 
 # Quick start
@@ -201,7 +199,7 @@ dekick e2e --mode run --spec cypress/e2e/your-test.cy.js
 
 > Running tests on macOS will require to install `xquartz` package. You can install it using `brew install xquartz` command or by downloading it from [here](https://www.xquartz.org/).
 
-### Global config (`~/.config/dekick/global.yml`)
+## Global config (`~/.config/dekick/global.yml`)
 <a id="markdown-global-config-~%2F.config%2Fdekick%2Fglobal.yml" name="global-config-~%2F.config%2Fdekick%2Fglobal.yml"></a>
 You can create global config file in your home directory in `.config/dekick/global.yml` file. This file will be used as a default config for all projects. The structure is following:
 
@@ -216,7 +214,7 @@ dekick:
 ```
 If the file doesn't exist then DeKick will use default values.
 
-### How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
+## How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
 <a id="markdown-how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F" name="how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F"></a>
 Hence DeKick is dockerized (runs inside a Docker container), in order to run commands like `yarn` (for **react** flavour) or `composer` (for **laravel** flavour) you have to run it using `dekick` command. For example if you want to add `lodash` package using `yarn` then just run:
 
@@ -229,20 +227,19 @@ This will run `yarn` inside a proper container which your application is build w
 
 > Note that above will only work with some flavours like `react`, running `dekick yarn` command on `laravel` flavour won't work because there is no `yarn` command inside a node image.
 
-### How to run any command inside a container?
+## How to run any command inside a container?
 <a id="markdown-how-to-run-any-command-inside-a-container%3F" name="how-to-run-any-command-inside-a-container%3F"></a>
 DeKick runs in a container and you can run any command inside it. For example, if you want to run `ls` command inside a container then just run:
+
 ```shell
 dekick ls -l
 ```
+
+> Note that this is DeKick's own container, not the one with your application. If you want to run a shell inside a container with your application then run `dekick shell` command.
+
 This will run `ls -l` inside a proper container which your application is build with. By default it will run `ls` in the project directory which is bind mounted inside the container in the same directory as your project. When you run `source dekick/dev` you'll "lock" your project root path which will be the project you are in during `source dekick/dev`.
 
 **Note:** DeKick's using image based on [`docker:xx.xx.xx-cli-alpine`](https://hub.docker.com/_/docker) image which is based on Alpine Linux so you can use any command that is available in Alpine Linux.
- 
-## This project is still under development
-<a id="markdown-this-project-is-still-under-development" name="this-project-is-still-under-development"></a>
-
-More documentation will be available soon.
 
 # Troubleshooting
 <a id="markdown-troubleshooting" name="troubleshooting"></a>

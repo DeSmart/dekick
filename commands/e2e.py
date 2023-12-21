@@ -116,6 +116,9 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
             info_desc="Running e2e tests",
             cmd=cmd,
         )
+        
+        if out["code"] != 0:
+            return {"success": False, "text": out["stdout"]}
 
         return {"success": True, "text": out["stdout"]}
 
