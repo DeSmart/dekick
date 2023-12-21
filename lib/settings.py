@@ -39,6 +39,7 @@ DEKICK_BOILERPLATES = [
     "laravel/php8_2",
     "react/default",
     "nuxt/default",
+    "next/default",
 ]
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"
