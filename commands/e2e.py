@@ -100,7 +100,7 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
             cmd += ["-e", "DISPLAY=:0"]
         elif platform == "osx":
             host_ip = getenv("HOST_IP")
-            cmd += ["-e", "DISPLAY", f"{host_ip}:0"]
+            cmd += ["-e", f"DISPLAY={host_ip}:0"]
 
         cmd += cypress_image + cypress_cmd + cypress_args
         return run_shell(
