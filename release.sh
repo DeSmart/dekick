@@ -43,6 +43,7 @@ cd docker || exit 1
 cd - || exit 1
 echo "Saving version to .version"
 echo "$VERSION" > .version
+git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
@@ -58,6 +59,10 @@ echo "Version released!"
 
 echo "Switching back to develop branch"
 git checkout develop
+
+echo "develop" > .version
+git add .version
+git commit -m "chore: new version"
 
 echo "Changing README.md"
 sed -i "s/version-$VERSION](https:\/\/img.shields.io\/badge\/version-$VERSION-teal.svg/version-develop](https:\/\/img.shields.io\/badge\/version-develop-teal.svg/g" README.md
