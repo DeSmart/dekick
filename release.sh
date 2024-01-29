@@ -1,5 +1,5 @@
 #!/bin/env bash
-set -x
+set -e
 
 VERSION="$1"
 CURRENT_VERSION=$(curl -s https://raw.githubusercontent.com/DeSmart/dekick/main/.version)
