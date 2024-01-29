@@ -1,5 +1,5 @@
 #!/bin/env bash
-set -ex
+set -e
 
 VERSION="$1"
 CURRENT_VERSION=$(curl -s https://raw.githubusercontent.com/DeSmart/dekick/main/.version)
@@ -27,33 +27,32 @@ echo "Releasing boilerplates"
 cd "$BOILERPLATES_DIR" || exit 1
 
 git flow release start "${VERSION}"
-git flow release finish -m "chore: tag" "${VERSION}"
+git flow release finish "${VERSION}" -m "chore: tag"
 git push --tags
 git push --all
-
 cd - || exit 1
+
 echo "Releasing DeKick"
 git flow release start "${VERSION}"
 
-echo "Creating Docker images"
-cd docker || exit 1
-./create-dekick-dind-image.sh
-./create-dekick-image.sh
-
-cd - || exit 1
 echo "Saving version to .version"
-echo "$VERSION" > .version
+echo -n "$VERSION" > .version
 git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
 sed -i "s/\[version develop\]/[version-$VERSION]/g" README.md
 sed -i "s/version-develop-teal/version-$VERSION-teal/g" README.md
-
 git add README.md
 git commit -m "docs: update"
 
-git flow release finish -m "chore: tag" "${VERSION}"
+echo "Creating Docker images"
+cd docker || exit 1
+./create-dekick-dind-image.sh
+./create-dekick-image.sh
+cd - || exit 1
+
+git flow release finish "${VERSION}" -m "chore: tag"
 git push --tags
 git push --all
 
@@ -62,7 +61,7 @@ echo "Version released!"
 echo "Switching back to develop branch"
 git checkout develop
 
-echo "develop" > .version
+echo -n "develop" > .version
 git add .version
 git commit -m "chore: new version"
 

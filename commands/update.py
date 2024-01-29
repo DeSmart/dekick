@@ -92,13 +92,15 @@ def update() -> bool:
 
 
 def get_remote_version() -> str:
-    return requests.get(DEKICK_STABLE_VERSION_URL).text
+    """Get remote version of DeKick from the repository"""
+    return requests.get(DEKICK_STABLE_VERSION_URL, timeout=10).text.strip()
 
 
 DEKICK_LOCAL_VERSION = open(DEKICK_VERSION_PATH, "r", encoding="utf-8").read().strip()
 
 
 def get_local_version() -> str:
+    """Get local version of DeKick"""
     return DEKICK_LOCAL_VERSION
 
 
@@ -106,7 +108,6 @@ def compare_versions() -> bool:
     """Compare local and remote version of DeKick"""
 
     def run():
-
         local_version = get_local_version()
         remote_version = get_remote_version()
 
@@ -131,7 +132,6 @@ def compare_versions() -> bool:
 
 
 def ask_for_update() -> bool:
-
     question = "Update?"
 
     if Confirm.ask(question, default=False) is True:
