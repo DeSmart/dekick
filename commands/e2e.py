@@ -12,11 +12,10 @@ from os.path import isfile
 from rich.traceback import install
 
 from commands.local import install_logger
-from lib.misc import get_platform
+from lib.misc import get_platform, run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
-from lib.rbash import rbash
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_END, C_FILE
+from lib.settings import C_END, C_FILE
 
 install()
 
@@ -77,50 +76,48 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
 
     platform = get_platform()
     pwd = getcwd()
-    docker_cmd = "docker run"
-    cypress_image = "desmart/cypress-included:13.6.0-1"
-    cypress_envs = f"-v {pwd}/cypress:/cypress -v /tmp/.X11-unix:/tmp/.X11-unix --env-file {pwd}/.env"
-    cypress_args = "--browser electron --project /e2e --e2e"
+    docker_cmd = ["docker", "run", "--rm", "-it"]
+    cypress_image = ["desmart/cypress-included:13.6.0-1"]
+    cypress_envs = [
+        "-v",
+        f"{pwd}/cypress:/cypress",
+        "-v",
+        "/tmp/.X11-unix:/tmp/.X11-unix",
+        "--env-file",
+        f"{pwd}/.env",
+    ]
+    cypress_args = ["--browser", "electron", "--project", "/e2e", "--e2e"]
 
-    def cypress_open():
+    def cypress_open() -> int:
         """Open Cypress GUI"""
         cmd = ""
-        cypress_cmd = "cypress open"
+        cypress_cmd = ["cypress", "open"]
+        cmd = docker_cmd + cypress_envs
 
         if platform == "linux":
-            cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY "
+            display = getenv("DISPLAY")
+            print(display)
+            cmd += ["-e", "DISPLAY=:0"]
         elif platform == "osx":
             host_ip = getenv("HOST_IP")
-            cmd += f"{docker_cmd} {cypress_envs} -e DISPLAY={host_ip}:0 "
+            cmd += ["-e", f"DISPLAY={host_ip}:0"]
 
-        cmd += f"{cypress_image} {cypress_cmd} {cypress_args}"
-        rbash(
-            info_desc="Opening Cypress GUI",
-            cmd=cmd,
-        )
-        return {"success": True}
+        cmd += cypress_image + cypress_cmd + cypress_args
+        return run_shell(
+            cmd=cmd, capture_output=False, raise_error=False, raise_exception=False
+        )["returncode"]
 
-    def cypress_run():
-        cmd = ""
-        cypress_cmd = "cypress run"
+    def cypress_run() -> int:
+        cypress_cmd = ["cypress", "run"]
 
         if spec is not None:
             nonlocal cypress_args
-            cypress_args += f" --spec {spec}"
+            cypress_args += ["--spec", spec]
 
-        cmd += (
-            f"{docker_cmd} {cypress_envs} {cypress_image} {cypress_cmd} {cypress_args}"
-        )
-
-        out = rbash(
-            info_desc="Running e2e tests",
-            cmd=cmd,
-        )
-        
-        if out["code"] != 0:
-            return {"success": False, "text": out["stdout"]}
-
-        return {"success": True, "text": out["stdout"]}
+        cmd = docker_cmd + cypress_envs + cypress_image + cypress_cmd + cypress_args
+        return run_shell(
+            cmd=cmd, capture_output=False, raise_error=False, raise_exception=False
+        )["returncode"]
 
     def check_cypress_config_template():
         if not isfile("cypress/cypress.config.template.js"):
@@ -139,18 +136,9 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
     if ret is False:
         return 1
 
-    text = "Running e2e tests"
+    if mode == "run":
+        ret = cypress_run()
+    else:
+        ret = cypress_open()
 
-    if spec is not None:
-        text += f" for {C_CMD}{spec}{C_END}"
-
-    ret = run_func(
-        text=text if mode == "run" else "Opening Cypress GUI",
-        func=cypress_run if mode == "run" else cypress_open,
-        terminate=False,
-    )
-
-    if ret is False:
-        return 1
-
-    return 0
+    return ret

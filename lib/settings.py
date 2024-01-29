@@ -40,6 +40,7 @@ DEKICK_BOILERPLATES = [
     "react/default",
     "nuxt/default",
     "next/default",
+    "nest/default",
 ]
 
 DEKICKRC_TMPL_FILE = ".dekickrc.tmpl.yml"

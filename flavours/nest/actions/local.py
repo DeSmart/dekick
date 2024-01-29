@@ -22,7 +22,6 @@ def main():
     """Main"""
     pull_and_build_images()
     yarn_install()
-    yarn_build()
     start_services()
     if get_dekickrc_value("dekick.settings.seed.local") is True:
         ui_seed(force=False, check_with_global_config=True)
