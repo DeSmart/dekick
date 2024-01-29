@@ -8,7 +8,7 @@ COPY requirements.txt /tmp/requirements.txt
 COPY dockerd-entrypoint.sh /usr/local/bin/
 COPY base/* /
 
-RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
+RUN pip install --no-cache-dir --break-system-packages -r /tmp/requirements.txt && rm /tmp/requirements.txt; python -m compileall
 
 
 ENTRYPOINT ["dockerd-entrypoint.sh"]

@@ -7,6 +7,6 @@ RUN apk update\
 COPY requirements.txt /tmp/requirements.txt
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt; python -m compileall
+RUN pip install --no-cache-dir --break-system-packages -r /tmp/requirements.txt && rm /tmp/requirements.txt; python -m compileall
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
