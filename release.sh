@@ -47,7 +47,9 @@ git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
-sed -i "s/version-develop](https:\/\/img.shields.io\/badge\/version-develop-teal.svg/version-$VERSION](https:\/\/img.shields.io\/badge\/version-$VERSION-teal.svg/g" README.md
+sed -i "s/\[version develop\]/[version-$VERSION]/g" README.md
+sed -i "s/version-develop-teal/version-$VERSION-teal/g" README.md
+
 git add README.md
 git commit -m "docs: update"
 
@@ -65,7 +67,8 @@ git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
-sed -i "s/version-$VERSION](https:\/\/img.shields.io\/badge\/version-$VERSION-teal.svg/version-develop](https:\/\/img.shields.io\/badge\/version-develop-teal.svg/g" README.md
+sed -i "s/\[version $VERSION\]/[version-develop]/g" README.md
+sed -i "s/version-$VERSION-teal/version-develop-teal/g" README.md
 git add README.md
 git commit -m "docs: update"
 
