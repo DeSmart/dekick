@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.traceback import install
 
 from commands.docker_compose import docker_compose
+from flavours.shared import is_service_running
 
 install()
 console = Console()
@@ -80,9 +81,16 @@ def shell(
         tmp_docker_env.append("-e")
         tmp_docker_env.append(f'{key}="{value}"')
 
+    cmd = "run"
+    flags = ["-it", "--rm"]
+
+    if is_service_running(service=container):
+        cmd = "exec"
+        flags = ["-it"]
+
     return docker_compose(
-        cmd="run",
-        args=["-it", "--rm"] + tmp_docker_env + [container] + [shell_cmd] + args,
+        cmd=cmd,
+        args=flags + tmp_docker_env + [container] + [shell_cmd] + args,
         env=env,
         raise_exception=False,
         raise_error=True,

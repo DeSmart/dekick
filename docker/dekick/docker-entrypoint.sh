@@ -12,14 +12,10 @@ if [ "$user" = "root" ] && [ -n "$CURRENT_USERNAME" ] && [ -n "$CURRENT_UID" ]; 
   exit $?
 fi
 
+# shellcheck disable=SC1091
 source "$DEKICK_PATH/commands.sh"
 
 export HOME=/tmp/homedir
-
-# Speedup startup by compiling python files on a first run
-if [ ! -d "$DEKICK_PATH/__pycache__" ]; then
-  python -m compileall "${DEKICK_PATH}" > /dev/null 2>&1
-fi
 
 if [ -z "$1" ]; then
     dekick -h
