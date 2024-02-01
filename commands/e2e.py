@@ -11,7 +11,7 @@ from os.path import isfile
 
 from rich.traceback import install
 
-from commands.local import install_logger
+from commands.local import get_envs_from_credentials_provider, install_logger
 from lib.misc import get_platform, run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.run_func import run_func
@@ -73,6 +73,7 @@ def e2e(log_level: str, log_filename: str, mode: str, spec: str, args: list) -> 
     Run unit test for specific flavour
     """
     install_logger(log_level, log_filename)
+    get_envs_from_credentials_provider()
 
     platform = get_platform()
     pwd = getcwd()

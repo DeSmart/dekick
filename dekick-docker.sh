@@ -37,6 +37,7 @@ fi
 CURRENT_UID=$(id -u)
 CURRENT_USERNAME=$(whoami)
 
+# When running as root (in CI/CD for example) use dekick user with uid 1000
 if [ "$CURRENT_UID" = "0" ]; then
   CURRENT_UID=1000
   CURRENT_USERNAME="dekick"
