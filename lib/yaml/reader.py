@@ -1,4 +1,5 @@
 """Read YAML files as flatdict"""
+
 import sys
 from os import path
 
@@ -17,7 +18,7 @@ def read_yaml(file) -> flatdict.FlatDict:
 
     lint(file)
 
-    with (open(file, "r", encoding="utf-8")) as yaml_file:
+    with open(file, "r", encoding="utf-8") as yaml_file:
         yaml_parsed = yaml.safe_load(yaml_file)
         ret = flatdict.FlatDict(yaml_parsed, delimiter=".")
         return ret

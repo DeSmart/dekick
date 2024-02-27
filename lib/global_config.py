@@ -1,4 +1,5 @@
 """Global DeKick settings, stored in user's home directory"""
+
 import flatdict
 
 from lib.settings import (
@@ -9,19 +10,20 @@ from lib.settings import (
     DEKICKRC_GLOBAL_PATH,
 )
 from lib.yaml.reader import read_yaml
+from lib.yaml.saver import save_flat
 
 
 def get_global_config_value(name: str):
     """Get value from .dekickrc.yml file"""
-    dekickrc_flat = __get_dekickrc_global_flat()
+    global_flat = __get_dekickrc_global_flat()
 
     try:
-        if not name in dekickrc_flat:
+        if not name in global_flat:
             raise TypeError(
                 f"{C_CODE}Key{C_END} {name} does not exists in "
                 + f"{C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}"
             )
-        value = dekickrc_flat[name]
+        value = global_flat[name]
         if value is None:
             return ""
         return value
@@ -32,6 +34,18 @@ def get_global_config_value(name: str):
         ) from exception
 
 
+def set_global_config_value(name: str, value: str):
+    """Set value in global file and save the file"""
+    dekickrc = __get_dekickrc_global_flat()
+    dekickrc[name] = value
+    __save_dekickrc_global_flat(dekickrc)
+
+
 def __get_dekickrc_global_flat() -> flatdict.FlatDict:
-    """Gets flattened .dekickrc.yml file"""
+    """Gets flattened file"""
     return read_yaml(DEKICKRC_GLOBAL_PATH)
+
+
+def __save_dekickrc_global_flat(global_flat: flatdict.FlatDict):
+    """Saves flattened file"""
+    save_flat(DEKICKRC_GLOBAL_PATH, global_flat)

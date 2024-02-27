@@ -155,9 +155,11 @@ def get_elapsed_time(text: str, elapsed_time: float) -> str:
     elapsed_time_formatted = (
         "< 1s"
         if elapsed_time < 1
-        else f"{int(elapsed_time)}s"
-        if elapsed_time.is_integer()
-        else f"{elapsed_time:.1f}s"
+        else (
+            f"{int(elapsed_time)}s"
+            if elapsed_time.is_integer()
+            else f"{elapsed_time:.1f}s"
+        )
     )
 
     right_margin = 5

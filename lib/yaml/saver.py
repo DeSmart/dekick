@@ -1,4 +1,5 @@
 """Flat to yaml saver"""
+
 import flatdict
 from yaml import dump
 

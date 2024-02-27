@@ -69,11 +69,15 @@ def show_banner():
     )
     print("╭" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╮")
 
-    dekick_str_len = len(f"DeKick {namespace.command}")
+    full_command = namespace.command
+    if ARG_SUBCOMMAND:
+        full_command += f":{ARG_SUBCOMMAND}"
+
+    dekick_str_len = len(f"DeKick {full_command}")
     version_str_len = len(f"version: {version}")
 
     print(
-        f"│ {C_CMD}DeKick{C_END} {C_FILE}{namespace.command}"
+        f"│ {C_CMD}DeKick{C_END} {C_FILE}{full_command}"
         + (((TERMINAL_COLUMN_WIDTH - 5) - version_str_len - dekick_str_len) * " ")
         + f"{C_END} version: {C_CODE}{version}{C_END}"
         + " │"

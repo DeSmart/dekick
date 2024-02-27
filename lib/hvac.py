@@ -1,0 +1,243 @@
+"""Set of helper functions to interact with HashiCorp Vault."""
+
+from logging import debug
+
+from hvac import exceptions as hvac_exceptions
+
+from lib.dekickrc import get_dekickrc_value
+from lib.environments import get_environments
+
+
+def create_mount_point(client):
+    """Create a project (mountpoint) in Vault."""
+    mount_point = get_mount_point()
+    mounted_secrets_engines = client.sys.list_mounted_secrets_engines()
+
+    if mount_point not in mounted_secrets_engines["data"]:
+        client.sys.enable_secrets_engine(
+            backend_type="kv",
+            path=mount_point,
+            options={"version": 2, "max_versions": 1},
+            description=f"DeKick environment variables",
+        )
+
+
+def get_mount_point() -> str:
+    """Get the mount point from Vault."""
+    mount_point = str(get_dekickrc_value("hashicorp_vault.mount_point"))
+    if not mount_point.endswith("/"):
+        mount_point += "/"
+    return mount_point
+
+
+def create_admin_policy(client) -> str:
+    """Create an admin policy in Vault."""
+    mount_point = get_dekickrc_value("hashicorp_vault.mount_point")
+    admin_policy = f"""
+    {{
+        "path": {{
+            "sys/auth/*": {{
+                "capabilities": ["create", "read", "update", "delete"]
+            }},
+            "sys/mounts/*": {{
+                "capabilities": ["create", "read", "update", "delete"]
+            }},
+            "auth/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list"]
+            }},
+            "{mount_point}/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list"]
+            }},
+            "{mount_point}/data/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list"]
+            }},
+            "{mount_point}/metadata/*": {{
+                "capabilities": ["list", "read"]
+            }},
+            "sys/policies/acl/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list"]
+            }},
+            "identity/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list"]
+            }}
+        }}
+    }}
+    """
+    policy_name = "admin"
+    client.sys.create_or_update_policy(name=policy_name, policy=admin_policy)
+    return policy_name
+
+
+def create_project_policy(
+    client, project_name: str, project_group: str, roles: list
+) -> dict:
+    """Create a policy in Vault."""
+    path = _create_path(project_name, project_group)
+    mount_point = get_dekickrc_value("hashicorp_vault.mount_point")
+    environs = get_environments()
+    policy_names = {}
+
+    for role in roles:
+
+        if role == "maintainer":
+            environs_path = "*"
+        else:
+            environs = ",".join([env for env in environs if env != "production"])
+            environs_path = "{" + environs + "}"
+
+        policy = f"""
+            path "{mount_point}/*" {{
+                capabilities = ["list"]
+            }}
+            path "{mount_point}/{path}/*" {{
+                capabilities = ["list"]
+            }}
+            path "{mount_point}/data/{path}/{environs_path}" {{
+                capabilities = ["read", "update", "list", "create", "patch"]
+            }}
+        """
+        policy_name = _create_policy_name(project_group, project_name, role)
+        policy_names[role] = policy_name
+        client.sys.create_or_update_policy(name=policy_name, policy=policy)
+
+    return policy_names
+
+
+def create_token(client, policies: list, username, ttl="8760h"):
+    """Create a token in Vault."""
+    return client.auth.token.create(
+        policies=policies, ttl=ttl, renewable=True, name=username
+    )
+
+
+def append_policies_to_user(client, username: str, policies: list[str]):
+    """Add policies to a user in Vault."""
+    try:
+        user_policies = read_entity_policies(client, username)
+        combined_policies = list(set(user_policies + policies))
+    except hvac_exceptions.InvalidPath:
+        combined_policies = policies
+
+    entity_id = read_entity_by_name(client, username)["id"]
+    client.secrets.identity.create_or_update_entity(
+        name=username, entity_id=entity_id, policies=combined_policies
+    )
+
+
+def get_all_user_data(client) -> list[dict]:
+    """Get all user names from Vault."""
+    entities = client.secrets.identity.list_entities()
+    user_data = []
+    for entity_id in entities["data"]["keys"]:
+        entity_info = client.secrets.identity.read_entity(entity_id=entity_id)
+        metadata = entity_info["data"]["metadata"]
+        entities["data"]["key_info"][entity_id]["metadata"] = metadata
+        user_data.append(
+            {
+                "username": entities["data"]["key_info"][entity_id]["name"],
+                "entity_id": entity_id,
+                "metadata": metadata,
+            }
+        )
+    return user_data
+
+
+def is_user_exists(client, username: str) -> bool:
+    """Check if a user exists in Vault."""
+    try:
+        read_entity_by_name(client, username)
+        return True
+    except hvac_exceptions.InvalidPath:
+        return False
+
+
+def read_entity_policies(client, username: str) -> list[str]:
+    """Read policies for an entity in Vault."""
+    entity = read_entity_by_name(client, username)
+    return entity["policies"]
+
+
+def read_entity_by_name(client, username: str):
+    """Read an entity by name in Vault."""
+    entity_response = client.secrets.identity.read_entity_by_name(name=username)
+    return entity_response["data"]
+
+
+def enable_userpass_auth_method(client):
+    """Enable userpass auth method in Vault."""
+    # Check if userpass auth method is already enabled
+    auth_methods = client.sys.list_auth_methods()
+    userpass_enabled = any(
+        auth_method
+        for auth_method, details in auth_methods["data"].items()
+        if details["type"] == "userpass"
+    )
+
+    # Enable userpass auth method if not already enabled
+    if not userpass_enabled:
+        client.sys.enable_auth_method(method_type="userpass")
+        debug("Userpass auth method has been enabled.")
+    else:
+        debug("Userpass auth method is already enabled.")
+
+
+def create_entity(client, username: str, metadata: dict) -> str:
+    """Create an entity in Vault."""
+    entity_response = client.secrets.identity.create_or_update_entity_by_name(
+        name=username, metadata=metadata
+    )
+
+    if isinstance(entity_response, dict):
+        return entity_response["data"]["id"]
+
+    return ""
+
+
+def create_or_update_user(client, username: str, password: str, metadata: dict):
+    """Create or update a user in Vault."""
+    create_userpass(client, username, password)
+
+    entity_id = create_entity(client, username, metadata)
+    if entity_id:
+        create_alias(client, username, entity_id)
+
+
+def create_userpass(client, username: str, password: str):
+    """Create a user in Vault."""
+    client.auth.userpass.create_or_update_user(
+        username=username, password=password, policies=["default"]
+    )
+
+
+def create_alias(client, username: str, entity_id: str):
+    """Create an alias for an entity in Vault."""
+    userpass_mount_accessor = _get_userpass_mount_accessor(client)
+    client.secrets.identity.create_or_update_entity_alias(
+        name=username,
+        canonical_id=entity_id,
+        mount_accessor=userpass_mount_accessor,
+    )
+
+
+def _get_userpass_mount_accessor(client) -> str:
+    """Get the accessor for the userpass auth method."""
+    auth_methods = client.sys.list_auth_methods()
+    return next(
+        (
+            details["accessor"]
+            for auth_method, details in auth_methods["data"].items()
+            if details["type"] == "userpass"
+        ),
+        "",
+    )
+
+
+def _create_path(project_name: str, project_group: str) -> str:
+    """Create a path for the project."""
+    return f"{project_group}/{project_name}"
+
+
+def _create_policy_name(project_group: str, project_name: str, role: str) -> str:
+    """Create a policy name for the project."""
+    return f"{project_group}/{project_name}:{role}"
+    return f"{project_group}/{project_name}:{role}"

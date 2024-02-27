@@ -18,3 +18,4 @@ humanfriendly
 hvac
 yamllint
 beaupy
+thefuzz

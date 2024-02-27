@@ -8,8 +8,13 @@ def info() -> str:
     return "Gitlab"
 
 
-def init():
+def configure():
+    """Configure this driver"""
+
+
+def ui_init():
     """Initialize this driver"""
+    pass
 
 
 # pylint: disable=unused-argument
@@ -18,7 +23,7 @@ def get_envs(*args, env: str, gitlab_token: str = "", **kwargs) -> str:
     return get_project_var(scope=env, token=gitlab_token)
 
 
-def arguments(parser: ArgumentParser):
+def arguments(sub_command: str, parser: ArgumentParser):
     """Parse arguments for this driver"""
     parser.add_argument(
         "--gitlab-token",

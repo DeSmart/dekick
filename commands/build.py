@@ -1,6 +1,7 @@
 """
 Runs the specified command
 """
+
 import sys
 from argparse import ArgumentParser, Namespace
 from logging import debug, error
