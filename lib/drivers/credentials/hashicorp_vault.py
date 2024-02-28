@@ -4,10 +4,12 @@ import re
 import sys
 from argparse import ArgumentParser
 from os import mkdir
+from time import sleep
 
 import flatdict
 import hvac
 from beaupy import prompt, select, select_multiple
+from genericpath import isdir
 from hvac import exceptions as hvac_exceptions
 from rich.console import Console
 from rich.prompt import Confirm
@@ -434,7 +436,7 @@ def ui_pull() -> bool:
 
         except hvac_exceptions.InvalidPath as exception:
             raise ValueError(
-                f"Path {mount_point}{path} not found, check your mount_point"
+                f"Path {mount_point}{path} not found, check your mount_point or initialize Vault with {C_CODE}dekick credentials run init{C_END} command"
             ) from exception
 
         except hvac_exceptions.Forbidden as exception:
@@ -462,28 +464,49 @@ def ui_push() -> bool:
     client = _get_client()
     yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE)
 
-    for env_name in get_environments():
-        env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
+    if not isdir(DEKICK_ENVS_DIR):
+        print(
+            f"\n{C_BOLD}This is a first run, let me create {C_FILE}{DEKICK_ENVS_DIR}{C_END} {C_BOLD}dir and all environment files.{C_END}"
+        )
+        mkdir(DEKICK_ENVS_DIR)
+        for env_name in get_environments():
+            env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
+            print(f"Creating file {C_FILE}{env_file}{C_END}")
+            with open(env_file, "w", encoding="utf-8") as file:
+                file.write("")
+            sleep(1)
 
-        with open(env_file, "r", encoding="utf-8") as file:
-            env_data = dict2env(env2dict(file.read()), env_name)
-        with open(env_file, "w", encoding="utf-8") as file:
-            file.write(env_data)
+        print(
+            "\n{C_WARN}Please fill all environment files with proper data and run this command again.{C_END}"
+        )
+    else:
+        print(f"{C_BOLD}\nPushing environment files to {info()}{C_END}")
+        for env_name in get_environments():
+            env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
 
-        env_id = sha256_checksum(env_file)
+            with open(env_file, "r", encoding="utf-8") as file:
+                env_data = dict2env(env2dict(file.read()), env_name)
+            with open(env_file, "w", encoding="utf-8") as file:
+                file.write(env_data)
 
-        for index, value in enumerate(yaml_flat["environments"]):
-            if value["name"] == env_name:
-                yaml_flat["environments"][index]["id"] = env_id
+            env_id = sha256_checksum(env_file)
 
-        with open(env_file, "r", encoding="utf-8") as file:
-            env_data = file.read()
-            path = f"{project_group}/{project_name}/{env_name}/{env_id}"
-            client.secrets.kv.v2.create_or_update_secret(
-                path=path, secret=env2dict(env_data), mount_point=mount_point
-            )
+            for index, value in enumerate(yaml_flat["environments"]):
+                if value["name"] == env_name:
+                    yaml_flat["environments"][index]["id"] = env_id
 
-    save_flat(DEKICK_HVAC_ENV_FILE, yaml_flat)
+            with open(env_file, "r", encoding="utf-8") as file:
+                env_data = file.read()
+                path = f"{project_group}/{project_name}/{env_name}/{env_id}"
+                client.secrets.kv.v2.create_or_update_secret(
+                    path=path, secret=env2dict(env_data), mount_point=mount_point
+                )
+                print(f"Pushed {C_FILE}{env_file}{C_END} to {C_CMD}{path}{C_END}")
+
+        save_flat(DEKICK_HVAC_ENV_FILE, yaml_flat)
+        print(
+            f"\nAll environment files pushed, please remember to commit {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file!"
+        )
 
     return True
 

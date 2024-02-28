@@ -1,11 +1,13 @@
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from logging import error
 
 from lib.logger import install_logger
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.providers.credentials import parser_driver_arguments
 from lib.providers.credentials import ui_pull as provider_ui_pull
+from lib.settings import C_END, C_ERROR
 
 
 def parser_help() -> str:
@@ -33,5 +35,11 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
 
 def ui_pull(*args, **kwargs) -> int:
     """UI wrapper pulling all environment variables and saving to envs/ dir"""
-    provider_ui_pull()
+    try:
+        provider_ui_pull()
+    except Exception as e:
+        error(e)
+        print(f"{C_ERROR}Error{C_END}: {e}")
+        return 1
+
     return 0
