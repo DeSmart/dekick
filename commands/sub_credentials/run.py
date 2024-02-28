@@ -10,14 +10,7 @@ from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.providers.credentials import parser_driver_arguments
 from lib.providers.credentials import ui_run_action as provider_ui_run_action
 from lib.run_func import run_func
-from lib.settings import (
-    C_CODE,
-    C_END,
-    C_ERROR,
-    C_FILE,
-    DEKICKRC_GLOBAL_HOST_PATH,
-    is_pytest,
-)
+from lib.settings import C_CODE, C_END, C_ERROR, C_FILE
 
 
 def parser_help() -> str:

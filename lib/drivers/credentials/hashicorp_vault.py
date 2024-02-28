@@ -1,3 +1,4 @@
+import glob
 import hashlib
 import random
 import re
@@ -6,11 +7,11 @@ from os import mkdir
 
 import flatdict
 import hvac
-from beaupy import select
+from beaupy import select, select_multiple
 from hvac import exceptions as hvac_exceptions
-from nltk.corpus import words
 from rich.console import Console
 from rich.prompt import Confirm
+from rich.table import Table
 from thefuzz import fuzz
 
 from lib.dekickrc import get_dekickrc_value
@@ -18,6 +19,7 @@ from lib.dotenv import dict2env, env2dict
 from lib.environments import get_environments
 from lib.global_config import get_global_config_value
 from lib.hvac import (
+    add_policies_to_user,
     append_policies_to_user,
     create_admin_policy,
     create_mount_point,
@@ -25,32 +27,46 @@ from lib.hvac import (
     create_project_policy,
     enable_userpass_auth_method,
     get_all_user_data,
+    get_entity_by_username,
     get_mount_point,
+    get_user_policies,
     is_user_exists,
 )
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_CODE, C_END, C_FILE
+from lib.settings import (
+    C_BOLD,
+    C_CMD,
+    C_CODE,
+    C_END,
+    C_ERROR,
+    C_FILE,
+    C_WARN,
+    DEKICKRC_GLOBAL_HOST_PATH,
+    TERMINAL_COLUMN_WIDTH,
+)
 from lib.words import get_words
 from lib.yaml.reader import read_yaml
 from lib.yaml.saver import save_flat
 
 console = Console()
 
-VAULT_TOKEN = str(get_global_config_value("hashicorp_vault.token"))
 VAULT_ADDR = str(get_dekickrc_value("hashicorp_vault.url"))
 HVAC_CLIENT = None
 DEKICK_HVAC_ENV_FILE = ".dekick_hvac.yml"
 DEKICK_ENVS_DIR = "envs"
 DEKICK_HVAC_ROLES = ["developer", "maintainer"]
+DEKICK_HVAC_PAGE_SIZE = 30
 
 
 def get_actions() -> list[tuple[str, str]]:
     """Get available actions for this driver"""
     return [
         ("init", "Initialize Vault for this project"),
-        ("create_user", "Create user in Vault"),
-        ("list_users", "List all users in Vault"),
-        ("search_users", "Search for users in Vault"),
+        ("create_user", "Create user"),
+        ("delete_user", "Delete user"),
+        ("assign_policies", "Assign policies to user"),
+        ("list_users", "List all users"),
+        ("search_users", "Search for users"),
     ]
 
 
@@ -72,25 +88,62 @@ def get_envs(*args, env: str, token: str = "", **kwargs) -> str:
     return ""
 
 
-def ui_action_init() -> bool:
+def ui_action_init(root_token: str = "") -> bool:
     """Initialize Vault for this project"""
-    root_token = ui_get_for_root_token_from_cli()
-    client = _get_client(root_token)
+    try:
+        client = _get_client(root_token)
+        create_mount_point(client)
+        ui_enable_userpass_auth_method(client)
+        create_envs_dir()
+        ui_create_dekick_hvac_yaml()
+        ui_create_project_policy()
+        ui_create_admin_policy()
+    except hvac_exceptions.Forbidden:
+        global HVAC_CLIENT  # pylint: disable=global-statement
+        HVAC_CLIENT = None
+        return ui_action_init(ui_get_for_root_token())
 
-    ui_create_mount_point(client)
-    ui_enable_userpass_auth_method(client)
-    create_envs_dir()
-    ui_create_dekick_hvac_yaml()
-    print("Vault initialized for this project")
+    return True
+
+
+def ui_create_project_policy() -> bool:
+    """Create project policy"""
+    client = _get_client()
+    project_name = str(get_dekickrc_value("project.name"))
+    project_group = str(get_dekickrc_value("project.group"))
+
+    def wrapper():
+        create_project_policy(client, project_name, project_group, DEKICK_HVAC_ROLES)
+        return {"success": True}
+
+    run_func(
+        text=f"Creating project policies for {C_CMD}{project_group}/{project_name}{C_END}",
+        func=wrapper,
+    )
+
+    return True
+
+
+def ui_create_admin_policy() -> bool:
+    """Create admin policy"""
+    client = _get_client()
+
+    def wrapper():
+        create_admin_policy(client)
+        return {"success": True}
+
+    run_func(
+        text=f"Creating admin policy",
+        func=wrapper,
+    )
 
     return True
 
 
 def ui_action_create_user() -> bool:
-    root_token = ui_get_for_root_token_from_cli()
-    user_data = ui_get_user_data_from_cli()
+    user_data = ui_get_user_data()
     password = _generate_word_password()
-    client = _get_client(root_token)
+    client = _get_client()
     project_name = str(get_dekickrc_value("project.name"))
     project_group = str(get_dekickrc_value("project.group"))
 
@@ -105,32 +158,119 @@ def ui_action_create_user() -> bool:
         else:
             create_or_update_user(client, username, password, metadata)
             print(
-                f"User {C_CODE}{username}{C_END} created with password {C_CODE}{password}{C_END}"
+                f"User {C_FILE}{username}{C_END} created with password {C_FILE}{password}{C_END}"
             )
+        if Confirm.ask(
+            f"Should we give this user {C_BOLD}administrative access (admin){C_END} to Vault, enabling them to manage projects and users?",
+            default=False,
+        ):
+            policy_name = create_admin_policy(client)
+            append_policies_to_user(client, username, [policy_name])
+        else:
+            if Confirm.ask(
+                f"Should the user be granted access to this particular project?",
+                default=True,
+            ):
+                console.print(f"\nChoose user's role for this project:")
+                role = select(list(DEKICK_HVAC_ROLES), cursor="🢧", cursor_style="cyan")
+                console.print(f"Ok, adding role {role} to user policies")
+                policy_names = create_project_policy(
+                    client, project_name, project_group, DEKICK_HVAC_ROLES
+                )
+                policy_name = policy_names[role]
+                append_policies_to_user(client, username, [policy_name])
+    except hvac_exceptions.InvalidPath as exception:
+        raise ValueError(
+            f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
+        ) from exception
+    except hvac_exceptions.Forbidden as exception:
+        raise ValueError(
+            "You don't have the necessary access to create users or assign rights. Please check your permissions."
+        ) from exception
+
+    return True
+
+
+def ui_action_delete_user() -> bool:
+    """Delete user in Hashicorp Vault"""
+    client = _get_client()
+
+    username = _ui_select_username(client)
+    current_username = str(get_global_config_value("hashicorp_vault.username"))
+
+    if username == current_username:
+        raise ValueError(
+            f"You can't delete user {C_CODE}{username}{C_END} that you are currently using to manage Vault. Please use another user to delete this user."
+        )
+
+    if not Confirm.ask(
+        f"Are you sure you want to delete user {C_CODE}{username}{C_END}?",
+        default=False,
+    ) or not Confirm.ask(
+        "Are you really sure? This action is irreversible!", default=False
+    ):
+        print("User deletion cancelled")
+        return False
+
+    try:
+        entity = get_entity_by_username(client, username)
+        client.secrets.identity.delete_entity(entity_id=entity["id"])
+        print(f"User {C_CODE}{username}{C_END} deleted")
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
             f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
         ) from exception
 
-    if Confirm.ask(
-        f"Should this user be given administrative access to Vault, enabling them to manage projects and users?",
+    return True
+
+
+def ui_action_assign_policies() -> bool:
+    """Assign policies to user in Hashicorp Vault"""
+    client = _get_client()
+    username = _ui_select_username(client)
+    user_policies = get_user_policies(client, username)
+
+    policies = client.sys.list_policies()["data"]["policies"]
+    policies_filtred = [
+        policy
+        for policy in policies
+        if not policy.startswith("default") and not policy.startswith("root")
+    ]
+    ticked_indices = [
+        index for index, p in enumerate(policies_filtred) if p in user_policies
+    ]
+
+    policy_indexes = select_multiple(
+        policies_filtred,
+        tick_style="cyan",
+        preprocessor=lambda x: (
+            x.split(":")[0] + " (" + x.split(":")[1] + ")" if x != "admin" else x
+        ),
+        cursor_style="magenta",
+        return_indices=True,
+        ticked_indices=ticked_indices,
+        pagination=True,
+        page_size=DEKICK_HVAC_PAGE_SIZE,
+    )
+
+    policy_names = []
+    for policy_index in policy_indexes:
+        policy_names.append(policies_filtred[int(policy_index)])
+
+    if "admin" in policy_names and not Confirm.ask(
+        f"Are you sure you want to assign {C_BOLD}administrative access (admin){C_END} to user {C_CODE}{username}{C_END}?",
         default=False,
     ):
-        policy_name = create_admin_policy(client)
-        append_policies_to_user(client, username, [policy_name])
-    else:
-        if Confirm.ask(
-            f"Should the user be granted access to this particular project?",
-            default=True,
-        ):
-            console.print(f"\nChoose user's role for this project:")
-            role = select(list(DEKICK_HVAC_ROLES), cursor="🢧", cursor_style="cyan")
-            console.print(f"Ok, adding role {role} to user policies")
-            policy_names = create_project_policy(
-                client, project_name, project_group, DEKICK_HVAC_ROLES
-            )
-            policy_name = policy_names[role]
-            append_policies_to_user(client, username, [policy_name])
+        print("Policy assignment cancelled")
+        return False
+
+    try:
+        add_policies_to_user(client, username, policy_names)
+        print(f"Policies assigned to user {C_CODE}{username}{C_END}")
+    except hvac_exceptions.InvalidPath as exception:
+        raise ValueError(
+            f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
+        ) from exception
 
     return True
 
@@ -139,13 +279,46 @@ def ui_action_list_users() -> bool:
     """List all users in Hashicorp Vault"""
     client = _get_client()
 
+    table = Table(
+        show_header=True,
+        header_style="bold",
+        width=TERMINAL_COLUMN_WIDTH,
+    )
+    table.add_column("Username", style="white")
+    table.add_column("First name", style="magenta")
+    table.add_column("Last name", style="magenta")
+    table.add_column("Email", style="blue")
+    table.add_column("Group", style="green", justify="center")
+    table.add_column("Project", style="green", justify="center")
+    table.add_column("Role", style="green", justify="center")
+
     try:
         user_data = get_all_user_data(client)
-        print(f"{C_CODE}Users list:{C_END}")
         for data in user_data:
-            console.print(
-                f"  {data['username']} ({data['metadata']['firstname']} {data['metadata']['lastname']} {data['metadata']['email']})"
+            user_policies = get_user_policies(client, data["username"])
+            groups = []
+            projects = []
+            roles = []
+
+            for user_policy in user_policies:
+                if user_policy == "admin":
+                    groups.append("-")
+                    projects.append("-")
+                    roles.append("admin")
+                else:
+                    groups.append(user_policy.split("/")[0])
+                    projects.append(user_policy.split("/")[1].split(":")[0])
+                    roles.append(user_policy.split(":")[1])
+            table.add_row(
+                data["username"],
+                data["metadata"]["firstname"],
+                data["metadata"]["lastname"],
+                data["metadata"]["email"],
+                "\n".join(groups),
+                "\n".join(projects),
+                "\n".join(roles),
             )
+        console.print(table)
         return True
     except hvac_exceptions.Forbidden as exception:
         raise KeyError(
@@ -328,17 +501,6 @@ def ui_enable_userpass_auth_method(client):
     return {"success": True}
 
 
-def ui_create_mount_point(client):
-    """Create mount point"""
-
-    def wrapper():
-        create_mount_point(client)
-
-    run_func(text=f"Creating mount point {C_CODE}dekick{C_END}", func=wrapper)
-
-    return {"success": True}
-
-
 def create_envs_dir():
     """Create envs directory"""
 
@@ -348,23 +510,66 @@ def create_envs_dir():
         pass
 
 
-def ui_get_for_root_token_from_cli():
+def ui_get_for_root_token():
     """Ask for root token"""
     root_token = input(
-        f"Enter your Hashicorp Vault ({C_CODE}{VAULT_ADDR}{C_END}) root token: "
+        f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your Vault ({C_CODE}{VAULT_ADDR}{C_END}) to continue: "
     )
     return root_token
 
 
-def ui_get_user_data_from_cli() -> dict:
+def ui_get_user_data(
+    username: str = "",
+    firstname: str = "",
+    lastname: str = "",
+    companyname: str = "",
+    email: str = "",
+) -> dict:
     """Ask for username"""
-    username = (input(f"Enter username you want to create: ")).strip()
-    firstname = (input(f"Enter firstname for {C_CMD}{username}{C_END}: ")).strip()
-    lastname = (input(f"Enter lastname for {C_CMD}{username}{C_END}: ")).strip()
-    email = (input(f"Enter email for {C_CMD}{username}{C_END}: ")).strip()
+
+    if not username:
+        username = (input(f"Enter username you want to create: ")).strip()
+        if not username:
+            print(f"{C_ERROR}Error:{C_END} Username can't be empty")
+            return ui_get_user_data()
+
+    if not firstname:
+        firstname = (input(f"Enter firstname for {C_CMD}{username}{C_END}: ")).strip()
+        if not firstname:
+            print(f"{C_ERROR}Error:{C_END} Firstname can't be empty")
+            return ui_get_user_data(username)
+
+    if not lastname:
+        lastname = (input(f"Enter lastname for {C_CMD}{username}{C_END}: ")).strip()
+        if not lastname:
+            print(f"{C_ERROR}Error:{C_END} Lastname can't be empty")
+            return ui_get_user_data(username, firstname)
+
+    if not companyname:
+        companyname = (
+            input(f"Enter company name for {C_CMD}{username}{C_END}: ")
+        ).strip()
+        if not companyname:
+            print(f"{C_ERROR}Error:{C_END} Company name can't be empty")
+            return ui_get_user_data(username, firstname, lastname)
+
+    if not email:
+        email = (input(f"Enter email for {C_CMD}{username}{C_END}: ")).strip()
+        if not email:
+            print(f"{C_ERROR}Error:{C_END} Email can't be empty")
+            return ui_get_user_data()
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            print(f"{C_ERROR}Error:{C_END} Invalid email format!")
+            return ui_get_user_data(username, firstname, lastname, companyname)
 
     confirm = Confirm.ask(
-        f"Should I create user {C_CODE}{username}{C_END} with firstname {C_CODE}{firstname}{C_END}, lastname {C_CODE}{lastname}{C_END} and email {C_CODE}{email}{C_END}?",
+        f"""Is this ok?
+    User name: {C_CODE}{username}{C_END}
+    First name: {C_CODE}{firstname}{C_END}
+    Last name: {C_CODE}{lastname}{C_END}
+    Company name: {C_CODE}{companyname}{C_END}
+    E-mail: {C_CODE}{email}{C_END}
+""",
         default=True,
     )
 
@@ -387,14 +592,31 @@ def arguments(sub_command: str, parser: ArgumentParser):
     )
 
 
-def _get_client(vault_token: str = "") -> hvac.Client:
+def _get_client(token: str = "") -> hvac.Client:
     global HVAC_CLIENT  # pylint: disable=global-statement
 
-    if not vault_token:
-        vault_token = VAULT_TOKEN
-
     if not HVAC_CLIENT:
-        HVAC_CLIENT = hvac.Client(url=VAULT_ADDR, token=vault_token or VAULT_TOKEN)
+        username = str(get_global_config_value("hashicorp_vault.username"))
+        password = str(get_global_config_value("hashicorp_vault.password"))
+
+        if token:
+            HVAC_CLIENT = hvac.Client(url=VAULT_ADDR, token=token)
+        elif username and password:
+            try:
+                HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
+                HVAC_CLIENT.auth.userpass.login(username=username, password=password)
+            except hvac_exceptions.InvalidRequest:
+                if Confirm.ask(
+                    f"Invalid username or password taken from {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}.\nShould I try to authorize using root token?",
+                    default=True,
+                ):
+                    root_token = ui_get_for_root_token()
+                    HVAC_CLIENT = None
+                    return _get_client(root_token)
+                else:
+                    print("Authorization cancelled, I give up.")
+        else:
+            HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
 
     return HVAC_CLIENT
 
@@ -408,3 +630,26 @@ def _generate_word_password(num_words: int = 5) -> str:
         password = "-".join(selected_words) + str(random.randint(10, 99))
         num_words -= 1
     return password
+
+
+def _ui_select_username(
+    client, page_size: int = DEKICK_HVAC_PAGE_SIZE, pagination: bool = True
+) -> str:
+    """Select username from list of users"""
+    user_data = get_all_user_data(client)
+    sorted_user_data = sorted(user_data, key=lambda x: x["username"])
+    users = []
+    for user in sorted_user_data:
+        users.append(
+            f"{user['username']} ({user['metadata']['firstname']} {user['metadata']['lastname']}, {user['metadata']['email']})"
+        )
+
+    user_index = select(
+        users,
+        cursor="🢧",
+        cursor_style="cyan",
+        return_index=True,
+        page_size=page_size,
+        pagination=pagination,
+    )
+    return sorted_user_data[int(user_index)]["username"]

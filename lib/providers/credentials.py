@@ -76,7 +76,6 @@ def ui_run_action() -> bool:
             action = action.replace("_", " ")
             actions.append(f"{C_FILE}{C_BOLD}{action}{C_END} - {doc}")
 
-        console.print(f"\nChoose action to run:")
         ARG_ACTION = select(actions, cursor="🢧", cursor_style="cyan")
 
         if not ARG_ACTION:

@@ -1,4 +1,5 @@
 """Settings for DeKick"""
+
 import time
 from getpass import getuser
 from glob import glob

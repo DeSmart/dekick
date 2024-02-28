@@ -36,14 +36,20 @@ def create_admin_policy(client) -> str:
     admin_policy = f"""
     {{
         "path": {{
+            "sys/auth": {{
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
+            }},
             "sys/auth/*": {{
-                "capabilities": ["create", "read", "update", "delete"]
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
+            }},
+            "sys/mounts": {{
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
             }},
             "sys/mounts/*": {{
-                "capabilities": ["create", "read", "update", "delete"]
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
             }},
             "auth/*": {{
-                "capabilities": ["create", "read", "update", "delete", "list"]
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
             }},
             "{mount_point}/*": {{
                 "capabilities": ["create", "read", "update", "delete", "list"]
@@ -54,11 +60,17 @@ def create_admin_policy(client) -> str:
             "{mount_point}/metadata/*": {{
                 "capabilities": ["list", "read"]
             }},
-            "sys/policies/acl/*": {{
-                "capabilities": ["create", "read", "update", "delete", "list"]
+            "sys/policy": {{
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
+            }},
+            "sys/policy/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
+            }},
+            "sys/policies/*": {{
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
             }},
             "identity/*": {{
-                "capabilities": ["create", "read", "update", "delete", "list"]
+                "capabilities": ["create", "read", "update", "delete", "list", "sudo"]
             }}
         }}
     }}
@@ -111,16 +123,21 @@ def create_token(client, policies: list, username, ttl="8760h"):
 
 
 def append_policies_to_user(client, username: str, policies: list[str]):
-    """Add policies to a user in Vault."""
+    """Append policies to a user in Vault."""
     try:
-        user_policies = read_entity_policies(client, username)
+        user_policies = get_user_policies(client, username)
         combined_policies = list(set(user_policies + policies))
     except hvac_exceptions.InvalidPath:
         combined_policies = policies
 
-    entity_id = read_entity_by_name(client, username)["id"]
+    add_policies_to_user(client, username, combined_policies)
+
+
+def add_policies_to_user(client, username: str, policies: list[str]):
+    """Add policies to a user in Vault."""
+    entity_id = get_entity_by_username(client, username)["id"]
     client.secrets.identity.create_or_update_entity(
-        name=username, entity_id=entity_id, policies=combined_policies
+        name=username, entity_id=entity_id, policies=policies
     )
 
 
@@ -145,19 +162,19 @@ def get_all_user_data(client) -> list[dict]:
 def is_user_exists(client, username: str) -> bool:
     """Check if a user exists in Vault."""
     try:
-        read_entity_by_name(client, username)
+        get_entity_by_username(client, username)
         return True
     except hvac_exceptions.InvalidPath:
         return False
 
 
-def read_entity_policies(client, username: str) -> list[str]:
+def get_user_policies(client, username: str) -> list[str]:
     """Read policies for an entity in Vault."""
-    entity = read_entity_by_name(client, username)
+    entity = get_entity_by_username(client, username)
     return entity["policies"]
 
 
-def read_entity_by_name(client, username: str):
+def get_entity_by_username(client, username: str):
     """Read an entity by name in Vault."""
     entity_response = client.secrets.identity.read_entity_by_name(name=username)
     return entity_response["data"]
@@ -181,7 +198,7 @@ def enable_userpass_auth_method(client):
         debug("Userpass auth method is already enabled.")
 
 
-def create_entity(client, username: str, metadata: dict) -> str:
+def create_entity_by_username(client, username: str, metadata: dict) -> str:
     """Create an entity in Vault."""
     entity_response = client.secrets.identity.create_or_update_entity_by_name(
         name=username, metadata=metadata
@@ -197,7 +214,7 @@ def create_or_update_user(client, username: str, password: str, metadata: dict):
     """Create or update a user in Vault."""
     create_userpass(client, username, password)
 
-    entity_id = create_entity(client, username, metadata)
+    entity_id = create_entity_by_username(client, username, metadata)
     if entity_id:
         create_alias(client, username, entity_id)
 
