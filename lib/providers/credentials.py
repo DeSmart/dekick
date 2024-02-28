@@ -70,13 +70,20 @@ def ui_run_action() -> bool:
     ARG_ACTION = sys.argv[3] if len(sys.argv) > 3 else None
 
     if not ARG_ACTION:
-
         actions = list()
         for action, doc in get_actions():
             action = action.replace("_", " ")
             actions.append(f"{C_FILE}{C_BOLD}{action}{C_END} - {doc}")
 
+        console.print("\nChoose an action:", style="bold")
         ARG_ACTION = select(actions, cursor="🢧", cursor_style="cyan")
+        sys.stdout.write("\033[F")  # Cursor up one line
+        sys.stdout.write("\033[K")  # Clear line
+        sys.stdout.write("\033[F")  # Cursor up one line
+        sys.stdout.write("\033[K")  # Clear line
+
+        action = get_actions()[actions.index(ARG_ACTION)][1]
+        console.print(f"\n{action}", style="bold")
 
         if not ARG_ACTION:
             return False
@@ -88,6 +95,11 @@ def ui_run_action() -> bool:
             .replace(f"{C_END}", "")
             .replace(" ", "_")
         )
+    else:
+        action = get_actions()[
+            [action for action, _ in get_actions()].index(ARG_ACTION)
+        ][1]
+        console.print(f"\n{action}", style="bold")
 
     return getattr(driver_module, f"ui_action_{ARG_ACTION}")()
 
