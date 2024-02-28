@@ -20,11 +20,11 @@ from lib.environments import get_environments
 from lib.global_config import get_global_config_value
 from lib.hvac import (
     add_policies_to_user,
-    append_policies_to_user,
     create_admin_policy,
     create_mount_point,
     create_or_update_user,
     create_project_policy,
+    create_userpass,
     enable_userpass_auth_method,
     get_all_user_data,
     get_entity_by_username,
@@ -63,6 +63,7 @@ def get_actions() -> list[tuple[str, str]]:
         ("init", "Initializing Vault for this project"),
         ("create_user", "Creating user"),
         ("delete_user", "Deleting user"),
+        ("change_user_password", "Changing user password"),
         ("assign_policies", "Assigning policies to user"),
         ("list_users", "Listing users"),
         ("search_users", "Searching for users"),
@@ -119,6 +120,34 @@ def ui_create_project_policy() -> bool:
         text=f"Creating project policies for {C_CMD}{project_group}/{project_name}{C_END}",
         func=wrapper,
     )
+
+    return True
+
+
+def ui_action_change_user_password(root_token: str = "") -> bool:
+    """Change user password in Hashicorp Vault"""
+    client = _get_client(root_token)
+
+    try:
+        username = _ui_select_username(client)
+        Confirm.ask(
+            f"Are you sure you want to change password for user {C_CODE}{username}{C_END}?",
+            default=False,
+        )
+        password = _generate_word_password()
+        create_userpass(client, username, password)
+        print(
+            f"Password for user {C_CODE}{username}{C_END} changed to {C_CODE}{password}{C_END}"
+            + f"\n{C_BOLD}Remember to inform the user about the new password!{C_END}"
+        )
+    except hvac_exceptions.InvalidPath as exception:
+        raise ValueError(
+            f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
+        ) from exception
+    except hvac_exceptions.Forbidden as exception:
+        global HVAC_CLIENT
+        HVAC_CLIENT = None
+        return ui_action_change_user_password(ui_get_for_root_token())
 
     return True
 
@@ -605,7 +634,11 @@ def _get_client(token: str = "") -> hvac.Client:
             try:
                 HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
                 HVAC_CLIENT.auth.userpass.login(username=username, password=password)
-            except (hvac_exceptions.InvalidRequest, hvac_exceptions.Forbidden):
+            except (
+                hvac_exceptions.InvalidRequest,
+                hvac_exceptions.Forbidden,
+                hvac_exceptions.InternalServerError,
+            ):
                 HVAC_CLIENT = None
                 root_token = ui_get_for_root_token()
                 return _get_client(root_token)
@@ -615,7 +648,7 @@ def _get_client(token: str = "") -> hvac.Client:
     return HVAC_CLIENT
 
 
-def _generate_word_password(num_words: int = 5) -> str:
+def _generate_word_password(num_words: int = 8) -> str:
     """Generate a password consisting of random English words and numbers."""
     password = ""
     words = get_words()
