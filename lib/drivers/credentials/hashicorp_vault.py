@@ -1,4 +1,3 @@
-import glob
 import hashlib
 import random
 import re
@@ -7,7 +6,7 @@ from os import mkdir
 
 import flatdict
 import hvac
-from beaupy import select, select_multiple
+from beaupy import prompt, select, select_multiple
 from hvac import exceptions as hvac_exceptions
 from rich.console import Console
 from rich.prompt import Confirm
@@ -512,8 +511,10 @@ def create_envs_dir():
 
 def ui_get_for_root_token():
     """Ask for root token"""
-    root_token = input(
-        f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your Vault ({C_CODE}{VAULT_ADDR}{C_END}) to continue: "
+    root_token = prompt(
+        f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your Vault ({C_CODE}{VAULT_ADDR}{C_END}) to continue: ",
+        secure=True,
+        validator=lambda x: len(x) > 0,
     )
     return root_token
 
