@@ -9,7 +9,7 @@ from time import sleep
 import flatdict
 import hvac
 from beaupy import prompt, select, select_multiple
-from genericpath import isdir
+from genericpath import exists, isdir
 from hvac import exceptions as hvac_exceptions
 from rich.console import Console
 from rich.prompt import Confirm
@@ -464,6 +464,8 @@ def ui_push() -> bool:
     client = _get_client()
     yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE)
 
+    ui_check_gitignore()
+
     if not isdir(DEKICK_ENVS_DIR):
         print(
             f"\n{C_BOLD}This is a first run, let me create {C_FILE}{DEKICK_ENVS_DIR}{C_END} {C_BOLD}dir and all environment files.{C_END}"
@@ -505,10 +507,32 @@ def ui_push() -> bool:
 
         save_flat(DEKICK_HVAC_ENV_FILE, yaml_flat)
         print(
-            f"\nAll environment files pushed, please remember to commit {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file!"
+            f"\n{C_WARN}All environment files pushed, please remember to commit {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END}{C_WARN} file!{C_END}"
         )
 
     return True
+
+
+def ui_check_gitignore():
+    """Check if .gitignore file exists"""
+    if not exists(".gitignore"):
+        print(
+            f"{C_WARN}Warning:{C_END} {C_FILE}.gitignore{C_END} file not found. I will create one for you."
+        )
+        with open(".gitignore", "w", encoding="utf-8") as file:
+            file.write(f"{DEKICK_ENVS_DIR}\n{DEKICK_ENVS_DIR}/*\n")
+        print(f"{C_FILE}.gitignore{C_END} file created and filled")
+    else:
+        with open(".gitignore", "r", encoding="utf-8") as file:
+            gitignore = file.read()
+            if DEKICK_ENVS_DIR not in gitignore:
+                print(
+                    f"{C_WARN}Warning:{C_END} {C_FILE}.gitignore{C_END} file exists, but {DEKICK_ENVS_DIR} is not present in it. I will append it for you."
+                )
+                with open(".gitignore", "a", encoding="utf-8") as file:
+                    file.write(f"{DEKICK_ENVS_DIR}\n{DEKICK_ENVS_DIR}/*\n")
+                print(f"{C_FILE}.gitignore{C_END} file updated")
+                print(f"{C_WARN}\nPlease remember to commit this change!{C_END}")
 
 
 def sha256_checksum(filename, block_size=65536):
