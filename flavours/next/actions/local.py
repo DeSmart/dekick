@@ -1,6 +1,7 @@
 """
 Local run for Node ExpressJS (backend) application
 """
+
 from rich.traceback import install
 
 from flavours.express.shared import wait_for_container
@@ -14,4 +15,4 @@ def main():
     pull_and_build_images()
     yarn_install()
     start_services()
-    wait_for_container(search_string="Ready in", timeout=60)
+    wait_for_container(search_string=["Ready in", "ready started server"], timeout=60)

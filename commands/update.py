@@ -3,6 +3,7 @@ Update DeKick
 
 Get newest stable version of DeKick from the repository and replace current one
 """
+
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
@@ -21,11 +22,13 @@ from lib.settings import (
     C_CMD,
     C_CODE,
     C_END,
+    C_WARN,
     CURRENT_UID,
     DEKICK_GIT_URL,
     DEKICK_PATH,
     DEKICK_STABLE_VERSION_URL,
     DEKICK_VERSION_PATH,
+    PROJECT_ROOT,
 )
 
 install()
@@ -86,8 +89,9 @@ def update() -> bool:
     if not ask_for_update():
         return False
     tmpdir = make_tmpdir()
-    clone_dekick(tmpdir)
-    copy_files(tmpdir)
+    ui_clone_dekick(tmpdir)
+    ui_copy_files(tmpdir)
+    ui_ask_commit()
     return True
 
 
@@ -140,7 +144,7 @@ def ask_for_update() -> bool:
     return False
 
 
-def clone_dekick(tmpdir: str):
+def ui_clone_dekick(tmpdir: str):
     def run():
         try:
             run_shell(
@@ -164,7 +168,7 @@ def clone_dekick(tmpdir: str):
     run_func(f"Cloning files to {tmpdir}", func=run)
 
 
-def copy_files(tmpdir: str):
+def ui_copy_files(tmpdir: str):
     """Copies files from tmpdir to DEKICK_PATH"""
 
     def run():
@@ -177,7 +181,7 @@ def copy_files(tmpdir: str):
 
             return {
                 "success": True,
-                "text": "Files copied successfully. Please commit changes into your project.",
+                "text": "Files copied successfully.",
             }
         except Exception as error:
             logging.error("Message or exit code: %s", error.args[0])
@@ -188,6 +192,24 @@ def copy_files(tmpdir: str):
             }
 
     run_func(f"Copying files from {tmpdir} to {DEKICK_PATH}", func=run)
+
+
+def ui_ask_commit():
+    """Asks user to commit changes"""
+
+    # Check if user uses git in the project
+    output = run_shell(["git", "status"], {}, capture_output=True)
+    if output["returncode"] > 0:
+        return
+
+    if Confirm.ask(
+        "Do you want to stage the DeKick update to the Git repository?", default=False
+    ):
+        run_shell(["git", "add", f"{PROJECT_ROOT}/dekick"], {}, capture_output=True)
+
+        print(
+            f"Changes staged successfully. {C_WARN}Please commit them manually.{C_END}"
+        )
 
 
 def make_tmpdir() -> str:
