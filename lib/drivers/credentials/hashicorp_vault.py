@@ -146,7 +146,7 @@ def create_initial_envs():
     for env_name in get_environments():
         env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
         with open(env_file, "w", encoding="utf-8") as file:
-            file.write(dict2env({"ENV": env_name}, env_name))
+            file.write(dict2env({}, env_name))
 
 
 def ui_create_project_policy() -> bool:
@@ -181,6 +181,7 @@ def ui_action_save_user_to_global_config():
         f"Would you like to save user and password to your global {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} config?\n{C_WARN}Warning: {C_END}Your current settings will be overwritten!"
     ):
         print("Saving cancelled")
+        return
 
     set_global_config_value("hashicorp_vault.username", username)
     set_global_config_value("hashicorp_vault.password", password)
@@ -276,7 +277,9 @@ def ui_action_delete_user(root_token: str = "") -> bool:
 
     try:
         username = _ui_select_username(client)
-        current_username = str(get_global_config_value("hashicorp_vault.username"))
+        current_username = str(
+            get_global_config_value("hashicorp_vault.username", False)
+        )
 
         if username == current_username:
             raise ValueError(
@@ -494,6 +497,12 @@ def ui_pull() -> bool:
 
     def get_envs(env: str, id: str) -> str:
         """Get all variables from Hashicorp Vault"""
+
+        if not id:
+            raise ValueError(
+                f"Field {C_CMD}id{C_END} for environment {C_CODE}{env}{C_END} is empty in {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file. Please run {C_CMD}dekick credentials push{C_END} first."
+            )
+
         path = f"{project_group}/{project_name}/{env}/{id}"
 
         try:
@@ -526,6 +535,10 @@ def ui_pull() -> bool:
         env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
         with open(env_file, "w", encoding="utf-8") as file:
             file.write(get_envs(env=env_name, id=env_id))
+
+    print(
+        f"All environment files pulled and placed in {C_FILE}{DEKICK_ENVS_DIR}/{C_END}{C_WARN} directory.{C_END}"
+    )
 
     return True
 
@@ -761,8 +774,8 @@ def _get_client(token: str = "") -> hvac.Client:
     global HVAC_CLIENT  # pylint: disable=global-statement
 
     if not HVAC_CLIENT:
-        username = str(get_global_config_value("hashicorp_vault.username"))
-        password = str(get_global_config_value("hashicorp_vault.password"))
+        username = str(get_global_config_value("hashicorp_vault.username", False))
+        password = str(get_global_config_value("hashicorp_vault.password", False))
 
         if token:
             HVAC_CLIENT = hvac.Client(url=VAULT_ADDR, token=token)
