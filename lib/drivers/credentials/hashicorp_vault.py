@@ -71,13 +71,13 @@ def get_actions() -> list[tuple[str, str]]:
         ("create_user", "Creating user"),
         ("delete_user", "Deleting user"),
         ("change_user_password", "Changing user password"),
+        (
+            "save_user_to_global_config",
+            f"Saving username and password to your global config",
+        ),
         ("assign_policies", "Assigning policies to user"),
         ("list_users", "Listing users"),
         ("search_users", "Searching for users"),
-        (
-            "save_username_to_global_config",
-            f"Saving username and password to your global config",
-        ),
     ]
 
 
@@ -167,7 +167,7 @@ def ui_create_project_policy() -> bool:
     return True
 
 
-def ui_action_save_username_to_global_config():
+def ui_action_save_user_to_global_config():
     """Save username and password to global .dekickrc.yml file"""
     username = (
         input(
