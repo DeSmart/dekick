@@ -40,7 +40,6 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
 def ui_run(**kwargs):
     """UI wrapper"""
     check_dekickrc()
-    ui_check_dotenv_file()
     try:
         provider_ui_run_action()
     except Exception as e:

@@ -1,7 +1,6 @@
 import hashlib
 import random
 import re
-import sys
 from argparse import ArgumentParser
 from os import mkdir
 from time import sleep
@@ -9,8 +8,10 @@ from time import sleep
 import flatdict
 import hvac
 from beaupy import prompt, select, select_multiple
+from beaupy._internals import ValidationError as BeaupyValidationError
 from genericpath import exists, isdir
 from hvac import exceptions as hvac_exceptions
+from requests.exceptions import ConnectionError as RequestConnectionError
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.table import Table
@@ -19,7 +20,8 @@ from thefuzz import fuzz
 from lib.dekickrc import get_dekickrc_value
 from lib.dotenv import dict2env, env2dict
 from lib.environments import get_environments
-from lib.global_config import get_global_config_value
+from lib.git import is_git_repository
+from lib.global_config import get_global_config_value, set_global_config_value
 from lib.hvac import (
     add_policies_to_user,
     create_admin_policy,
@@ -34,6 +36,7 @@ from lib.hvac import (
     get_user_policies,
     is_user_exists,
 )
+from lib.misc import run_shell
 from lib.run_func import run_func
 from lib.settings import (
     C_BOLD,
@@ -43,6 +46,7 @@ from lib.settings import (
     C_ERROR,
     C_FILE,
     C_WARN,
+    DEKICKRC_GLOBAL_HOST_PATH,
     TERMINAL_COLUMN_WIDTH,
 )
 from lib.words import get_words
@@ -50,6 +54,7 @@ from lib.yaml.reader import read_yaml
 from lib.yaml.saver import save_flat
 
 console = Console()
+ask = Confirm.ask
 
 VAULT_ADDR = str(get_dekickrc_value("hashicorp_vault.url"))
 HVAC_CLIENT = None
@@ -69,6 +74,10 @@ def get_actions() -> list[tuple[str, str]]:
         ("assign_policies", "Assigning policies to user"),
         ("list_users", "Listing users"),
         ("search_users", "Searching for users"),
+        (
+            "save_username_to_global_config",
+            f"Saving username and password to your global config",
+        ),
     ]
 
 
@@ -96,16 +105,48 @@ def ui_action_init(root_token: str = "") -> bool:
         client = _get_client(root_token)
         create_mount_point(client)
         ui_enable_userpass_auth_method(client)
-        create_envs_dir()
         ui_create_dekick_hvac_yaml()
         ui_create_project_policy()
         ui_create_admin_policy()
+        ui_check_gitignore()
+        try:
+            get_all_user_data(client)
+        except hvac_exceptions.InvalidPath:
+            if ask(
+                f"Your {info()} does not have any users created yet. Would you like to create a user now?",
+                default=False,
+            ):
+                (username, password) = ui_action_create_user(root_token)
+            if ask(
+                f"Would you like to save generated user {C_CMD}{username}{C_END} and password to your global {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} config?"
+            ):
+                set_global_config_value("hashicorp_vault.username", username)
+                set_global_config_value("hashicorp_vault.password", password)
+        create_initial_envs()
+        print(
+            f"Envs directory {C_FILE}{DEKICK_ENVS_DIR}/{C_END} created, please fill it with initial environment variables and run {C_CMD}dekick credentials push{C_END} command to push them to Vault."
+        )
+
+        if is_git_repository():
+            print(
+                f"{C_WARN}\nPlease remember to stage and commit all changes to your Git repository!{C_END}"
+            )
+
     except hvac_exceptions.Forbidden:
         global HVAC_CLIENT  # pylint: disable=global-statement
         HVAC_CLIENT = None
         return ui_action_init(ui_get_for_root_token())
 
     return True
+
+
+def create_initial_envs():
+    """Create initial environment files"""
+    create_envs_dir()
+    for env_name in get_environments():
+        env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
+        with open(env_file, "w", encoding="utf-8") as file:
+            file.write(dict2env({"ENV": env_name}, env_name))
 
 
 def ui_create_project_policy() -> bool:
@@ -126,13 +167,33 @@ def ui_create_project_policy() -> bool:
     return True
 
 
+def ui_action_save_username_to_global_config():
+    """Save username and password to global .dekickrc.yml file"""
+    username = (
+        input(
+            "Enter username: ",
+        )
+    ).strip()
+    password = input(
+        "Enter password: ",
+    ).strip()
+    if not ask(
+        f"Would you like to save user and password to your global {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} config?\n{C_WARN}Warning: {C_END}Your current settings will be overwritten!"
+    ):
+        print("Saving cancelled")
+
+    set_global_config_value("hashicorp_vault.username", username)
+    set_global_config_value("hashicorp_vault.password", password)
+    print("Username and password saved")
+
+
 def ui_action_change_user_password(root_token: str = "") -> bool:
     """Change user password in Hashicorp Vault"""
     client = _get_client(root_token)
 
     try:
         username = _ui_select_username(client)
-        Confirm.ask(
+        ask(
             f"Are you sure you want to change password for user {C_CODE}{username}{C_END}?",
             default=False,
         )
@@ -170,13 +231,20 @@ def ui_create_admin_policy() -> bool:
     return True
 
 
-def ui_action_create_user(root_token: str = "") -> bool:
-    user_data = ui_get_user_data()
-    password = _generate_word_password()
+def ui_action_create_user(
+    root_token: str = "", user_data: dict = {}, password: str = ""
+) -> tuple[str, str]:
+
+    if not user_data:
+        user_data = ui_get_user_data()
+
+    if not password:
+        password = _generate_word_password()
+
     client = _get_client(root_token)
 
     if not user_data:
-        return False
+        return ("", "")
 
     try:
         username = user_data["username"]
@@ -197,9 +265,9 @@ def ui_action_create_user(root_token: str = "") -> bool:
     except hvac_exceptions.Forbidden as exception:
         global HVAC_CLIENT  # pylint: disable=global-statement
         HVAC_CLIENT = None
-        return ui_action_init(ui_get_for_root_token())
+        return ui_action_create_user(ui_get_for_root_token(), user_data, password)
 
-    return True
+    return (username, password)
 
 
 def ui_action_delete_user(root_token: str = "") -> bool:
@@ -215,10 +283,10 @@ def ui_action_delete_user(root_token: str = "") -> bool:
                 f"You can't delete user {C_CODE}{username}{C_END} that you are currently using to manage Vault. Please use another user to delete this user."
             )
 
-        if not Confirm.ask(
+        if not ask(
             f"Are you sure you want to delete user {C_CODE}{username}{C_END}?",
             default=False,
-        ) or not Confirm.ask(
+        ) or not ask(
             "Are you really sure? This action is irreversible!", default=False
         ):
             print("User deletion cancelled")
@@ -274,7 +342,7 @@ def ui_action_assign_policies(root_token: str = "", username: str = "") -> bool:
         for policy_index in policy_indexes:
             policy_names.append(policies_filtred[int(policy_index)])
 
-        if "admin" in policy_names and not Confirm.ask(
+        if "admin" in policy_names and not ask(
             f"Are you sure you want to assign {C_BOLD}administrative access (admin){C_END} to user {C_CODE}{username}{C_END}?",
             default=False,
         ):
@@ -444,7 +512,13 @@ def ui_pull() -> bool:
                 f"You don't have access to path {mount_point}{path}. Do you have proper access rights?"
             ) from exception
 
-    yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE)
+    try:
+        yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE, True)
+    except FileNotFoundError:
+        print(
+            f"{C_ERROR}Error:{C_END} {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file not found. Please run {C_CMD}dekick credentials run init{C_END} to initialize {info()} for this project."
+        )
+        return False
 
     for env in yaml_flat["environments"]:
         env_name = env["name"]
@@ -456,21 +530,19 @@ def ui_pull() -> bool:
     return True
 
 
-def ui_push() -> bool:
+def ui_push(root_token: str = "") -> bool:
     """Push all environment variables to Hashicorp Vault"""
     mount_point = get_mount_point()
     project_name = str(get_dekickrc_value("project.name"))
     project_group = str(get_dekickrc_value("project.group"))
-    client = _get_client()
-    yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE)
-
-    ui_check_gitignore()
+    client = _get_client(root_token)
 
     if not isdir(DEKICK_ENVS_DIR):
         print(
-            f"\n{C_BOLD}This is a first run, let me create {C_FILE}{DEKICK_ENVS_DIR}{C_END} {C_BOLD}dir and all environment files.{C_END}"
+            f"\n{C_BOLD}This is a first run, let me create {C_FILE}{DEKICK_ENVS_DIR}/{C_END} {C_BOLD}dir and all environment files.{C_END}"
         )
-        mkdir(DEKICK_ENVS_DIR)
+        create_envs_dir()
+
         for env_name in get_environments():
             env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
             print(f"Creating file {C_FILE}{env_file}{C_END}")
@@ -479,9 +551,17 @@ def ui_push() -> bool:
             sleep(1)
 
         print(
-            "\n{C_WARN}Please fill all environment files with proper data and run this command again.{C_END}"
+            f"\n{C_WARN}Please fill all environment files with proper data and run this command again.{C_END}"
         )
     else:
+        try:
+            yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE, True)
+        except FileNotFoundError:
+            print(
+                f"{C_ERROR}Error:{C_END} {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file not found. Please run {C_CMD}dekick credentials run init{C_END} to initialize {info()} for this project."
+            )
+            return False
+
         print(f"{C_BOLD}\nPushing environment files to {info()}{C_END}")
         for env_name in get_environments():
             env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
@@ -515,24 +595,30 @@ def ui_push() -> bool:
 
 def ui_check_gitignore():
     """Check if .gitignore file exists"""
+
+    def write_gitignore(mode: str = "w"):
+        gitignore_content = (
+            f"# DeKick environments\n{DEKICK_ENVS_DIR}/\n{DEKICK_ENVS_DIR}/*\n.env\n"
+        )
+        with open(".gitignore", mode, encoding="utf-8") as file:
+            file.write(gitignore_content)
+
     if not exists(".gitignore"):
         print(
             f"{C_WARN}Warning:{C_END} {C_FILE}.gitignore{C_END} file not found. I will create one for you."
         )
-        with open(".gitignore", "w", encoding="utf-8") as file:
-            file.write(f"{DEKICK_ENVS_DIR}\n{DEKICK_ENVS_DIR}/*\n")
-        print(f"{C_FILE}.gitignore{C_END} file created and filled")
+        write_gitignore("w")
+        print(
+            f"{C_FILE}.gitignore{C_END} file created and filled, please stage and commit it."
+        )
     else:
         with open(".gitignore", "r", encoding="utf-8") as file:
             gitignore = file.read()
             if DEKICK_ENVS_DIR not in gitignore:
                 print(
-                    f"{C_WARN}Warning:{C_END} {C_FILE}.gitignore{C_END} file exists, but {DEKICK_ENVS_DIR} is not present in it. I will append it for you."
+                    f"{C_WARN}Warning:{C_END} {C_FILE}.gitignore{C_END} file exists, does not have a {info()} specific paths in it. I will append it for you."
                 )
-                with open(".gitignore", "a", encoding="utf-8") as file:
-                    file.write(f"{DEKICK_ENVS_DIR}\n{DEKICK_ENVS_DIR}/*\n")
-                print(f"{C_FILE}.gitignore{C_END} file updated")
-                print(f"{C_WARN}\nPlease remember to commit this change!{C_END}")
+                write_gitignore("a")
 
 
 def sha256_checksum(filename, block_size=65536):
@@ -572,7 +658,6 @@ def ui_enable_userpass_auth_method(client):
 
 def create_envs_dir():
     """Create envs directory"""
-
     try:
         mkdir(DEKICK_ENVS_DIR)
     except FileExistsError:
@@ -581,11 +666,15 @@ def create_envs_dir():
 
 def ui_get_for_root_token():
     """Ask for root token"""
-    root_token = prompt(
-        f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your Vault ({C_CODE}{VAULT_ADDR}{C_END}) to continue: ",
-        secure=True,
-        validator=lambda x: len(x) > 0,
-    )
+    try:
+        root_token = prompt(
+            f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your {info()} ({C_CODE}{VAULT_ADDR}{C_END}) to continue: ",
+            secure=True,
+            validator=lambda x: len(x) > 0,
+        )
+    except BeaupyValidationError:
+        print(f"{C_ERROR}Error:{C_END} Root token can't be empty")
+        return ui_get_for_root_token()
     return root_token
 
 
@@ -633,7 +722,7 @@ def ui_get_user_data(
             print(f"{C_ERROR}Error:{C_END} Invalid email format!")
             return ui_get_user_data(username, firstname, lastname, companyname)
 
-    confirm = Confirm.ask(
+    confirm = ask(
         f"""Is this ok?
     User name: {C_CODE}{username}{C_END}
     First name: {C_CODE}{firstname}{C_END}
@@ -689,6 +778,10 @@ def _get_client(token: str = "") -> hvac.Client:
                 HVAC_CLIENT = None
                 root_token = ui_get_for_root_token()
                 return _get_client(root_token)
+            except RequestConnectionError:
+                raise RequestConnectionError(
+                    f"Can't connect to {info()} using {C_CODE}{VAULT_ADDR}{C_END}. Please check your network connection and try again."
+                )
         else:
             HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
 
