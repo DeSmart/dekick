@@ -2,6 +2,7 @@ import hashlib
 import random
 import re
 from argparse import ArgumentParser
+from logging import debug
 from os import mkdir
 from time import sleep
 
@@ -201,7 +202,7 @@ def ui_action_create_deployment_token(root_token: str = "") -> bool:
         project_group = str(get_dekickrc_value("project.group"))
         project_name = str(get_dekickrc_value("project.name"))
         policy_names = [create_policy_name(project_group, project_name, "deployment")]
-        token = create_token(client, policy_names, no_parent=False)
+        token = create_token(client, policy_names, no_parent=False, renawable=True)
         print(f"Here's your deployment token: {C_CODE}{token}{C_END}")
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
@@ -843,32 +844,48 @@ def arguments(sub_command: str, parser: ArgumentParser):
 def _get_client(token: str = "") -> hvac.Client:
     global HVAC_CLIENT  # pylint: disable=global-statement
 
-    if not HVAC_CLIENT:
+    try:
+
+        if HVAC_CLIENT:
+            _renew_token_self(HVAC_CLIENT)
+            return HVAC_CLIENT
+
         username = str(get_global_config_value("hashicorp_vault.username", False))
         password = str(get_global_config_value("hashicorp_vault.password", False))
 
         if token:
             HVAC_CLIENT = hvac.Client(url=VAULT_ADDR, token=token)
         elif username and password:
-            try:
-                HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
-                HVAC_CLIENT.auth.userpass.login(username=username, password=password)
-            except (
-                hvac_exceptions.InvalidRequest,
-                hvac_exceptions.Forbidden,
-                hvac_exceptions.InternalServerError,
-            ):
-                HVAC_CLIENT = None
-                root_token = ui_get_for_root_token()
-                return _get_client(root_token)
-            except RequestConnectionError:
-                raise RequestConnectionError(
-                    f"Can't connect to {info()} using {C_CODE}{VAULT_ADDR}{C_END}. Please check your network connection and try again."
-                )
+            HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
+            HVAC_CLIENT.auth.userpass.login(username=username, password=password)
         else:
             HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
 
-    return HVAC_CLIENT
+        _renew_token_self(HVAC_CLIENT)
+        return HVAC_CLIENT
+    except (
+        hvac_exceptions.InvalidRequest,
+        hvac_exceptions.Forbidden,
+        hvac_exceptions.InternalServerError,
+    ) as e:
+        HVAC_CLIENT = None
+        if not token:
+            root_token = ui_get_for_root_token()
+            return _get_client(root_token)
+        raise ValueError("Invalid token or token expired.")
+    except RequestConnectionError:
+        raise RequestConnectionError(
+            f"Can't connect to {info()} using {C_CODE}{VAULT_ADDR}{C_END}. Please check your network connection and try again."
+        )
+
+
+def _renew_token_self(client: hvac.Client):
+    auto_token_renewal = get_dekickrc_value("hashicorp_vault.auto_token_renewal")
+    if bool(auto_token_renewal) is False:
+        return
+
+    debug("Renewing token")
+    client.auth.token.renew_self()
 
 
 def _generate_word_password(num_words: int = 8) -> str:

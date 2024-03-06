@@ -135,11 +135,16 @@ def create_deployment_policy(client, project_name: str, project_group: str) -> s
     return policy_name
 
 
-def create_token(client, policies: list, ttl="8760h", no_parent: bool = False) -> str:
+def create_token(
+    client, policies: list, ttl="768h", no_parent: bool = False, renawable: bool = True
+) -> str:
     """Create a token in Vault and return it"""
-    return client.auth.token.create(
-        policies=policies, ttl=ttl, renewable=False, no_parent=no_parent
-    )["auth"]["client_token"]
+    res = client.auth.token.create(
+        policies=policies, ttl=ttl, renewable=renawable, no_parent=no_parent
+    )
+    debug(f"Token created: {res['auth']['client_token']}")
+
+    return res["auth"]["client_token"]
 
 
 def append_policies_to_user(client, username: str, policies: list[str]):

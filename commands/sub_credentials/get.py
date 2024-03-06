@@ -1,13 +1,23 @@
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from logging import error
 
 from lib.environments import get_environments
 from lib.logger import install_logger
 from lib.parser_defaults import parser_default_args, parser_default_funcs
-from lib.providers.credentials import get_envs, get_info, parser_driver_arguments
+from lib.providers.credentials import get_envs as provider_get_envs
+from lib.providers.credentials import get_info, parser_driver_arguments
 from lib.run_func import run_func
-from lib.settings import C_CMD, C_CODE, C_END, C_FILE, DEKICK_DOTENV_FILE, is_pytest
+from lib.settings import (
+    C_CMD,
+    C_CODE,
+    C_END,
+    C_ERROR,
+    C_FILE,
+    DEKICK_DOTENV_FILE,
+    is_pytest,
+)
 
 
 def parser_help() -> str:
@@ -65,7 +75,7 @@ def ui_save_dotenv(**kwargs):
 
 def save_dotenv(*args, **kwargs) -> int:
     """Saves credentials to .env file."""
-    envs = get_envs(*args, **kwargs)
+    envs = provider_get_envs(*args, **kwargs)
 
     try:
         with open(DEKICK_DOTENV_FILE, "w", encoding="utf-8") as file:

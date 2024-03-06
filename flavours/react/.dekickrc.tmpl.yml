@@ -12,6 +12,7 @@ gitlab:
 hashicorp_vault:
   url: type="str",default="",validation="url()",required="false"
   mount_point: type="str",default="dekick",validation="rel_path()",required="false"
+  auto_token_renewal: type="bool",default="true",validation="bool()",required="false"
 dekick:
   auto_update: type="bool",default="true",validation="bool()",required="false"
   boilerplate: type="str",default="express",validation="boilerplate()",required="true"
