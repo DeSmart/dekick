@@ -153,7 +153,7 @@ def get_elapsed_time(text: str, elapsed_time: float) -> str:
     text_length = len(result)
 
     elapsed_time_formatted = (
-        "< 1s"
+        ""
         if elapsed_time < 1
         else (
             f"{int(elapsed_time)}s"

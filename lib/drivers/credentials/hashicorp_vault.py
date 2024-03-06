@@ -25,9 +25,12 @@ from lib.global_config import get_global_config_value, set_global_config_value
 from lib.hvac import (
     add_policies_to_user,
     create_admin_policy,
+    create_deployment_policy,
     create_mount_point,
     create_or_update_user,
+    create_policy_name,
     create_project_policy,
+    create_token,
     create_userpass,
     enable_userpass_auth_method,
     get_all_user_data,
@@ -36,7 +39,6 @@ from lib.hvac import (
     get_user_policies,
     is_user_exists,
 )
-from lib.misc import run_shell
 from lib.run_func import run_func
 from lib.settings import (
     C_BOLD,
@@ -76,6 +78,7 @@ def get_actions() -> list[tuple[str, str]]:
             f"Saving username and password to your global config",
         ),
         ("assign_policies", "Assigning policies to user"),
+        ("create_deployment_token", "Creating token for CI/CD use"),
         ("list_users", "Listing users"),
         ("search_users", "Searching for users"),
     ]
@@ -94,7 +97,28 @@ def configure():
 # pylint: disable=unused-argument
 def get_envs(*args, env: str, token: str = "", **kwargs) -> str:
     """Get variables"""
-    pass
+    client = _get_client(token)
+    mount_point = get_mount_point()
+    project_name = str(get_dekickrc_value("project.name"))
+    project_group = str(get_dekickrc_value("project.group"))
+    env_data = read_yaml(DEKICK_HVAC_ENV_FILE, True)["environments"]
+
+    id = next((e["id"] for e in env_data if e["name"] == env), None)
+
+    path = f"{project_group}/{project_name}/{env}/{id}"
+    try:
+        secrets = client.secrets.kv.v2.read_secret_version(
+            path=path, mount_point=mount_point
+        )
+        return dict2env(secrets["data"]["data"], env)
+    except hvac_exceptions.InvalidPath as exception:
+        raise ValueError(
+            f"Path {mount_point}{path} not found, check your mount_point or initialize Vault with {C_CODE}dekick credentials run init{C_END} command"
+        ) from exception
+    except hvac_exceptions.Forbidden as exception:
+        raise KeyError(
+            f"You don't have access to path {mount_point}{path}. Do you have proper access rights?"
+        ) from exception
 
     return ""
 
@@ -107,6 +131,7 @@ def ui_action_init(root_token: str = "") -> bool:
         ui_enable_userpass_auth_method(client)
         ui_create_dekick_hvac_yaml()
         ui_create_project_policy()
+        ui_create_deployment_policy()
         ui_create_admin_policy()
         ui_check_gitignore()
         try:
@@ -122,6 +147,10 @@ def ui_action_init(root_token: str = "") -> bool:
             ):
                 set_global_config_value("hashicorp_vault.username", username)
                 set_global_config_value("hashicorp_vault.password", password)
+        if ask(
+            "Would you like to create a deployment token for CI/CD use for this project?"
+        ):
+            ui_action_create_deployment_token(root_token)
         create_initial_envs()
         print(
             f"Envs directory {C_FILE}{DEKICK_ENVS_DIR}/{C_END} created, please fill it with initial environment variables and run {C_CMD}dekick credentials push{C_END} command to push them to Vault."
@@ -149,20 +178,39 @@ def create_initial_envs():
             file.write(dict2env({}, env_name))
 
 
-def ui_create_project_policy() -> bool:
+def ui_create_project_policy():
     """Create project policy"""
     client = _get_client()
     project_name = str(get_dekickrc_value("project.name"))
     project_group = str(get_dekickrc_value("project.group"))
-
-    def wrapper():
-        create_project_policy(client, project_name, project_group, DEKICK_HVAC_ROLES)
-        return {"success": True}
-
     run_func(
         text=f"Creating project policies for {C_CMD}{project_group}/{project_name}{C_END}",
-        func=wrapper,
+        func=lambda: (
+            create_project_policy(
+                client, project_name, project_group, DEKICK_HVAC_ROLES
+            ),
+            {"success": True},
+        )[1],
     )
+
+
+def ui_action_create_deployment_token(root_token: str = "") -> bool:
+    """Create deployment token in Hashicorp Vault"""
+    client = _get_client(root_token)
+    try:
+        project_group = str(get_dekickrc_value("project.group"))
+        project_name = str(get_dekickrc_value("project.name"))
+        policy_names = [create_policy_name(project_group, project_name, "deployment")]
+        token = create_token(client, policy_names, no_parent=False)
+        print(f"Here's your deployment token: {C_CODE}{token}{C_END}")
+    except hvac_exceptions.InvalidPath as exception:
+        raise ValueError(
+            f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
+        ) from exception
+    except hvac_exceptions.Forbidden as exception:
+        global HVAC_CLIENT
+        HVAC_CLIENT = None
+        return ui_action_create_deployment_token(ui_get_for_root_token())
 
     return True
 
@@ -216,20 +264,27 @@ def ui_action_change_user_password(root_token: str = "") -> bool:
     return True
 
 
-def ui_create_admin_policy() -> bool:
+def ui_create_admin_policy():
     """Create admin policy"""
     client = _get_client()
-
-    def wrapper():
-        create_admin_policy(client)
-        return {"success": True}
-
     run_func(
         text=f"Creating admin policy",
-        func=wrapper,
+        func=lambda: (create_admin_policy(client), {"success": True})[1],
     )
 
-    return True
+
+def ui_create_deployment_policy():
+    """Create deployment policy"""
+    client = _get_client()
+    project_name = str(get_dekickrc_value("project.name"))
+    project_group = str(get_dekickrc_value("project.group"))
+    run_func(
+        text=f"Creating deployment policy for {C_CMD}{project_group}/{project_name}{C_END}",
+        func=lambda: (
+            create_deployment_policy(client, project_name, project_group),
+            {"success": True},
+        )[1],
+    )
 
 
 def ui_action_create_user(
@@ -310,6 +365,43 @@ def ui_action_delete_user(root_token: str = "") -> bool:
     return True
 
 
+def _ui_select_policies(
+    client,
+    user_policies: list[str] = [],
+    exclude_deployment_policy: bool = False,
+):
+    policies = client.sys.list_policies()["data"]["policies"]
+    policies_filtered = [
+        policy
+        for policy in policies
+        if not policy.startswith("default")
+        and not policy.startswith("root")
+        and (not exclude_deployment_policy or "deployment" not in policy)
+    ]
+    ticked_indices = [
+        index for index, p in enumerate(policies_filtered) if p in user_policies
+    ]
+
+    policy_indexes = select_multiple(
+        policies_filtered,
+        tick_style="cyan",
+        preprocessor=lambda x: (
+            x.split(":")[0] + " (" + x.split(":")[1] + ")" if x != "admin" else x
+        ),
+        cursor_style="magenta",
+        return_indices=True,
+        ticked_indices=ticked_indices,
+        pagination=True,
+        page_size=DEKICK_HVAC_PAGE_SIZE,
+    )
+
+    policy_names = [
+        policies_filtered[int(policy_index)] for policy_index in policy_indexes
+    ]
+
+    return policy_names
+
+
 def ui_action_assign_policies(root_token: str = "", username: str = "") -> bool:
     """Assign policies to user in Hashicorp Vault"""
     client = _get_client(root_token)
@@ -318,32 +410,9 @@ def ui_action_assign_policies(root_token: str = "", username: str = "") -> bool:
             username = _ui_select_username(client)
         user_policies = get_user_policies(client, username)
 
-        policies = client.sys.list_policies()["data"]["policies"]
-        policies_filtred = [
-            policy
-            for policy in policies
-            if not policy.startswith("default") and not policy.startswith("root")
-        ]
-        ticked_indices = [
-            index for index, p in enumerate(policies_filtred) if p in user_policies
-        ]
-
-        policy_indexes = select_multiple(
-            policies_filtred,
-            tick_style="cyan",
-            preprocessor=lambda x: (
-                x.split(":")[0] + " (" + x.split(":")[1] + ")" if x != "admin" else x
-            ),
-            cursor_style="magenta",
-            return_indices=True,
-            ticked_indices=ticked_indices,
-            pagination=True,
-            page_size=DEKICK_HVAC_PAGE_SIZE,
+        policy_names = _ui_select_policies(
+            client, user_policies, exclude_deployment_policy=True
         )
-
-        policy_names = []
-        for policy_index in policy_indexes:
-            policy_names.append(policies_filtred[int(policy_index)])
 
         if "admin" in policy_names and not ask(
             f"Are you sure you want to assign {C_BOLD}administrative access (admin){C_END} to user {C_CODE}{username}{C_END}?",
@@ -355,6 +424,10 @@ def ui_action_assign_policies(root_token: str = "", username: str = "") -> bool:
         global HVAC_CLIENT
         HVAC_CLIENT = None
         return ui_action_assign_policies(ui_get_for_root_token())
+    except hvac_exceptions.InvalidPath as exception:
+        raise ValueError(
+            f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
+        ) from exception
 
     try:
         if policy_names:
@@ -660,13 +733,10 @@ def ui_create_dekick_hvac_yaml():
 
 def ui_enable_userpass_auth_method(client):
     """Enable userpass auth method"""
-
-    def wrapper():
-        enable_userpass_auth_method(client)
-
-    run_func(text=f"Enabling userpass auth method", func=wrapper)
-
-    return {"success": True}
+    run_func(
+        text=f"Enabling userpass auth method",
+        func=lambda: (enable_userpass_auth_method(client), {"success": True})[1],
+    )
 
 
 def create_envs_dir():

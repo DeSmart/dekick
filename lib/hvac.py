@@ -108,18 +108,38 @@ def create_project_policy(
                 capabilities = ["read", "update", "list", "create", "patch"]
             }}
         """
-        policy_name = _create_policy_name(project_group, project_name, role)
+        policy_name = create_policy_name(project_group, project_name, role)
         policy_names[role] = policy_name
         client.sys.create_or_update_policy(name=policy_name, policy=policy)
 
     return policy_names
 
 
-def create_token(client, policies: list, username, ttl="8760h"):
-    """Create a token in Vault."""
+def create_deployment_policy(client, project_name: str, project_group: str) -> str:
+    """Create a deployment policy in Vault."""
+    path = _create_path(project_name, project_group)
+    mount_point = get_dekickrc_value("hashicorp_vault.mount_point")
+    policy = f"""
+    path "{mount_point}/*" {{
+        capabilities = ["list"]
+    }}
+    path "{mount_point}/{path}/*" {{
+        capabilities = ["list"]
+    }}
+    path "{mount_point}/data/{path}/*" {{
+        capabilities = ["read", "list"]
+    }}
+    """
+    policy_name = create_policy_name(project_group, project_name, "deployment")
+    client.sys.create_or_update_policy(name=policy_name, policy=policy)
+    return policy_name
+
+
+def create_token(client, policies: list, ttl="8760h", no_parent: bool = False) -> str:
+    """Create a token in Vault and return it"""
     return client.auth.token.create(
-        policies=policies, ttl=ttl, renewable=True, name=username
-    )
+        policies=policies, ttl=ttl, renewable=False, no_parent=no_parent
+    )["auth"]["client_token"]
 
 
 def append_policies_to_user(client, username: str, policies: list[str]):
@@ -236,6 +256,11 @@ def create_alias(client, username: str, entity_id: str):
     )
 
 
+def create_policy_name(project_group: str, project_name: str, role: str) -> str:
+    """Create a policy name for the project."""
+    return f"{project_group}/{project_name}:{role}"
+
+
 def _get_userpass_mount_accessor(client) -> str:
     """Get the accessor for the userpass auth method."""
     auth_methods = client.sys.list_auth_methods()
@@ -252,9 +277,3 @@ def _get_userpass_mount_accessor(client) -> str:
 def _create_path(project_name: str, project_group: str) -> str:
     """Create a path for the project."""
     return f"{project_group}/{project_name}"
-
-
-def _create_policy_name(project_group: str, project_name: str, role: str) -> str:
-    """Create a policy name for the project."""
-    return f"{project_group}/{project_name}:{role}"
-    return f"{project_group}/{project_name}:{role}"
