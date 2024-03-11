@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 from lib.glcli import get_project_var
+from lib.settings import is_pytest
 
 
 def info() -> str:
@@ -20,6 +21,10 @@ def ui_init():
 # pylint: disable=unused-argument
 def get_envs(*args, env: str, gitlab_token: str = "", **kwargs) -> str:
     """Get all variables from Gitlab"""
+
+    if is_pytest():
+        return ""
+
     return get_project_var(scope=env, token=gitlab_token)
 
 

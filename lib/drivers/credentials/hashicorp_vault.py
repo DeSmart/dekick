@@ -3,12 +3,12 @@ import hashlib
 import random
 import re
 from argparse import ArgumentParser
+from cgitb import text
 from logging import debug
 from os import mkdir
 from os.path import isfile
 from shutil import copyfile
 from time import sleep
-from typing import Union
 
 import flatdict
 import hvac
@@ -24,8 +24,10 @@ from thefuzz import fuzz
 
 from lib.dekickrc import get_dekickrc_value
 from lib.dotenv import dict2env, env2dict
+from lib.drivers.credentials.gitlab import get_envs as gitlab_get_envs
 from lib.environments import get_environments
 from lib.git import is_git_repository
+from lib.glcli import get_project_var
 from lib.global_config import get_global_config_value, set_global_config_value
 from lib.hvac import (
     add_policies_to_user,
@@ -92,7 +94,7 @@ def get_actions() -> list[tuple[str, str]]:
         ("Create_deployment_Token", "Creating token for CI/CD use"),
         ("List_users", "Listing users"),
         ("Search_users", "Searching for users"),
-        ("Migrate_from_Gitlab", f"Migrating from GitLab to {info()}"),
+        ("Migrate_from_Gitlab", f"Migrating the project from GitLab to {info()}"),
     ]
 
 
@@ -104,11 +106,6 @@ def info() -> str:
 def configure():
     """Configure this driver"""
     pass
-
-
-def ui_action_migrate_envs_from_gitlab(root_token: str = "") -> bool:
-    """Migrate environment variables from GitLab to Hashicorp Vault"""
-    return True
 
 
 # pylint: disable=unused-argument
@@ -186,6 +183,97 @@ def ui_action_init(root_token: str = "") -> bool:
     return True
 
 
+def ui_action_migrate_from_gitlab(root_token: str = "") -> bool:
+    """Migrate environment variables from GitLab to Hashicorp Vault"""
+    client = _get_client(root_token)
+    username = _get_loggedin_user()
+    project_group = str(get_dekickrc_value("project.group"))
+    project_name = str(get_dekickrc_value("project.name"))
+
+    if username:
+        user_policies = get_user_policies(client, username)
+
+        if (
+            "admin" not in user_policies
+            and not f"{project_group}/{project_name}:maintainer" in user_policies
+        ):
+            raise ValueError(
+                f"You don't have proper rights to migrate from GitLab to {info()}. You need to have {C_CMD}admin{C_END} or {C_CMD}maintainer{C_END} rights."
+            )
+
+    if not ask(
+        f"Are you sure you want to migrate from GitLab to {info()}?", default=False
+    ):
+        return False
+
+    token = str(get_global_config_value("gitlab.token"))
+
+    if not token:
+        if ask(
+            f"GitLab token not found in {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END}. Would you like to enter it now?",
+            default=False,
+        ):
+            token = prompt(
+                "Enter your GitLab token: ", secure=True, validator=lambda x: len(x) > 0
+            )
+        else:
+            return False
+
+    environments = get_environments()
+    create_envs_dir()
+
+    for env in environments:
+        print(f"Getting environment {C_CODE}{env}{C_END} from GitLab")
+        env_data = get_project_var(scope=env, token=token)
+        env_file = f"{DEKICK_ENVS_DIR}/{env}.env"
+        with open(env_file, "w", encoding="utf-8") as file:
+            file.write(env_data)
+            print(
+                f"  Storing environment {C_CODE}{env}{C_END} variables into {C_FILE}{env_file}{C_END}"
+            )
+
+    if ask(f"Would you like to push these environments to {info()}?", default=False):
+        ui_push(no_confirm=True)
+
+    print(f"\n{C_BOLD}Checking consistency of the environments{C_END}")
+
+    def check_env_key_value(
+        env: str, source_env: dict, dest_env: dict, source_name: str, dest_name: str
+    ):
+        for env_key, env_value in source_env.items():
+            if env_key not in dest_env:
+                return {
+                    "success": False,
+                    "text": f"Variable {C_CODE}{env_key}{C_END} not found in {dest_name} for environment {C_CODE}{env}{C_END}",
+                }
+            if env_value != dest_env[env_key]:
+                return {
+                    "success": False,
+                    "text": f"Variable {C_CODE}{env_key}{C_END} in {dest_name} for environment {C_CODE}{env}{C_END} does not match {source_name} value ({C_CODE}{env_value}{C_END} {C_BOLD}vs{C_END} {C_CODE}{dest_env[env_key]}{C_END})",
+                }
+
+    for env in environments:
+        env_gitlab = env2dict(get_project_var(scope=env, token=token))
+        env_hvac = env2dict(get_envs(env=env, token=root_token))
+
+        run_func(
+            f"Checking consitency {info()} -> GitLab for environment {C_CODE}{env}{C_END}",
+            func=lambda: check_env_key_value(
+                env, env_gitlab, env_hvac, info(), "GitLab"
+            ),
+        )
+        run_func(
+            f"Checking consistency GitLab -> {info()} for environment {C_CODE}{env}{C_END}",
+            func=lambda: check_env_key_value(
+                env, env_hvac, env_gitlab, "GitLab", info()
+            ),
+        )
+
+    print(f"\nAll environments have been successfully migrated to {info()}")
+
+    return True
+
+
 def ui_create_project_policy():
     """Create project policy"""
     client = _get_client()
@@ -244,7 +332,7 @@ def ui_action_save_user_to_global_config():
     print("Username and password saved")
 
 
-def ui_action_change_password(root_token: str = "") -> bool:
+def ui_action_change_user_password(root_token: str = "") -> bool:
     """Change user password in Hashicorp Vault"""
     client = _get_client(root_token)
 
@@ -258,8 +346,20 @@ def ui_action_change_password(root_token: str = "") -> bool:
         create_userpass(client, username, password)
         print(
             f"Password for user {C_CODE}{username}{C_END} changed to {C_CODE}{password}{C_END}"
-            + f"\n{C_BOLD}Remember to inform the user about the new password!{C_END}"
         )
+
+        global_username = get_global_config_value("hashicorp_vault.username", False)
+
+        if global_username == username:
+            set_global_config_value("hashicorp_vault.password", password)
+            print(
+                f"Password for user {C_CODE}{username}{C_END} changed and saved to global {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} config"
+            )
+        else:
+            print(
+                f"\n{C_BOLD}Remember to inform the user about the new password!{C_END}"
+            )
+
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
             f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
@@ -267,7 +367,7 @@ def ui_action_change_password(root_token: str = "") -> bool:
     except hvac_exceptions.Forbidden as exception:
         global HVAC_CLIENT
         HVAC_CLIENT = None
-        return ui_action_change_password(ui_get_for_root_token())
+        return ui_action_change_user_password(ui_get_for_root_token())
 
     return True
 
@@ -666,7 +766,7 @@ def ui_pull(root_token: str = "") -> bool:
     return True
 
 
-def ui_push(root_token: str = "") -> bool:
+def ui_push(root_token: str = "", no_confirm: bool = False) -> bool:
     """Push all environment variables to Hashicorp Vault"""
     mount_point = get_mount_point()
     project_name = str(get_dekickrc_value("project.name"))
@@ -714,7 +814,6 @@ def ui_push(root_token: str = "") -> bool:
 
         user_policies = get_user_policies(client, _get_loggedin_user())
         environments = get_environments()
-        confirmation_asked = False
 
         if (
             "admin" not in user_policies
@@ -726,12 +825,12 @@ def ui_push(root_token: str = "") -> bool:
                 default=True,
             ):
                 return False
-            confirmation_asked = True
+            no_confirm = True
 
         else:
             environments_filtered = environments
 
-        if confirmation_asked is False and not ask(
+        if no_confirm is False and not ask(
             f"Are you sure you want to push all environment files to {info()}?",
             default=False,
         ):
@@ -770,6 +869,7 @@ def ui_push(root_token: str = "") -> bool:
                 print(
                     f"\n{C_WARN}Remember to add and commit {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file manually!{C_END}"
                 )
+                remove_envs_dir()
                 return True
             run_shell(["git", "add", DEKICK_HVAC_ENV_FILE], {})
 

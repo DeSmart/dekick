@@ -1,6 +1,7 @@
 """
 Wrapper for GitLab library
 """
+
 import logging
 
 import gitlab
@@ -42,10 +43,6 @@ def auth(token: str = "") -> gitlab.Gitlab:
 
 def get_project_var(scope: str, token: str = "") -> str:
     """Gets a project variable from Gitlab"""
-
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
-        return ""
-
     gl_client = auth(token)
     variable = "ENVFILE"
     group = str(get_dekickrc_value("project.group"))
