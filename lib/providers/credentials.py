@@ -72,7 +72,7 @@ def ui_run_action() -> bool:
     if not ARG_ACTION:
         actions = list()
         for action, doc in get_actions():
-            action = action.replace("_", " ")
+            action = action.replace("_", " ").capitalize()
             actions.append(f"{C_FILE}{C_BOLD}{action}{C_END} - {doc}")
 
         console.print("\nChoose an action:", style="bold")

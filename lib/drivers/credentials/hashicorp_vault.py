@@ -55,6 +55,7 @@ from lib.settings import (
     C_FILE,
     C_WARN,
     DEKICKRC_GLOBAL_HOST_PATH,
+    HOST_HOME,
     TERMINAL_COLUMN_WIDTH,
 )
 from lib.words import get_words
@@ -75,6 +76,9 @@ DEKICK_HVAC_PAGE_SIZE = 30
 
 def get_actions() -> list[tuple[str, str]]:
     """Get available actions for this driver"""
+
+    dekickrc_global_without_home = DEKICKRC_GLOBAL_HOST_PATH.replace(HOST_HOME, "~")
+
     return [
         ("init", "Initializing Vault for this project"),
         ("create_user", "Creating user"),
@@ -82,7 +86,7 @@ def get_actions() -> list[tuple[str, str]]:
         ("change_user_password", "Changing user password"),
         (
             "save_user_to_global_config",
-            f"Saving username and password to your global config",
+            f"Saving user and password to global config {dekickrc_global_without_home}",
         ),
         ("assign_policies", "Assigning policies to user"),
         ("create_deployment_token", "Creating token for CI/CD use"),
@@ -168,10 +172,11 @@ def ui_action_init(root_token: str = "") -> bool:
             default=False,
         ):
             ui_action_create_deployment_token(root_token)
-        create_initial_envs()
-        print(
-            f"Envs directory {C_FILE}{DEKICK_ENVS_DIR}/{C_END} created, please fill it with initial environment variables and run {C_CMD}dekick credentials push{C_END} command to push them to Vault."
-        )
+
+        if ask(
+            f"Would you like to prepare environment files for this project?",
+        ):
+            ui_pull()
 
         if is_git_repository():
             print(
@@ -184,15 +189,6 @@ def ui_action_init(root_token: str = "") -> bool:
         return ui_action_init(ui_get_for_root_token())
 
     return True
-
-
-def create_initial_envs():
-    """Create initial environment files"""
-    create_envs_dir()
-    for env_name in get_environments():
-        env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
-        with open(env_file, "w", encoding="utf-8") as file:
-            file.write(dict2env({}, env_name))
 
 
 def ui_create_project_policy():
