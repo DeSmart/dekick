@@ -16,7 +16,7 @@ from lib.settings import C_CODE, C_END, C_ERROR, C_FILE
 def parser_help() -> str:
     """Set description for this command, used in arguments parser"""
     return (
-        "Run action specific to credentials provider"
+        "Run action specific to credentials provider "
         + f"defined in {C_FILE}.dekickrc.yml{C_END} "
     )
 

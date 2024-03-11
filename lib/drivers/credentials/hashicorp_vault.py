@@ -1,10 +1,14 @@
+import copy
 import hashlib
 import random
 import re
 from argparse import ArgumentParser
 from logging import debug
 from os import mkdir
+from os.path import isfile
+from shutil import copyfile
 from time import sleep
+from typing import Union
 
 import flatdict
 import hvac
@@ -40,6 +44,7 @@ from lib.hvac import (
     get_user_policies,
     is_user_exists,
 )
+from lib.misc import run_shell
 from lib.run_func import run_func
 from lib.settings import (
     C_BOLD,
@@ -61,6 +66,7 @@ ask = Confirm.ask
 
 VAULT_ADDR = str(get_dekickrc_value("hashicorp_vault.url"))
 HVAC_CLIENT = None
+HVAC_USERNAME = None
 DEKICK_HVAC_ENV_FILE = ".dekick_hvac.yml"
 DEKICK_ENVS_DIR = "envs"
 DEKICK_HVAC_ROLES = ["developer", "maintainer"]
@@ -82,6 +88,7 @@ def get_actions() -> list[tuple[str, str]]:
         ("create_deployment_token", "Creating token for CI/CD use"),
         ("list_users", "Listing users"),
         ("search_users", "Searching for users"),
+        ("migrate_from_gitlab", "Migrating from GitLab"),
     ]
 
 
@@ -95,6 +102,11 @@ def configure():
     pass
 
 
+def ui_action_migrate_envs_from_gitlab(root_token: str = "") -> bool:
+    """Migrate environment variables from GitLab to Hashicorp Vault"""
+    return True
+
+
 # pylint: disable=unused-argument
 def get_envs(*args, env: str, token: str = "", **kwargs) -> str:
     """Get variables"""
@@ -105,6 +117,11 @@ def get_envs(*args, env: str, token: str = "", **kwargs) -> str:
     env_data = read_yaml(DEKICK_HVAC_ENV_FILE, True)["environments"]
 
     id = next((e["id"] for e in env_data if e["name"] == env), None)
+
+    if not id:
+        raise ValueError(
+            f"I can't get env variables because field {C_CMD}id{C_END} for environment {C_CODE}{env}{C_END} is empty in {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file."
+        )
 
     path = f"{project_group}/{project_name}/{env}/{id}"
     try:
@@ -120,8 +137,6 @@ def get_envs(*args, env: str, token: str = "", **kwargs) -> str:
         raise KeyError(
             f"You don't have access to path {mount_point}{path}. Do you have proper access rights?"
         ) from exception
-
-    return ""
 
 
 def ui_action_init(root_token: str = "") -> bool:
@@ -143,13 +158,14 @@ def ui_action_init(root_token: str = "") -> bool:
                 default=False,
             ):
                 (username, password) = ui_action_create_user(root_token)
-            if ask(
-                f"Would you like to save generated user {C_CMD}{username}{C_END} and password to your global {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} config?"
-            ):
-                set_global_config_value("hashicorp_vault.username", username)
-                set_global_config_value("hashicorp_vault.password", password)
+                if ask(
+                    f"Would you like to save generated user {C_CMD}{username}{C_END} and password to your global {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} config?"
+                ):
+                    set_global_config_value("hashicorp_vault.username", username)
+                    set_global_config_value("hashicorp_vault.password", password)
         if ask(
-            "Would you like to create a deployment token for CI/CD use for this project?"
+            "Would you like to create a deployment token for CI/CD use for this project?",
+            default=False,
         ):
             ui_action_create_deployment_token(root_token)
         create_initial_envs()
@@ -202,7 +218,7 @@ def ui_action_create_deployment_token(root_token: str = "") -> bool:
         project_group = str(get_dekickrc_value("project.group"))
         project_name = str(get_dekickrc_value("project.name"))
         policy_names = [create_policy_name(project_group, project_name, "deployment")]
-        token = create_token(client, policy_names, no_parent=False, renawable=True)
+        token = create_token(client, policy_names, no_parent=True, renawable=True)
         print(f"Here's your deployment token: {C_CODE}{token}{C_END}")
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
@@ -563,7 +579,6 @@ def ui_action_search_users() -> bool:
 
 def ui_pull() -> bool:
     """Pull all environment variables and save to envs/ dir for further processing"""
-    create_envs_dir()
     mount_point = get_mount_point()
     project_name = str(get_dekickrc_value("project.name"))
     project_group = str(get_dekickrc_value("project.group"))
@@ -603,15 +618,54 @@ def ui_pull() -> bool:
         )
         return False
 
-    for env in yaml_flat["environments"]:
+    user_policies = get_user_policies(client, _get_loggedin_user())
+
+    if (
+        "admin" not in user_policies
+        and not f"{project_group}/{project_name}:maintainer" in user_policies
+    ):
+        environments_filtered = [
+            env for env in yaml_flat["environments"] if env["name"] != "production"
+        ]
+    else:
+        environments_filtered = yaml_flat["environments"]
+
+    create_envs_dir()
+
+    for env in environments_filtered:
         env_name = env["name"]
         env_id = env["id"]
+
+        if exists(f"{DEKICK_ENVS_DIR}/{env_name}.env"):
+            if ask(
+                f"{C_WARN}Warning:{C_END} Overwrite existing {C_FILE}{DEKICK_ENVS_DIR}/{env_name}.env{C_END} file?",
+                default=False,
+            ):
+                copy_from = f"{DEKICK_ENVS_DIR}/{env_name}.env"
+                copy_to = f"{DEKICK_ENVS_DIR}/{env_name}.env.bak"
+                print(
+                    f"  Overwriting {C_FILE}{copy_from}{C_END}, but nonethless created a copy for you here {C_FILE}{copy_to}{C_END} :)"
+                )
+                copyfile(copy_from, copy_to)
+            else:
+                print(f"  Skipping {C_FILE}{DEKICK_ENVS_DIR}/{env_name}.env{C_END}")
+                continue
+
+        if env_id == "":
+            envs_content = dict2env({}, env_name)
+            print(
+                f"{C_WARN}Warning:{C_END} Creating initial, empty {C_FILE}{DEKICK_ENVS_DIR}/{env_name}.env{C_END} file."
+            )
+        else:
+            envs_content = get_envs(env=env_name, id=env_id)
+
         env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
         with open(env_file, "w", encoding="utf-8") as file:
-            file.write(get_envs(env=env_name, id=env_id))
+            file.write(envs_content)
 
     print(
-        f"All environment files pulled and placed in {C_FILE}{DEKICK_ENVS_DIR}/{C_END}{C_WARN} directory.{C_END}"
+        f"\nAll environment files pulled and placed in {C_FILE}{DEKICK_ENVS_DIR}/{C_END}{C_WARN} directory.{C_END}"
+        + f"\nFill it with proper data and run {C_CMD}dekick credentials push{C_END} command to push them to {info()}."
     )
 
     return True
@@ -624,7 +678,17 @@ def ui_push(root_token: str = "") -> bool:
     project_group = str(get_dekickrc_value("project.group"))
     client = _get_client(root_token)
 
-    if not isdir(DEKICK_ENVS_DIR):
+    try:
+        yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE, True)
+    except FileNotFoundError:
+        print(
+            f"{C_ERROR}Error:{C_END} {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file not found. Please run {C_CMD}dekick credentials run init{C_END} to initialize {info()} for this project."
+        )
+        return False
+
+    all_ids_filled = all(env.get("id") for env in yaml_flat["environments"])
+
+    if not isdir(DEKICK_ENVS_DIR) and not all_ids_filled:
         print(
             f"\n{C_BOLD}This is a first run, let me create {C_FILE}{DEKICK_ENVS_DIR}/{C_END} {C_BOLD}dir and all environment files.{C_END}"
         )
@@ -634,23 +698,52 @@ def ui_push(root_token: str = "") -> bool:
             env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
             print(f"Creating file {C_FILE}{env_file}{C_END}")
             with open(env_file, "w", encoding="utf-8") as file:
-                file.write("")
+                file.write(dict2env({}, env_name))
             sleep(1)
 
+        if isfile(".env") and ask(
+            f"Would you like to copy your local .env file to {C_FILE}{DEKICK_ENVS_DIR}/local.env{C_END}?"
+        ):
+            copyfile(".env", f"{DEKICK_ENVS_DIR}/local.env")
+
         print(
-            f"\n{C_WARN}Please fill all environment files with proper data and run this command again.{C_END}"
+            f"\n{C_WARN}Please fill all environment files in {C_FILE}{DEKICK_ENVS_DIR}/{C_END}{C_WARN} dir with proper data and run this command again.{C_END}"
         )
     else:
-        try:
-            yaml_flat = read_yaml(DEKICK_HVAC_ENV_FILE, True)
-        except FileNotFoundError:
+
+        if not isdir(DEKICK_ENVS_DIR):
             print(
-                f"{C_ERROR}Error:{C_END} {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file not found. Please run {C_CMD}dekick credentials run init{C_END} to initialize {info()} for this project."
+                f"{C_ERROR}Error:{C_END} {C_FILE}{DEKICK_ENVS_DIR}/{C_END} directory not found. Please run {C_CMD}dekick credentials pull{C_END} first."
             )
             return False
 
+        user_policies = get_user_policies(client, _get_loggedin_user())
+        environments = get_environments()
+        confirmation_asked = False
+
+        if (
+            "admin" not in user_policies
+            and not f"{project_group}/{project_name}:maintainer" in user_policies
+        ):
+            environments_filtered = [env for env in environments if env != "production"]
+            if exists(f"{DEKICK_ENVS_DIR}/production.env") and not ask(
+                f"{C_WARN}Warning: {C_END}Insufficient permissions to push to the {C_CMD}production{C_END} environment. This environment will be bypassed. Do you wish to continue with the remaining environments?",
+                default=True,
+            ):
+                return False
+            confirmation_asked = True
+
+        else:
+            environments_filtered = environments
+
+        if confirmation_asked is False and not ask(
+            f"Are you sure you want to push all environment files to {info()}?",
+            default=False,
+        ):
+            return True
+
         print(f"{C_BOLD}\nPushing environment files to {info()}{C_END}")
-        for env_name in get_environments():
+        for env_name in environments_filtered:
             env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
 
             with open(env_file, "r", encoding="utf-8") as file:
@@ -670,14 +763,36 @@ def ui_push(root_token: str = "") -> bool:
                 client.secrets.kv.v2.create_or_update_secret(
                     path=path, secret=env2dict(env_data), mount_point=mount_point
                 )
-                print(f"Pushed {C_FILE}{env_file}{C_END} to {C_CMD}{path}{C_END}")
+                print(f"Pushing {C_FILE}{env_file}{C_END} to {C_CMD}{path}{C_END}")
 
         save_flat(DEKICK_HVAC_ENV_FILE, yaml_flat)
+
+        if is_git_repository():
+            if not ask(
+                f"\nDo you want to stage {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file?",
+                default=False,
+            ):
+                print(
+                    f"\n{C_WARN}Remember to add and commit {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END} file manually!{C_END}"
+                )
+                return True
+            run_shell(["git", "add", DEKICK_HVAC_ENV_FILE], {})
+
         print(
             f"\n{C_WARN}All environment files pushed, please remember to commit {C_FILE}{DEKICK_HVAC_ENV_FILE}{C_END}{C_WARN} file!{C_END}"
         )
 
+        remove_envs_dir()
+
     return True
+
+
+def remove_envs_dir():
+    """Remove envs directory"""
+    try:
+        run_shell(["rm", "-rf", DEKICK_ENVS_DIR], {})
+    except FileNotFoundError:
+        pass
 
 
 def ui_check_gitignore():
@@ -842,10 +957,9 @@ def arguments(sub_command: str, parser: ArgumentParser):
 
 
 def _get_client(token: str = "") -> hvac.Client:
-    global HVAC_CLIENT  # pylint: disable=global-statement
+    global HVAC_CLIENT, HVAC_USERNAME  # pylint: disable=global-statement
 
     try:
-
         if HVAC_CLIENT:
             _renew_token_self(HVAC_CLIENT)
             return HVAC_CLIENT
@@ -853,13 +967,13 @@ def _get_client(token: str = "") -> hvac.Client:
         username = str(get_global_config_value("hashicorp_vault.username", False))
         password = str(get_global_config_value("hashicorp_vault.password", False))
 
+        HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
         if token:
-            HVAC_CLIENT = hvac.Client(url=VAULT_ADDR, token=token)
+            HVAC_CLIENT.token = token
+            HVAC_USERNAME = None
         elif username and password:
-            HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
             HVAC_CLIENT.auth.userpass.login(username=username, password=password)
-        else:
-            HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
+            HVAC_USERNAME = username
 
         _renew_token_self(HVAC_CLIENT)
         return HVAC_CLIENT
@@ -867,8 +981,13 @@ def _get_client(token: str = "") -> hvac.Client:
         hvac_exceptions.InvalidRequest,
         hvac_exceptions.Forbidden,
         hvac_exceptions.InternalServerError,
-    ) as e:
+    ) as exception:
+
+        if "lease is not renewable" in str(exception):
+            return HVAC_CLIENT
+
         HVAC_CLIENT = None
+        HVAC_USERNAME = None
         if not token:
             root_token = ui_get_for_root_token()
             return _get_client(root_token)
@@ -877,6 +996,12 @@ def _get_client(token: str = "") -> hvac.Client:
         raise RequestConnectionError(
             f"Can't connect to {info()} using {C_CODE}{VAULT_ADDR}{C_END}. Please check your network connection and try again."
         )
+
+
+def _get_loggedin_user() -> str:
+    if HVAC_USERNAME:
+        return HVAC_USERNAME
+    return ""
 
 
 def _renew_token_self(client: hvac.Client):

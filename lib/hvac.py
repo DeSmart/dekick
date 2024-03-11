@@ -2,13 +2,14 @@
 
 from logging import debug
 
+from hvac import Client
 from hvac import exceptions as hvac_exceptions
 
 from lib.dekickrc import get_dekickrc_value
 from lib.environments import get_environments
 
 
-def create_mount_point(client):
+def create_mount_point(client: Client):
     """Create a project (mountpoint) in Vault."""
     mount_point = get_mount_point()
     mounted_secrets_engines = client.sys.list_mounted_secrets_engines()
@@ -30,7 +31,7 @@ def get_mount_point() -> str:
     return mount_point
 
 
-def create_admin_policy(client) -> str:
+def create_admin_policy(client: Client) -> str:
     """Create an admin policy in Vault."""
     mount_point = get_dekickrc_value("hashicorp_vault.mount_point")
     admin_policy = f"""
@@ -91,12 +92,6 @@ def create_project_policy(
 
     for role in roles:
 
-        if role == "maintainer":
-            environs_path = "*"
-        else:
-            environs = ",".join([env for env in environs if env != "production"])
-            environs_path = "{" + environs + "}"
-
         policy = f"""
             path "{mount_point}/*" {{
                 capabilities = ["list"]
@@ -104,7 +99,14 @@ def create_project_policy(
             path "{mount_point}/{path}/*" {{
                 capabilities = ["list"]
             }}
-            path "{mount_point}/data/{path}/{environs_path}" {{
+        """
+
+        for env in environs:
+            if role == "developer" and env == "production":
+                continue
+
+            policy += f"""
+            path "{mount_point}/data/{path}/{env}/*" {{
                 capabilities = ["read", "update", "list", "create", "patch"]
             }}
         """
@@ -115,7 +117,9 @@ def create_project_policy(
     return policy_names
 
 
-def create_deployment_policy(client, project_name: str, project_group: str) -> str:
+def create_deployment_policy(
+    client: Client, project_name: str, project_group: str
+) -> str:
     """Create a deployment policy in Vault."""
     path = _create_path(project_name, project_group)
     mount_point = get_dekickrc_value("hashicorp_vault.mount_point")
@@ -136,7 +140,11 @@ def create_deployment_policy(client, project_name: str, project_group: str) -> s
 
 
 def create_token(
-    client, policies: list, ttl="768h", no_parent: bool = False, renawable: bool = True
+    client: Client,
+    policies: list,
+    ttl="768h",
+    no_parent: bool = False,
+    renawable: bool = True,
 ) -> str:
     """Create a token in Vault and return it"""
     res = client.auth.token.create(
@@ -147,7 +155,7 @@ def create_token(
     return res["auth"]["client_token"]
 
 
-def append_policies_to_user(client, username: str, policies: list[str]):
+def append_policies_to_user(client: Client, username: str, policies: list[str]):
     """Append policies to a user in Vault."""
     try:
         user_policies = get_user_policies(client, username)
@@ -158,7 +166,7 @@ def append_policies_to_user(client, username: str, policies: list[str]):
     add_policies_to_user(client, username, combined_policies)
 
 
-def add_policies_to_user(client, username: str, policies: list[str]):
+def add_policies_to_user(client: Client, username: str, policies: list[str]):
     """Add policies to a user in Vault."""
     entity_id = get_entity_by_username(client, username)["id"]
     client.secrets.identity.create_or_update_entity(
@@ -166,7 +174,7 @@ def add_policies_to_user(client, username: str, policies: list[str]):
     )
 
 
-def get_all_user_data(client) -> list[dict]:
+def get_all_user_data(client: Client) -> list[dict]:
     """Get all user names from Vault."""
     entities = client.secrets.identity.list_entities()
     user_data = []
@@ -184,7 +192,7 @@ def get_all_user_data(client) -> list[dict]:
     return user_data
 
 
-def is_user_exists(client, username: str) -> bool:
+def is_user_exists(client: Client, username: str) -> bool:
     """Check if a user exists in Vault."""
     try:
         get_entity_by_username(client, username)
@@ -193,19 +201,19 @@ def is_user_exists(client, username: str) -> bool:
         return False
 
 
-def get_user_policies(client, username: str) -> list[str]:
+def get_user_policies(client: Client, username: str) -> list[str]:
     """Read policies for an entity in Vault."""
     entity = get_entity_by_username(client, username)
     return entity["policies"]
 
 
-def get_entity_by_username(client, username: str):
+def get_entity_by_username(client: Client, username: str):
     """Read an entity by name in Vault."""
     entity_response = client.secrets.identity.read_entity_by_name(name=username)
     return entity_response["data"]
 
 
-def enable_userpass_auth_method(client):
+def enable_userpass_auth_method(client: Client):
     """Enable userpass auth method in Vault."""
     # Check if userpass auth method is already enabled
     auth_methods = client.sys.list_auth_methods()
@@ -223,7 +231,7 @@ def enable_userpass_auth_method(client):
         debug("Userpass auth method is already enabled.")
 
 
-def create_entity_by_username(client, username: str, metadata: dict) -> str:
+def create_entity_by_username(client: Client, username: str, metadata: dict) -> str:
     """Create an entity in Vault."""
     entity_response = client.secrets.identity.create_or_update_entity_by_name(
         name=username, metadata=metadata
@@ -235,7 +243,7 @@ def create_entity_by_username(client, username: str, metadata: dict) -> str:
     return ""
 
 
-def create_or_update_user(client, username: str, password: str, metadata: dict):
+def create_or_update_user(client: Client, username: str, password: str, metadata: dict):
     """Create or update a user in Vault."""
     create_userpass(client, username, password)
 
@@ -244,14 +252,14 @@ def create_or_update_user(client, username: str, password: str, metadata: dict):
         create_alias(client, username, entity_id)
 
 
-def create_userpass(client, username: str, password: str):
+def create_userpass(client: Client, username: str, password: str):
     """Create a user in Vault."""
     client.auth.userpass.create_or_update_user(
         username=username, password=password, policies=["default"]
     )
 
 
-def create_alias(client, username: str, entity_id: str):
+def create_alias(client: Client, username: str, entity_id: str):
     """Create an alias for an entity in Vault."""
     userpass_mount_accessor = _get_userpass_mount_accessor(client)
     client.secrets.identity.create_or_update_entity_alias(
@@ -266,7 +274,7 @@ def create_policy_name(project_group: str, project_name: str, role: str) -> str:
     return f"{project_group}/{project_name}:{role}"
 
 
-def _get_userpass_mount_accessor(client) -> str:
+def _get_userpass_mount_accessor(client: Client) -> str:
     """Get the accessor for the userpass auth method."""
     auth_methods = client.sys.list_auth_methods()
     return next(

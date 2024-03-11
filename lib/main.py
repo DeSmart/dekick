@@ -68,7 +68,6 @@ def show_banner():
         if is_dekick_dockerized()
         else get_dekick_version()
     )
-    print("╭" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╮")
 
     full_command = namespace.command
     if ARG_SUBCOMMAND:
@@ -78,12 +77,12 @@ def show_banner():
     version_str_len = len(f"version: {version}")
 
     print(
-        f"│ {C_CMD}DeKick{C_END} {C_FILE}{full_command}"
-        + (((TERMINAL_COLUMN_WIDTH - 5) - version_str_len - dekick_str_len) * " ")
+        f"\n{C_CMD}DeKick{C_END} {C_FILE}{full_command}"
+        + (((TERMINAL_COLUMN_WIDTH - 2) - version_str_len - dekick_str_len) * " ")
         + f"{C_END} version: {C_CODE}{version}{C_END}"
-        + " │"
+        + ""
     )
-    print("╰" + ((TERMINAL_COLUMN_WIDTH - 2) * "─") + "╯")
+    print(TERMINAL_COLUMN_WIDTH * "─")
 
 
 def show_run_time():
