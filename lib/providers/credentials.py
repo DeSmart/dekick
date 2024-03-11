@@ -71,9 +71,9 @@ def ui_run_action() -> bool:
 
     if not ARG_ACTION:
         actions = list()
-        for action, doc in get_actions():
-            action = action.replace("_", " ").capitalize()
-            actions.append(f"{C_FILE}{C_BOLD}{action}{C_END} - {doc}")
+        for action_name, doc in get_actions():
+            action_name = action_name.replace("_", " ")
+            actions.append(f"{C_FILE}{C_BOLD}{action_name}{C_END} - {doc}")
 
         console.print("\nChoose an action:", style="bold")
         ARG_ACTION = select(actions, cursor="🢧", cursor_style="cyan")
@@ -82,8 +82,8 @@ def ui_run_action() -> bool:
         sys.stdout.write("\033[F")  # Cursor up one line
         sys.stdout.write("\033[K")  # Clear line
 
-        action = get_actions()[actions.index(ARG_ACTION)][1]
-        console.print(f"\n{action}", style="bold")
+        action_name = get_actions()[actions.index(ARG_ACTION)][1]
+        console.print(f"\n{action_name}", style="bold")
 
         if not ARG_ACTION:
             return False
@@ -94,12 +94,13 @@ def ui_run_action() -> bool:
             .replace(f"{C_FILE}{C_BOLD}", "")
             .replace(f"{C_END}", "")
             .replace(" ", "_")
+            .lower()
         )
     else:
-        action = get_actions()[
-            [action for action, _ in get_actions()].index(ARG_ACTION)
+        action_name = get_actions()[
+            [action.lower() for action, _ in get_actions()].index(ARG_ACTION)
         ][1]
-        console.print(f"\n{action}", style="bold")
+        console.print(f"\n{action_name}", style="bold")
 
     return getattr(driver_module, f"ui_action_{ARG_ACTION}")()
 

@@ -80,19 +80,19 @@ def get_actions() -> list[tuple[str, str]]:
     dekickrc_global_without_home = DEKICKRC_GLOBAL_HOST_PATH.replace(HOST_HOME, "~")
 
     return [
-        ("init", "Initializing Vault for this project"),
-        ("create_user", "Creating user"),
-        ("delete_user", "Deleting user"),
-        ("change_user_password", "Changing user password"),
+        ("Init", "Initializing Vault for this project"),
+        ("Create_user", "Creating user"),
+        ("Delete_user", "Deleting user"),
+        ("Change_user_password", "Changing user's password"),
         (
-            "save_user_to_global_config",
+            "Save_user_to_global_config",
             f"Saving user and password to global config {dekickrc_global_without_home}",
         ),
-        ("assign_policies", "Assigning policies to user"),
-        ("create_deployment_token", "Creating token for CI/CD use"),
-        ("list_users", "Listing users"),
-        ("search_users", "Searching for users"),
-        ("migrate_from_gitlab", "Migrating from GitLab"),
+        ("Assign_policies", "Assigning policies to user"),
+        ("Create_deployment_Token", "Creating token for CI/CD use"),
+        ("List_users", "Listing users"),
+        ("Search_users", "Searching for users"),
+        ("Migrate_from_Gitlab", f"Migrating from GitLab to {info()}"),
     ]
 
 
@@ -173,11 +173,6 @@ def ui_action_init(root_token: str = "") -> bool:
         ):
             ui_action_create_deployment_token(root_token)
 
-        if ask(
-            f"Would you like to prepare environment files for this project?",
-        ):
-            ui_pull()
-
         if is_git_repository():
             print(
                 f"{C_WARN}\nPlease remember to stage and commit all changes to your Git repository!{C_END}"
@@ -249,7 +244,7 @@ def ui_action_save_user_to_global_config():
     print("Username and password saved")
 
 
-def ui_action_change_user_password(root_token: str = "") -> bool:
+def ui_action_change_password(root_token: str = "") -> bool:
     """Change user password in Hashicorp Vault"""
     client = _get_client(root_token)
 
@@ -272,7 +267,7 @@ def ui_action_change_user_password(root_token: str = "") -> bool:
     except hvac_exceptions.Forbidden as exception:
         global HVAC_CLIENT
         HVAC_CLIENT = None
-        return ui_action_change_user_password(ui_get_for_root_token())
+        return ui_action_change_password(ui_get_for_root_token())
 
     return True
 
@@ -573,12 +568,12 @@ def ui_action_search_users() -> bool:
     return True
 
 
-def ui_pull() -> bool:
+def ui_pull(root_token: str = "") -> bool:
     """Pull all environment variables and save to envs/ dir for further processing"""
     mount_point = get_mount_point()
     project_name = str(get_dekickrc_value("project.name"))
     project_group = str(get_dekickrc_value("project.group"))
-    client = _get_client()
+    client = _get_client(root_token)
 
     def get_envs(env: str, id: str) -> str:
         """Get all variables from Hashicorp Vault"""
@@ -614,7 +609,11 @@ def ui_pull() -> bool:
         )
         return False
 
-    user_policies = get_user_policies(client, _get_loggedin_user())
+    username = _get_loggedin_user()
+    if username:
+        user_policies = get_user_policies(client, username)
+    else:
+        user_policies = ["admin"]
 
     if (
         "admin" not in user_policies
