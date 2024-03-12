@@ -1,6 +1,7 @@
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from logging import exception
 
 from lib.environments import get_environments
 from lib.logger import install_logger
@@ -51,17 +52,19 @@ def ui_save_dotenv(**kwargs):
         try:
             save_dotenv(**kwargs)
         except Exception as error:  # pylint: disable=broad-except
+            exception(error)
             return {"success": False, "text": error.args[0]}
 
     env = kwargs["env"]
     driver_info = get_info()
 
-    return run_func(
+    run_func(
         text=f"Saving credentials to {C_FILE}{DEKICK_DOTENV_FILE}{C_END} for "
         + f"environment {C_CMD}{env}{C_END} using {C_CODE}{driver_info}{C_END}",
         func=wrapper,
         func_args=kwargs,
     )
+    return 0
 
 
 def save_dotenv(*args, **kwargs) -> int:

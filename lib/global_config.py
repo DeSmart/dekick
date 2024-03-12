@@ -1,6 +1,7 @@
 """Global DeKick settings, stored in user's home directory"""
 
 import flatdict
+from genericpath import isfile
 
 from lib.settings import (
     C_CODE,
@@ -46,9 +47,15 @@ def set_global_config_value(name: str, value: str):
 
 def __get_dekickrc_global_flat() -> flatdict.FlatDict:
     """Gets flattened file"""
+
+    if not isfile(DEKICKRC_GLOBAL_PATH):
+        return flatdict.FlatDict()
+
     return read_yaml(DEKICKRC_GLOBAL_PATH)
 
 
 def __save_dekickrc_global_flat(global_flat: flatdict.FlatDict):
     """Saves flattened file"""
+    if not isfile(DEKICKRC_GLOBAL_PATH):
+        return
     save_flat(DEKICKRC_GLOBAL_PATH, global_flat)
