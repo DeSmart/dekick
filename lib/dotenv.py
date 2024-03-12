@@ -1,5 +1,5 @@
-import pipes
 import re
+import shlex
 
 from dotenv import dotenv_values
 
@@ -42,7 +42,7 @@ def dict2env(env_vars: dict, env: str) -> str:
 
     for var, value in sorted_env_vars.items():
         prefix = var.split("_")[0]
-        value = pipes.quote(value)
+        value = shlex.quote(value)
         groups.setdefault(prefix, []).append((var, value))
 
     for group_name, values in groups.items():
