@@ -48,38 +48,6 @@ def ui_run(**kwargs):
         return 1
 
 
-# def ui_check_global_config():
-#     driver_info = get_info()
-
-#     def wrapper():
-#         """Check if global config is set"""
-#         driver_name = get_driver_name()
-#         token = get_global_config_value(f"{driver_name}.token")
-
-#         if token:
-#             return {"success": True}
-
-#         return {
-#             "success": False,
-#             "message": f"Token for this ({driver_info}) is not set in global config.",
-#             "text": "Token not set",
-#             "type": "warn",
-#         }
-
-#     return run_func(text=f"Checking {driver_info} token", func=wrapper, terminate=False)
-
-
-# def ui_set_global_config(token):
-#     def wrapper():
-#         driver_name = get_driver_name()
-#         return set_global_config_value(f"{driver_name}.token", token)
-
-#     return run_func(
-#         text=f"Setting {get_info()} token in {C_FILE}{DEKICKRC_GLOBAL_HOST_PATH}{C_END} global config",
-#         func=wrapper,
-#     )
-
-
 def ui_check_dotenv_file():
     """Check if .env file exists"""
 

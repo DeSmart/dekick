@@ -1,4 +1,3 @@
-import copy
 import hashlib
 import random
 import re
@@ -24,10 +23,9 @@ from thefuzz import fuzz
 
 from lib.dekickrc import get_dekickrc_value
 from lib.dotenv import dict2env, env2dict
-from lib.drivers.credentials.gitlab import get_envs as gitlab_get_envs
 from lib.environments import get_environments
 from lib.git import is_git_repository
-from lib.glcli import get_project_var
+from lib.glcli import get_project_var, set_project_var
 from lib.global_config import get_global_config_value, set_global_config_value
 from lib.hvac import (
     add_policies_to_user,
@@ -74,6 +72,7 @@ DEKICK_HVAC_ENV_FILE = ".dekick_hvac.yml"
 DEKICK_ENVS_DIR = "envs"
 DEKICK_HVAC_ROLES = ["developer", "maintainer"]
 DEKICK_HVAC_PAGE_SIZE = 30
+DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME = "VAULT_TOKEN"
 
 
 def get_actions() -> list[tuple[str, str]]:
@@ -298,7 +297,19 @@ def ui_action_create_deployment_token(root_token: str = "") -> bool:
         project_name = str(get_dekickrc_value("project.name"))
         policy_names = [create_policy_name(project_group, project_name, "deployment")]
         token = create_token(client, policy_names, no_parent=True, renawable=True)
-        print(f"Here's your deployment token: {C_CODE}{token}{C_END}")
+
+        if ask(
+            f"Would you like to store the deployment token in Gitlab under {C_FILE}{DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME}{C_END} variable?",
+            default=False,
+        ):
+            set_project_var(
+                "*", token, variable_name=DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME, raw=True
+            )
+            print(
+                f"Deployment token stored in GitLab under {C_FILE}{DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME}{C_END} variable"
+            )
+        else:
+            print(f"Ok, here's your deployment token: {C_CODE}{token}{C_END}")
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
             f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
@@ -571,12 +582,13 @@ def ui_action_list_users(root_token: str = "") -> bool:
                     groups.append(user_policy.split("/")[0])
                     projects.append(user_policy.split("/")[1].split(":")[0])
                     roles.append(user_policy.split(":")[1])
+            metadata = _prepare_metadata(data["metadata"])
             users_table.add_row(
                 data["username"],
-                data["metadata"]["firstname"],
-                data["metadata"]["lastname"],
-                data["metadata"]["email"],
-                data["metadata"]["companyname"],
+                metadata["firstname"],
+                metadata["lastname"],
+                metadata["email"],
+                metadata["companyname"],
                 "\n".join(groups),
                 "\n".join(projects),
                 "\n".join(roles),
@@ -607,7 +619,7 @@ def ui_action_search_users() -> bool:
     for entity_id in entities["data"]["key_info"]:
         username = entities["data"]["key_info"][entity_id]["name"]
         entity_info = client.secrets.identity.read_entity(entity_id=entity_id)
-        metadata = entity_info["data"]["metadata"]
+        metadata = _prepare_metadata(entity_info["data"]["metadata"])
         entities["data"]["key_info"][entity_id]["metadata"] = metadata
         entities["data"]["key_info"][entity_id][
             "search_str"
@@ -634,10 +646,7 @@ def ui_action_search_users() -> bool:
 
     for entity in matched_entity:
         username = entity["username"]
-        firstname = entity["metadata"]["firstname"]
-        lastname = entity["metadata"]["lastname"]
-        companyname = entity["metadata"]["companyname"]
-        email = entity["metadata"]["email"] if "email" in entity["metadata"] else ""
+        metadata = _prepare_metadata(entity["metadata"])
         user_policies = get_user_policies(client, username)
         groups = []
         projects = []
@@ -654,10 +663,10 @@ def ui_action_search_users() -> bool:
 
         users_table.add_row(
             username,
-            firstname,
-            lastname,
-            email,
-            companyname,
+            metadata["firstname"],
+            metadata["lastname"],
+            metadata["email"],
+            metadata["companyname"],
             "\n".join(groups),
             "\n".join(projects),
             "\n".join(roles),
@@ -958,17 +967,23 @@ def create_envs_dir():
         pass
 
 
-def ui_get_for_root_token():
+def ui_get_for_root_token(retries: int = 1):
     """Ask for root token"""
+    MAX_RETRIES = 5
     try:
         root_token = prompt(
             f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your {info()} ({C_CODE}{VAULT_ADDR}{C_END}) to continue: ",
             secure=True,
-            validator=lambda x: len(x) > 0,
+            validator=lambda x: len(x) > 0 and "hvs" in x,
         )
     except BeaupyValidationError:
-        print(f"{C_ERROR}Error:{C_END} Root token can't be empty")
-        return ui_get_for_root_token()
+        if retries >= MAX_RETRIES:
+            raise ValueError(f"You have exceeded the maximum number of retries.")
+        print(
+            f"{C_ERROR}Error:{C_END} Root token can't be empty and has to contain hvs"
+        )
+        retries += 1
+        return ui_get_for_root_token(retries)
     return root_token
 
 
@@ -1078,7 +1093,9 @@ def _get_client(token: str = "") -> hvac.Client:
         hvac_exceptions.InternalServerError,
     ) as exception:
 
-        if "lease is not renewable" in str(exception):
+        if "lease is not renewable" in str(exception) or "invalid lease ID" in str(
+            exception
+        ):
             return HVAC_CLIENT
 
         HVAC_CLIENT = None
@@ -1127,8 +1144,9 @@ def _ui_select_username(
     sorted_user_data = sorted(user_data, key=lambda x: x["username"])
     users = []
     for user in sorted_user_data:
+        metadata = _prepare_metadata(user["metadata"])
         users.append(
-            f"{user['username']} ({user['metadata']['firstname']} {user['metadata']['lastname']}, {user['metadata']['email']})"
+            f"{user['username']} ({metadata['firstname']} {metadata['lastname']}, {metadata['email']})"
         )
 
     user_index = select(
@@ -1142,6 +1160,15 @@ def _ui_select_username(
     username = sorted_user_data[int(user_index)]["username"]
     print(f"{C_CMD}{C_BOLD}{username}{C_END}")
     return username
+
+
+def _prepare_metadata(metadata: dict) -> dict:
+    """Process metadata, return always every field even if metadata is empty"""
+    keys = ["firstname", "lastname", "email", "companyname"]
+    return {
+        key: metadata.get(key, "") if metadata and key in metadata else ""
+        for key in keys
+    }
 
 
 def _create_users_table(permissions: bool = True):

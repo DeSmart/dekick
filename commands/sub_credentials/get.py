@@ -58,7 +58,7 @@ def ui_save_dotenv(**kwargs):
 
     return run_func(
         text=f"Saving credentials to {C_FILE}{DEKICK_DOTENV_FILE}{C_END} for "
-        + f"{C_CMD}env {env}{C_END} using {C_CODE}{driver_info}{C_END}",
+        + f"enviroment {C_CMD}{env}{C_END} using {C_CODE}{driver_info}{C_END}",
         func=wrapper,
         func_args=kwargs,
     )
