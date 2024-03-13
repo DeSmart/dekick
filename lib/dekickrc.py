@@ -1,4 +1,5 @@
 """Check if .dekickrc.yml file is the same as .dekickrc.yml.tmpl file"""
+
 import re
 import sys
 from ast import literal_eval

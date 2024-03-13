@@ -42,8 +42,8 @@ def validator_port(value: str) -> bool:
 
 def validator_rel_path(value: str) -> bool:
     """
-    Validates if the provided string is a valid Unix-style absolute file path.
-    E.g. "/usr/local/bin/python"
+    Validates if the provided string is a valid Unix-style relative file path.
+    E.g. "usr/local/bin/python"
     """
     pattern = re.compile(r"^\.?[a-zA-Z0-9\.=+_\-/]+$")
     return bool(pattern.match(value))

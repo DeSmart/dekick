@@ -18,6 +18,11 @@ if ! tty > /dev/null 2>&1; then
 fi
 
 DEKICK_DOCKER_PORTS=""
+if [ -n "$DBG" ]; then
+  DEKICK_DEBUGGER="true"
+  export DEKICK_DEBUGGER
+fi
+
 if [ "$DEKICK_DEBUGGER" ]; then
   DEKICK_DOCKER_PORTS="-p 8753:8753"
 fi

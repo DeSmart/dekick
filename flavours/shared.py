@@ -1,6 +1,7 @@
 """
 Shared functions for all flavours
 """
+
 import logging
 from subprocess import CalledProcessError
 from sys import stdout

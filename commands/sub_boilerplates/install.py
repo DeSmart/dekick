@@ -1,4 +1,5 @@
 """Update local files with files from specific boilerplate defined in .dekickrc.yml"""
+
 import sys
 from argparse import ArgumentParser, Namespace
 from glob import glob
