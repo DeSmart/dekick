@@ -52,6 +52,9 @@ cd docker || exit 1
 ./create-dekick-image.sh
 cd - || exit 1
 
+git checkout main
+git pull
+git checkout "release/${VERSION}"
 git flow release finish "${VERSION}" -m "chore: tag"
 git push --tags
 git push --all
