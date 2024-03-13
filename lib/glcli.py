@@ -1,6 +1,7 @@
 """
 Wrapper for GitLab library
 """
+
 import logging
 
 import gitlab
@@ -40,14 +41,9 @@ def auth(token: str = "") -> gitlab.Gitlab:
     return gl_client
 
 
-def get_project_var(scope: str, token: str = "") -> str:
+def get_project_var(scope: str, token: str = "", variable_name="ENVFILE") -> str:
     """Gets a project variable from Gitlab"""
-
-    if is_pytest() or not get_dekickrc_value("gitlab.getenv"):
-        return ""
-
     gl_client = auth(token)
-    variable = "ENVFILE"
     group = str(get_dekickrc_value("project.group"))
     project = str(get_dekickrc_value("project.name"))
 
@@ -57,7 +53,7 @@ def get_project_var(scope: str, token: str = "") -> str:
     group_parsed = group.replace("_", "%2F").replace("/", "%2F")
     project_parsed = project.replace("_", "%2F").replace("/", "%2F")
 
-    url = f"/projects/{group_parsed}%2F{project_parsed}/variables/{variable}?filter[environment_scope]={scope}"
+    url = f"/projects/{group_parsed}%2F{project_parsed}/variables/{variable_name}?filter[environment_scope]={scope}"
     logging.debug("Gitlab: Making a http request to Gitlab (%s)", url)
 
     try:
@@ -75,6 +71,65 @@ def get_project_var(scope: str, token: str = "") -> str:
             raise gitlab.GitlabHttpError(http_codes[http_code]) from exception
 
         raise gitlab.GitlabHttpError(error) from exception
+
+
+def set_project_var(
+    scope: str,
+    value: str,
+    token: str = "",
+    variable_name: str = "ENVFILE",
+    raw: bool = False,
+    update: bool = False,
+) -> str:
+    """Sets a project variable in Gitlab"""
+    gl_client = auth(token)
+    group = str(get_dekickrc_value("project.group"))
+    project = str(get_dekickrc_value("project.name"))
+
+    if not group or not project:
+        raise ValueError(f"Group and/or project is not set in {DEKICKRC_FILE} file")
+
+    group_parsed = group.replace("_", "%2F").replace("/", "%2F")
+    project_parsed = project.replace("_", "%2F").replace("/", "%2F")
+
+    url = f"/projects/{group_parsed}%2F{project_parsed}/variables"
+    logging.debug("Gitlab: Making a http request to Gitlab (%s)", url)
+
+    try:
+        data = {
+            "key": variable_name,
+            "value": value,
+            "environment_scope": scope,
+            "raw": raw,
+        }
+
+        if update:
+            url += f"/{variable_name}"
+            gl_client.http_put(url, post_data=data)
+        else:
+            gl_client.http_post(url, post_data=data)
+    except gitlab.GitlabHttpError as exception:
+
+        if (
+            exception.args[0]
+            and "key" in exception.args[0]
+            and "has already been taken" in str(exception.args[0]["key"])
+        ):
+            return set_project_var(scope, value, token, variable_name, update=True)
+
+        error = f"Gitlab: {exception.args[0][4:]}"
+        http_codes = {
+            "403": f"Access denied to project {group}/{project}. Check your permissions.",
+            "404": f"Project {group}/{project} does not exist.",
+        }
+        http_code = exception.args[0][:3]
+
+        if http_code in http_codes:
+            raise gitlab.GitlabHttpError(http_codes[http_code]) from exception
+
+        raise gitlab.GitlabHttpError(error) from exception
+
+    return value
 
 
 def __get_token(token: str) -> str:
