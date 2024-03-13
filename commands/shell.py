@@ -35,6 +35,13 @@ def arguments(parser: ArgumentParser):
         help="Shell which will be run in the container (default: sh)",
     )
 
+    parser.add_argument(
+        "--user",
+        required=False,
+        default="",
+        help="Which user should run the shell (in the container)",
+    )
+
     parser.set_defaults(func=main)
 
 
@@ -48,6 +55,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     exit_code = shell(
         container=parser.container,
         shell_cmd=parser.shell,
+        user=parser.user,
         args=args,
     )["returncode"]
 
@@ -60,6 +68,7 @@ def shell(
     args: list = [],
     env: Union[dict, None] = None,
     docker_env: dict = {},
+    user: str = "",
 ):  # pylint: disable=too-many-arguments, dangerous-default-value
     """
     It runs a docker-compose command
@@ -87,6 +96,10 @@ def shell(
     if is_service_running(service=container):
         cmd = "exec"
         flags = ["-it"]
+
+    if user:
+        flags.append("--user")
+        flags.append(user)
 
     return docker_compose(
         cmd=cmd,
