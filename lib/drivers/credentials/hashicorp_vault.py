@@ -73,6 +73,7 @@ DEKICK_ENVS_DIR = "envs"
 DEKICK_HVAC_ROLES = ["developer", "maintainer"]
 DEKICK_HVAC_PAGE_SIZE = 30
 DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME = "VAULT_TOKEN"
+MAINTAINER_CACHE = None
 
 
 def get_actions() -> list[tuple[str, str]]:
@@ -184,21 +185,10 @@ def ui_action_init(root_token: str = "") -> bool:
 
 def ui_action_migrate_from_gitlab(root_token: str = "") -> bool:
     """Migrate environment variables from GitLab to Hashicorp Vault"""
-    client = _get_client(root_token)
-    username = _get_loggedin_user()
-    project_group = str(get_dekickrc_value("project.group"))
-    project_name = str(get_dekickrc_value("project.name"))
-
-    if username:
-        user_policies = get_user_policies(client, username)
-
-        if (
-            "admin" not in user_policies
-            and not f"{project_group}/{project_name}:maintainer" in user_policies
-        ):
-            raise ValueError(
-                f"You don't have proper rights to migrate from GitLab to {info()}. You need to have {C_CMD}admin{C_END} or {C_CMD}maintainer{C_END} rights."
-            )
+    if not _is_maintainer():
+        raise ValueError(
+            f"You don't have proper rights to migrate from GitLab to {info()}. You need to have {C_CMD}admin{C_END} or {C_CMD}maintainer{C_END} rights."
+        )
 
     if not ask(
         f"Are you sure you want to migrate from GitLab to {info()}?", default=False
@@ -718,29 +708,21 @@ def ui_pull(root_token: str = "") -> bool:
         )
         return False
 
-    username = _get_loggedin_user()
-    if username:
-        user_policies = get_user_policies(client, username)
-    else:
-        user_policies = ["admin"]
-
-    if (
-        "admin" not in user_policies
-        and not f"{project_group}/{project_name}:maintainer" in user_policies
-    ):
-        environments_filtered = [
-            env for env in yaml_flat["environments"] if env["name"] != "production"
-        ]
-    else:
-        environments_filtered = yaml_flat["environments"]
-
+    environments = yaml_flat["environments"]
     create_envs_dir()
 
-    for env in environments_filtered:
-        env_name = env["name"]
-        env_id = env["id"]
+    for env in environments:
+        env_name = env.get("name")
+        env_id = env.get("id")
+        env_prev_id = env.get("prev_id", "")
 
-        if exists(f"{DEKICK_ENVS_DIR}/{env_name}.env"):
+        if _is_maintainer() and env_name == "production" and env_prev_id:
+            env_id = env_prev_id
+
+        if _is_developer() and env_name == "production":
+            env_id = ""
+
+        if exists(f"{DEKICK_ENVS_DIR}/{env_name}.env") and _is_maintainer():
             if ask(
                 f"{C_WARN}Warning:{C_END} Overwrite existing {C_FILE}{DEKICK_ENVS_DIR}/{env_name}.env{C_END} file?",
                 default=False,
@@ -757,15 +739,17 @@ def ui_pull(root_token: str = "") -> bool:
 
         if env_id == "":
             envs_content = dict2env({}, env_name)
-            print(
-                f"{C_WARN}Warning:{C_END} Creating initial, empty {C_FILE}{DEKICK_ENVS_DIR}/{env_name}.env{C_END} file."
-            )
+            if _is_maintainer() or env_name != "production":
+                print(
+                    f"{C_WARN}Warning:{C_END} Creating initial, empty {C_FILE}{DEKICK_ENVS_DIR}/{env_name}.env{C_END} file."
+                )
         else:
             envs_content = get_envs(env=env_name, id=env_id)
 
-        env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
-        with open(env_file, "w", encoding="utf-8") as file:
-            file.write(envs_content)
+        if _is_maintainer() or env_name != "production":
+            env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
+            with open(env_file, "w", encoding="utf-8") as file:
+                file.write(envs_content)
 
     print(
         f"\nAll environment files pulled and placed in {C_FILE}{DEKICK_ENVS_DIR}/{C_END}{C_WARN} directory.{C_END}"
@@ -821,52 +805,46 @@ def ui_push(root_token: str = "", no_confirm: bool = False) -> bool:
             )
             return False
 
-        user_policies = get_user_policies(client, _get_loggedin_user())
         environments = get_environments()
 
-        if (
-            "admin" not in user_policies
-            and not f"{project_group}/{project_name}:maintainer" in user_policies
-        ):
-            environments_filtered = [env for env in environments if env != "production"]
-            if exists(f"{DEKICK_ENVS_DIR}/production.env") and not ask(
-                f"{C_WARN}Warning: {C_END}Insufficient permissions to push to the {C_CMD}production{C_END} environment. This environment will be bypassed. Do you wish to continue with the remaining environments?",
-                default=True,
-            ):
-                return False
-            no_confirm = True
-
-        else:
-            environments_filtered = environments
-
         if no_confirm is False and not ask(
-            f"Are you sure you want to push all environment files to {info()}?",
+            f"Are you sure you want to push environment files to {info()}?",
             default=False,
         ):
             return True
 
         print(f"{C_BOLD}\nPushing environment files to {info()}{C_END}")
-        for env_name in environments_filtered:
+        for env_name in environments:
             env_file = f"{DEKICK_ENVS_DIR}/{env_name}.env"
 
-            with open(env_file, "r", encoding="utf-8") as file:
-                env_data = dict2env(env2dict(file.read()), env_name)
-            with open(env_file, "w", encoding="utf-8") as file:
-                file.write(env_data)
-
-            env_id = sha256_checksum(env_file)
+            if _is_maintainer() or env_name != "production":
+                with open(env_file, "r", encoding="utf-8") as file:
+                    env_data = dict2env(env2dict(file.read()), env_name)
+                with open(env_file, "w", encoding="utf-8") as file:
+                    file.write(env_data)
+                env_id = sha256_checksum(env_file)
+            else:
+                env_id = ""
 
             for index, value in enumerate(yaml_flat["environments"]):
                 if value["name"] == env_name:
+                    prev_id = yaml_flat["environments"][index]["id"]
+                    if env_id == "" and prev_id != "":
+                        yaml_flat["environments"][index]["prev_id"] = prev_id
+                    if _is_maintainer() and yaml_flat["environments"][index].get(
+                        "prev_id"
+                    ):
+                        del yaml_flat["environments"][index]["prev_id"]
                     yaml_flat["environments"][index]["id"] = env_id
 
-            with open(env_file, "r", encoding="utf-8") as file:
-                env_data = file.read()
-                path = f"{project_group}/{project_name}/{env_name}/{env_id}"
-                client.secrets.kv.v2.create_or_update_secret(
-                    path=path, secret=env2dict(env_data), mount_point=mount_point
-                )
-                print(f"Pushing {C_FILE}{env_file}{C_END} to {C_CMD}{path}{C_END}")
+            if _is_maintainer() or env_name != "production":
+                with open(env_file, "r", encoding="utf-8") as file:
+                    env_data = file.read()
+                    path = f"{project_group}/{project_name}/{env_name}/{env_id}"
+                    client.secrets.kv.v2.create_or_update_secret(
+                        path=path, secret=env2dict(env_data), mount_point=mount_point
+                    )
+                    print(f"Pushing {C_FILE}{env_file}{C_END} to {C_CMD}{path}{C_END}")
 
         save_flat(DEKICK_HVAC_ENV_FILE, yaml_flat)
 
@@ -1189,3 +1167,33 @@ def _create_users_table(permissions: bool = True):
         table.add_column("Project", style="green", justify="center")
         table.add_column("Role", style="green", justify="center")
     return table
+
+
+def _is_maintainer() -> bool:
+
+    global MAINTAINER_CACHE  # pylint: disable=global-statement
+
+    if MAINTAINER_CACHE is not None:
+        return MAINTAINER_CACHE
+
+    client = _get_client()
+    username = _get_loggedin_user()
+
+    if not username:
+        return True
+
+    user_policies = get_user_policies(client, username)
+    project_group = str(get_dekickrc_value("project.group"))
+    project_name = str(get_dekickrc_value("project.name"))
+    is_maintainer = (
+        False
+        if "admin" not in user_policies
+        and not f"{project_group}/{project_name}:maintainer" in user_policies
+        else True
+    )
+    MAINTAINER_CACHE = is_maintainer
+    return is_maintainer
+
+
+def _is_developer() -> bool:
+    return not _is_maintainer()
