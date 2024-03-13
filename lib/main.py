@@ -70,9 +70,6 @@ def show_banner():
     )
 
     full_command = namespace.command
-    if ARG_SUBCOMMAND:
-        full_command += f":{ARG_SUBCOMMAND}"
-
     dekick_str_len = len(f"DeKick {full_command}")
     version_str_len = len(f"version: {version}")
 
