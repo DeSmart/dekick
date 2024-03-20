@@ -73,10 +73,11 @@ DEKICK_CI_MODE = False
 
 def get_credentials_drivers():
     """Generate list of available credentials drivers"""
-    return [
+    drivers = [
         path.splitext(path.basename(file))[0]
-        for file in glob(DEKICK_PATH + "/lib/drivers/credentials/*.py")
+        for file in glob(DEKICK_PATH + "/lib/drivers/credentials/*")
     ]
+    return drivers
 
 
 DEKICK_CREDENTIALS_DRIVERS = get_credentials_drivers()
