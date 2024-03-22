@@ -72,9 +72,9 @@ def _ui_select_policies(
     ticked_indices = [
         index for index, p in enumerate(policies_filtered) if p in user_policies
     ]
-
+    policies_sorted = sorted(policies_filtered)
     policy_indexes = select_multiple(
-        policies_filtered,
+        policies_sorted,
         tick_style="cyan",
         preprocessor=lambda x: (
             x.split(":")[0] + " (" + x.split(":")[1] + ")" if x != "admin" else x
