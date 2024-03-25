@@ -4,12 +4,9 @@ from rich.prompt import Confirm
 
 from lib.drivers.credentials.hashicorp_vault._main import (
     _get_client,
-    generate_word_password,
     ui_get_for_root_token,
     ui_get_user_data,
-)
-from lib.drivers.credentials.hashicorp_vault.assign_policies import (
-    ui_action as assign_policies_ui_action,
+    ui_select_username,
 )
 from lib.hvac import create_or_update_user, is_user_exists
 from lib.settings import C_BOLD, C_CODE, C_END, C_FILE
@@ -22,29 +19,26 @@ def ui_action(
     root_token: str = "", user_data: dict = {}, password: str = ""
 ) -> tuple[str, str]:
 
-    if not user_data:
-        user_data = ui_get_user_data()
-
-    if not password:
-        password = generate_word_password()
-
     client = _get_client(root_token)
+    if not user_data:
+        (username, metadata) = ui_select_username(client)
+        user_data = ui_get_user_data(
+            username,
+            metadata["firstname"],
+            metadata["lastname"],
+            metadata["companyname"],
+            metadata["email"],
+        )
+    else:
+        username = user_data["username"]
 
     if not user_data:
         return ("", "")
 
     try:
-        username = user_data["username"]
         metadata = user_data["metadata"]
-        if is_user_exists(client, username):
-            print(f"User {C_CODE}{username}{C_END} already exists")
-        else:
-            create_or_update_user(client, username, password, metadata)
-            print(
-                f"User {C_FILE}{username}{C_END} created with password {C_FILE}{password}{C_END}"
-            )
-        print(f"\n{C_BOLD}Choose policies for user {C_CODE}{username}{C_END}")
-        assign_policies_ui_action(root_token, username)
+        create_or_update_user(client, username, None, metadata)
+        print(f"User {C_FILE}{username}{C_END} updated")
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
             f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"

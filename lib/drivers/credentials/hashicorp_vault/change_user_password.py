@@ -3,10 +3,10 @@ from rich.console import Console
 from rich.prompt import Confirm
 
 from lib.drivers.credentials.hashicorp_vault._main import (
-    _generate_word_password,
     _get_client,
-    _ui_select_username,
+    generate_word_password,
     ui_get_for_root_token,
+    ui_select_username,
 )
 from lib.global_config import get_global_config_value, set_global_config_value
 from lib.hvac import create_userpass
@@ -21,12 +21,12 @@ def ui_action(root_token: str = "") -> bool:
     client = _get_client(root_token)
 
     try:
-        username = _ui_select_username(client)
+        (username, metadata) = ui_select_username(client)
         ask(
             f"Are you sure you want to change password for user {C_CODE}{username}{C_END}?",
             default=False,
         )
-        password = _generate_word_password()
+        password = generate_word_password()
         create_userpass(client, username, password)
         print(
             f"Password for user {C_CODE}{username}{C_END} changed to {C_CODE}{password}{C_END}"

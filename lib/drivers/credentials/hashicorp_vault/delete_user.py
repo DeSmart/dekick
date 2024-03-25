@@ -4,8 +4,8 @@ from rich.prompt import Confirm
 
 from lib.drivers.credentials.hashicorp_vault._main import (
     _get_client,
-    _ui_select_username,
     ui_get_for_root_token,
+    ui_select_username,
 )
 from lib.global_config import get_global_config_value
 from lib.hvac import get_entity_by_username
@@ -20,7 +20,7 @@ def ui_action(root_token: str = "") -> bool:
     client = _get_client(root_token)
 
     try:
-        username = _ui_select_username(client)
+        (username, metadata) = ui_select_username(client)
         current_username = str(
             get_global_config_value("hashicorp_vault.username", False)
         )

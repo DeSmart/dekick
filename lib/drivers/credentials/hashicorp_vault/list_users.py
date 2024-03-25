@@ -53,7 +53,7 @@ def ui_action(root_token: str = "") -> bool:
     except hvac_exceptions.Forbidden as exception:
         global HVAC_CLIENT  # pylint: disable=global-statement
         HVAC_CLIENT = None
-        return ui_action_list_users(ui_get_for_root_token())
+        return ui_action(ui_get_for_root_token())
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
             f"No users to list or vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"

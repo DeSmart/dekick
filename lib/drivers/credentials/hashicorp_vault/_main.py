@@ -50,7 +50,7 @@ HVAC_USERNAME = None
 DEKICK_HVAC_ENV_FILE = ".dekick_hvac.yml"
 DEKICK_ENVS_DIR = "envs"
 DEKICK_HVAC_ROLES = ["developer", "maintainer"]
-DEKICK_HVAC_PAGE_SIZE = 30
+DEKICK_HVAC_PAGE_SIZE = 20
 DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME = "VAULT_TOKEN"
 MAINTAINER_CACHE = None
 
@@ -73,6 +73,7 @@ def get_actions() -> list[tuple[str, str]]:
         ("Init", "Initializing Vault for this project"),
         ("Create_user", "Creating user"),
         ("Delete_user", "Deleting user"),
+        ("Edit_user", "Editing user"),
         ("Change_user_password", "Changing user's password"),
         (
             "Save_user_to_global_config",
@@ -380,66 +381,88 @@ def ui_get_user_data(
     lastname: str = "",
     companyname: str = "",
     email: str = "",
+    skip_fields: list = [],
 ) -> dict:
-    """Ask for username"""
+    """Ask for user data and validate it."""
 
-    if not username:
-        username = (input(f"Enter username you want to create: ")).strip()
-        if not username:
-            print(f"{C_ERROR}Error:{C_END} Username can't be empty")
-            return ui_get_user_data()
+    fields = {
+        "username": {
+            "validator": lambda x: len(x) > 0,
+            "name": "Username",
+            "value": username,
+        },
+        "firstname": {
+            "validator": lambda x: len(x) > 0,
+            "name": "First name",
+            "value": firstname,
+        },
+        "lastname": {
+            "validator": lambda x: len(x) > 0,
+            "name": "Last name",
+            "value": lastname,
+        },
+        "companyname": {
+            "validator": lambda x: len(x) > 0,
+            "name": "Company name",
+            "value": companyname,
+        },
+        "email": {
+            "validator": lambda x: bool(re.match(r"[^@]+@[^@]+\.[^@]+", x)),
+            "name": "E-mail",
+            "value": email,
+        },
+    }
 
-    if not firstname:
-        firstname = (input(f"Enter firstname for {C_CMD}{username}{C_END}: ")).strip()
-        if not firstname:
-            print(f"{C_ERROR}Error:{C_END} Firstname can't be empty")
-            return ui_get_user_data(username)
+    for varname in fields:
+        try:
+            if skip_fields and varname in skip_fields:
+                continue
 
-    if not lastname:
-        lastname = (input(f"Enter lastname for {C_CMD}{username}{C_END}: ")).strip()
-        if not lastname:
-            print(f"{C_ERROR}Error:{C_END} Lastname can't be empty")
-            return ui_get_user_data(username, firstname)
+            fields[varname]["value"] = prompt(
+                fields[varname]["name"],
+                initial_value=fields[varname]["value"],
+                raise_validation_fail=False,
+            )
 
-    if not companyname:
-        companyname = (
-            input(f"Enter company name for {C_CMD}{username}{C_END}: ")
-        ).strip()
-        if not companyname:
-            print(f"{C_ERROR}Error:{C_END} Company name can't be empty")
-            return ui_get_user_data(username, firstname, lastname)
+            if fields[varname]["validator"](fields[varname]["value"]) is False:
+                raise BeaupyValidationError()
 
-    if not email:
-        email = (input(f"Enter email for {C_CMD}{username}{C_END}: ")).strip()
-        if not email:
-            print(f"{C_ERROR}Error:{C_END} Email can't be empty")
-            return ui_get_user_data()
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            print(f"{C_ERROR}Error:{C_END} Invalid email format!")
-            return ui_get_user_data(username, firstname, lastname, companyname)
+            fields[varname]["value"] = fields[varname]["value"].strip()
+
+            skip_fields.append(varname)
+        except BeaupyValidationError:
+            print(f"{C_ERROR}Error:{C_END} Wrong {fields[varname]['name']}.")
+            return ui_get_user_data(
+                fields["username"]["value"],
+                fields["firstname"]["value"],
+                fields["lastname"]["value"],
+                fields["companyname"]["value"],
+                fields["email"]["value"],
+                skip_fields=skip_fields,
+            )
 
     confirm = ask(
         f"""Is this ok?
-    User name: {C_CODE}{username}{C_END}
-    First name: {C_CODE}{firstname}{C_END}
-    Last name: {C_CODE}{lastname}{C_END}
-    Company name: {C_CODE}{companyname}{C_END}
-    E-mail: {C_CODE}{email}{C_END}
+    User name: {C_CODE}{fields['username']['value']}{C_END}
+    First name: {C_CODE}{fields['firstname']['value']}{C_END}
+    Last name: {C_CODE}{fields['lastname']['value']}{C_END}
+    Company name: {C_CODE}{fields['companyname']['value']}{C_END}
+    E-mail: {C_CODE}{fields['email']['value']}{C_END}
 """,
         default=True,
     )
 
     if not confirm:
-        print("User creation cancelled")
+        print("User creation/edit cancelled")
         return {}
 
     return {
-        "username": username,
+        "username": fields["username"]["value"],
         "metadata": {
-            "firstname": firstname,
-            "lastname": lastname,
-            "email": email,
-            "companyname": companyname,
+            "firstname": fields["firstname"]["value"],
+            "lastname": fields["lastname"]["value"],
+            "email": fields["email"]["value"],
+            "companyname": fields["companyname"]["value"],
         },
     }
 
@@ -503,7 +526,7 @@ def _renew_token_self(client: hvac.Client):
     client.auth.token.renew_self()
 
 
-def _generate_word_password(num_words: int = 8) -> str:
+def generate_word_password(num_words: int = 8) -> str:
     """Generate a password consisting of random English words and numbers."""
     password = ""
     words = get_words()
@@ -514,9 +537,9 @@ def _generate_word_password(num_words: int = 8) -> str:
     return password
 
 
-def _ui_select_username(
+def ui_select_username(
     client, page_size: int = DEKICK_HVAC_PAGE_SIZE, pagination: bool = True
-) -> str:
+) -> tuple[str, dict]:
     """Select username from list of users"""
     user_data = get_all_user_data(client)
     sorted_user_data = sorted(user_data, key=lambda x: x["username"])
@@ -537,7 +560,10 @@ def _ui_select_username(
     )
     username = sorted_user_data[int(user_index)]["username"]
     print(f"{C_CMD}{C_BOLD}{username}{C_END}")
-    return username
+    return (
+        username,
+        _prepare_metadata(sorted_user_data[int(user_index)]["metadata"]),
+    )
 
 
 def _prepare_metadata(metadata: dict) -> dict:

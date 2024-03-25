@@ -7,8 +7,8 @@ from lib.drivers.credentials.hashicorp_vault._main import (
     DEKICK_HVAC_PAGE_SIZE,
     HVAC_CLIENT,
     _get_client,
-    _ui_select_username,
     ui_get_for_root_token,
+    ui_select_username,
 )
 from lib.hvac import add_policies_to_user, get_user_policies
 from lib.settings import C_BOLD, C_CODE, C_END
@@ -22,7 +22,7 @@ def ui_action(root_token: str = "", username: str = "") -> bool:
     client = _get_client(root_token)
     try:
         if not username:
-            username = _ui_select_username(client)
+            (username, metadata) = ui_select_username(client)
         user_policies = get_user_policies(client, username)
 
         policy_names = _ui_select_policies(
