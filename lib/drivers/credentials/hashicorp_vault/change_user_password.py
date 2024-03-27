@@ -22,10 +22,12 @@ def ui_action(root_token: str = "") -> bool:
 
     try:
         (username, metadata) = ui_select_username(client)
-        ask(
+        if not ask(
             f"Are you sure you want to change password for user {C_CODE}{username}{C_END}?",
             default=False,
-        )
+        ):
+            print("Change password canceled")
+            return False
         password = generate_word_password()
         create_userpass(client, username, password)
         print(
