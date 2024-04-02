@@ -1,6 +1,7 @@
 """
 Misc functions
 """
+
 import difflib
 import logging
 import os
@@ -215,6 +216,7 @@ def run_shell(
     raise_error: bool = True,
     capture_output: bool = False,
     cwd=None,
+    show_timer=False,
 ) -> dict:
     """
     Run a shell command

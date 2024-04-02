@@ -25,7 +25,9 @@ def set_spinner_mode(mode: str) -> None:
 def create_spinner(text: str):
     """Creates spinner"""
     if get_spinner_mode() == "halo":
-        return Halo(text=text, spinner="dots4", color="white", placement="left")
+        return Halo(
+            text=text, interval=50, spinner="dots4", color="white", placement="left"
+        )
     elif get_spinner_mode() == "null":
         return NullSpinner()
 

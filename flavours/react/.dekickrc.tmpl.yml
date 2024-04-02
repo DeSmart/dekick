@@ -6,6 +6,8 @@ project:
     credentials:
       driver: type="str",default="gitlab",validation="credentials_driver()",required="true"
   environments: type="list",default="[{'name':'test'},{'name':'beta'},{'name':'production'}]",validation="{'name':'name()'}",required="true"
+  dotenv:
+    ignore_keys: type="list",default="[]",validation="any()",required="false"
 gitlab:
   url: type="str",default="",validation="url()",required="false"
   getenv: type="bool",default="false",validation="bool()",required="false"

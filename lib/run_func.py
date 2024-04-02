@@ -31,6 +31,7 @@ def run_func(
     func=None,
     func_args: Union[None, dict] = None,
     terminate: bool = True,
+    show_elapsed_time=True,
 ) -> bool:
     """Run function with spinner
 
@@ -51,7 +52,7 @@ def run_func(
     spinner.start()
 
     if func is None:
-        time.sleep(0.5)
+        time.sleep(0.1)
         spinner.succeed()
         return True
 
@@ -74,7 +75,8 @@ def run_func(
 
         function_end = get_seconds_since_dekick_start(1)
         elapsed_time = round(function_end - function_start, 1)
-        out_text = out_text + get_elapsed_time((out_text), elapsed_time)
+        if show_elapsed_time:
+            out_text = out_text + get_elapsed_time((out_text), elapsed_time)
 
     except CalledProcessError as error:
         log_file = get_log_filename()
@@ -126,6 +128,16 @@ def run_func(
             logging.debug("Terminating DeKick with exit code 1")
             sys.exit(1)
         else:
+            if out is not None and "func" in out:
+                logging.debug(
+                    "Calling another function from run_func() with args: %s", out
+                )
+
+                if "func_args" in out:
+                    return out["func"](**out["func_args"])
+
+                return out["func"]()
+
             return False
 
     if out is not None and "text" in out and out["text"] != "":
