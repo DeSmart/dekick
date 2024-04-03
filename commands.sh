@@ -1,2 +1,2 @@
 #!/bin/bash
-export DEKICK_COMMANDS=("artisan" "boilerplates" "build" "composer" "credentials" "docker-compose" "e2e" "knex" "local" "logs" "node" "npm" "npx" "phpunit" "pint" "seed" "shell" "status" "stop" "test" "update" "yarn")
+export DEKICK_COMMANDS=("artisan" "boilerplates" "build" "composer" "creator" "credentials" "docker-compose" "e2e" "knex" "local" "logs" "node" "npm" "npx" "phpunit" "pint" "seed" "shell" "status" "stop" "test" "update" "yarn")

@@ -44,7 +44,6 @@ from lib.yaml.saver import save_flat
 console = Console()
 ask = Confirm.ask
 
-VAULT_ADDR = str(get_dekickrc_value("hashicorp_vault.url"))
 HVAC_CLIENT = None
 HVAC_USERNAME = None
 DEKICK_HVAC_ENV_FILE = ".dekick_hvac.yml"
@@ -360,7 +359,7 @@ def ui_get_for_root_token(retries: int = 1):
     MAX_RETRIES = 5
     try:
         root_token = prompt(
-            f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your {info()} ({C_CODE}{VAULT_ADDR}{C_END}) to continue: ",
+            f"{C_WARN}Warning:{C_END} Current user lacks the necessary privileges to proceed.\nPlease provide your root token to your {info()} ({C_CODE}{_get_vault_url()}{C_END}) to continue: ",
             secure=True,
             validator=lambda x: len(x) > 0 and "hvs" in x,
         )
@@ -478,7 +477,7 @@ def _get_client(token: str = "") -> hvac.Client:
         username = str(get_global_config_value("hashicorp_vault.username", False))
         password = str(get_global_config_value("hashicorp_vault.password", False))
 
-        HVAC_CLIENT = hvac.Client(url=VAULT_ADDR)
+        HVAC_CLIENT = hvac.Client(url=_get_vault_url())
         if token:
             HVAC_CLIENT.token = token
             HVAC_USERNAME = None
@@ -623,3 +622,7 @@ def _is_maintainer() -> bool:
 
 def _is_developer() -> bool:
     return not _is_maintainer()
+
+
+def _get_vault_url() -> str:
+    return str(get_dekickrc_value("hashicorp_vault.url"))

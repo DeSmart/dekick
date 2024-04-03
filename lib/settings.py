@@ -3,6 +3,7 @@
 import time
 from getpass import getuser
 from glob import glob
+from importlib import import_module
 from os import get_terminal_size, getcwd, getenv, getuid, listdir, path
 from sys import stdout
 
@@ -76,6 +77,7 @@ def get_credentials_drivers():
     drivers = [
         path.splitext(path.basename(file))[0]
         for file in glob(DEKICK_PATH + "/lib/drivers/credentials/*")
+        if "__pycache__" not in file
     ]
     return drivers
 
@@ -83,7 +85,18 @@ def get_credentials_drivers():
 DEKICK_CREDENTIALS_DRIVERS = get_credentials_drivers()
 
 
-def get_flavours():
+def get_credentials_drivers_info() -> dict:
+    """Generate list of available credentials drivers"""
+    drivers = DEKICK_CREDENTIALS_DRIVERS
+    drivers_info = {}
+    for driver in drivers:
+        get_module = import_module(f"lib.drivers.credentials.{driver}._main")
+        drivers_info[driver] = get_module.info()
+
+    return drivers_info
+
+
+def get_flavours() -> list:
     """Generate list of available flavours"""
     directory = DEKICK_PATH + "/flavours"
     return [
