@@ -5,7 +5,7 @@ project:
   providers:
     credentials:
       driver: type="str",default="",validation="credentials_driver()",required="false"
-  environments: type="list",default="[{'name':'test'},{'name':'beta'},{'name':'production'}]",validation="{'name':'name()'}",required="true"
+  environments: type="list",default="[{'name':'test'},{'name':'beta'},{'name':'production'}]",validation="{'name':'name()'}",required="false"
   dotenv:
     ignore_keys: type="list",default="[]",validation="any()",required="false"
 gitlab:
@@ -17,8 +17,8 @@ hashicorp_vault:
   auto_token_renewal: type="bool",default="true",validation="bool()",required="false"
 dekick:
   auto_update: type="bool",default="true",validation="bool()",required="false"
-  boilerplate: type="str",default="express",validation="boilerplate()",required="true"
-  ports: type="list",default="[{'port':3000,'service':'web'}]",validation="{'port':'port()','service':'name()'}",required="true"
+  boilerplate: type="str",default="express/default",validation="boilerplate()",required="false"
+  ports: type="list",default="[{'port':3000,'service':'web'}]",validation="{'port':'port()','service':'name()'}",required="false"
   flavour: type="str",default="react",validation="flavour()",required="true"
   settings:
     vite:
