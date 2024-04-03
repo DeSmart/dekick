@@ -140,7 +140,5 @@ def _get_driver_module_name() -> str:
     """Get driver name"""
     module_name = get_dekickrc_value("project.providers.credentials.driver")
     if not module_name:
-        raise ValueError(
-            f"Missing key project.providers.credentials.driver in {DEKICKRC_FILE}"
-        )
+        raise KeyError("No driver")
     return str(module_name)

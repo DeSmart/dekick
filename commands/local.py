@@ -220,7 +220,12 @@ def get_envs_from_credentials_provider():
                 "func_args": {"diff": diff, "project_vars": dotenv},
             }
 
-    credentials_driver_info = get_info()
+    try:
+        credentials_driver_info = get_info()
+    except KeyError as err:
+        if "No driver" in str(err):
+            return
+
     run_func(
         f"Downloading {C_FILE}.env{C_END} from {credentials_driver_info}",
         func=actual_get,

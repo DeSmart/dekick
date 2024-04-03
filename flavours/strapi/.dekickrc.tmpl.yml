@@ -4,7 +4,7 @@ project:
   artifacts: type="list",default="[{'path':'.yarn/cache/'},{'path':'.yarn/install-state.gz'}]",validation="{'path':'rel_path()'}",required="false"
   providers:
     credentials:
-      driver: type="str",default="gitlab",validation="credentials_driver()",required="true"
+      driver: type="str",default="",validation="credentials_driver()",required="false"
   environments: type="list",default="[{'name':'test'},{'name':'beta'},{'name':'production'}]",validation="{'name':'name()'}",required="true"
   dotenv:
     ignore_keys: type="list",default="[]",validation="any()",required="false"
