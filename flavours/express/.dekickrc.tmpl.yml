@@ -1,7 +1,7 @@
 project:
   name: type="str",default="dekick",validation="name()",required="true"
   group: type="str",default="",validation="name()",required="false"
-  artifacts: type="list",default="[{'path':'.yarn/cache/'},{'path':'.yarn/install-state.gz',{'path':'node_modules/'}]",validation="{'path':'rel_path()'}",required="false"
+  artifacts: type="list",default="[{'path':'.yarn/cache/'},{'path':'.yarn/install-state.gz'},{'path':'node_modules/'}]",validation="{'path':'rel_path()'}",required="false"
   providers:
     credentials:
       driver: type="str",default="",validation="credentials_driver()",required="false"
