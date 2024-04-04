@@ -173,11 +173,14 @@ def ui_copy_files(tmpdir: str):
 
     def run():
         try:
-            run_shell(["rm", "-rf", f"{DEKICK_PATH}/*", f"{DEKICK_PATH}/.*"], {})
-            run_shell(["cp", "-r", f"{tmpdir}/.", DEKICK_PATH], {})
-            run_shell(["rm", "-rf", f"{DEKICK_PATH}/.git"], {})
-            run_shell(["rm", "-rf", f"{tmpdir}"], {})
-            run_shell(["chown", "-R", CURRENT_UID, DEKICK_PATH], {})
+            run_shell(
+                f'rm -rf "{DEKICK_PATH}/"*; rm -rf "{DEKICK_PATH}/.git"; mv -f "{tmpdir}"/* "{DEKICK_PATH}"; mv -f "{tmpdir}"/.* "{DEKICK_PATH}"; rm -rf "{tmpdir}"; chown -R "{CURRENT_UID}" "{DEKICK_PATH}"',
+                {},
+                shell=True,
+                capture_output=True,
+                raise_exception=False,
+                raise_error=False,
+            )
 
             return {
                 "success": True,
