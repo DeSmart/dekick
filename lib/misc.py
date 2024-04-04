@@ -210,13 +210,13 @@ def is_port_free(port: int) -> bool:
 
 
 def run_shell(
-    cmd: list,
+    cmd: Union[list, str],
     env: Union[dict, None] = None,
     raise_exception: bool = True,
     raise_error: bool = True,
     capture_output: bool = False,
     cwd=None,
-    show_timer=False,
+    shell=False,
 ) -> dict:
     """
     Run a shell command
@@ -271,6 +271,7 @@ def run_shell(
         stderr=PIPE if capture_output is True else sys.stderr,
         universal_newlines=True,
         cwd=cwd,
+        shell=shell,
     ) as proc:
         stderr, stdout = proc.communicate()
         returncode = proc.returncode
