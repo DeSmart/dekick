@@ -66,10 +66,10 @@ function check_dekickrc() {
   fi
   if [[ -t 1 ]] && [ ! -f "${PROJECT_ROOT}/${DEKICKRC_FILE}" ]; then
     echo -e "\n\033[33mWarning:\033[0m No ${DEKICKRC_FILE} file found in current directory."
-    echo -ne "\nDo you want to install boilerplate in the current directory? (Y/n) "
+    echo -ne "\nDo you want to start project creator in the current directory? (Y/n) "
     read -r answer
     if [ "$answer" = "${answer#[nN]}" ]; then
-      dekick boilerplates install --force
+      dekick creator
     fi
     return 0
   fi

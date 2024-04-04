@@ -1,14 +1,17 @@
 """
 Runs the specified command
 """
+
 import logging
 import os
 import re
 import sys
 from argparse import ArgumentParser, Namespace
+from collections import OrderedDict
 from importlib import import_module
 from shutil import move
 
+from genericpath import exists
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.traceback import install
@@ -18,6 +21,7 @@ from commands.stop import stop
 from commands.update import update
 from lib import logger
 from lib.dekickrc import get_dekickrc_value, ui_validate_dekickrc
+from lib.dotenv import env2dict
 from lib.fs import chown
 from lib.migration import migrate
 from lib.misc import (
@@ -28,6 +32,7 @@ from lib.misc import (
     get_colored_diff,
     get_flavour,
     is_port_free,
+    run_shell,
 )
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.providers.credentials import get_envs, get_info
@@ -101,6 +106,7 @@ def local(parser: Namespace) -> int:
     check_project_group()
     first_run_banner()
     get_envs_from_credentials_provider()
+    ui_check_dotenv_file()
 
     return flavour_action(action="local")
 
@@ -214,7 +220,12 @@ def get_envs_from_credentials_provider():
                 "func_args": {"diff": diff, "project_vars": dotenv},
             }
 
-    credentials_driver_info = get_info()
+    try:
+        credentials_driver_info = get_info()
+    except KeyError as err:
+        if "No driver" in str(err):
+            return
+
     run_func(
         f"Downloading {C_FILE}.env{C_END} from {credentials_driver_info}",
         func=actual_get,
@@ -324,3 +335,96 @@ def get_used_ports() -> list:
     logging.debug("published ports: %s", published)
 
     return published
+
+
+def ui_check_dotenv_file():
+    """Check if .env file exists"""
+
+    def check_exists():
+
+        if exists(".env"):
+            return {"success": True}
+
+        return {
+            "success": False,
+            "text": f"File {C_FILE}.env{C_END} file does not exist. It must exist to make initial import to {C_CODE}local{C_END} environment.",
+        }
+
+    checked_keys = []
+    ignored_dotenv_keys = get_dekickrc_value("project.dotenv.ignore_keys")
+
+    def check_variables(start_with: str = ""):
+
+        with open(".env", "r", encoding="utf-8") as f:
+            env_data = env2dict(f.read())
+
+        if start_with:
+            start_index = list(env_data.keys()).index(start_with) + 1
+            env_data = OrderedDict(
+                list(env_data.items())[start_index:]
+                + list(env_data.items())[:start_index]
+            )
+
+        try:
+            for key, value in env_data.items():
+
+                if key in ignored_dotenv_keys:
+                    continue
+
+                if key in checked_keys:
+                    return {"success": True}
+
+                exclude_dirs = [
+                    "node_modules",
+                    "vendor",
+                    "envs",
+                    "logs",
+                    "storage",
+                    ".yarn",
+                    ".idea",
+                    ".vscode",
+                    ".pytest_cache",
+                    ".mypy_cache",
+                    ".cache",
+                    ".venv",
+                    ".git",
+                ]
+                exclude_files = [".env*", "*.lock", "*.log*", "README", "*.md"]
+
+                exclude_dirs_args = [f"--exclude-dir={dir}" for dir in exclude_dirs]
+                exclude_files_args = [f"--exclude={file}" for file in exclude_files]
+
+                checked_keys.append(key)
+                run_shell(
+                    ["grep", "-rIal"] + exclude_dirs_args + exclude_files_args + [key],
+                    capture_output=True,
+                    raise_exception=True,
+                    raise_error=False,
+                )
+
+        except Exception:
+            return {
+                "success": False,
+                "type": "warn",
+                "text": f"{C_CODE}{key}{C_END} defined in {C_FILE}.env{C_END} is not used in any project file",
+                "func": run_func,
+                "func_args": {
+                    "text": "Checking .env variables",
+                    "func": check_variables,
+                    "terminate": False,
+                    "show_elapsed_time": False,
+                    "func_args": {"start_with": key},
+                },
+            }
+        return {"success": True}
+
+    run_func(
+        text="Checking .env file",
+        func=check_exists,
+    )
+    run_func(
+        text="Checking .env variables",
+        func=check_variables,
+        terminate=False,
+        show_elapsed_time=False,
+    )

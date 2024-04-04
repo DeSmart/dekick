@@ -1,6 +1,7 @@
 """
 Runs docker-compose
 """
+
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
@@ -222,6 +223,8 @@ def get_container_exit_code(container_name: str) -> tuple:
                 "{{ .State.ExitCode }}:{{ .State.Status }}",
             ],
             capture_output=True,
+            raise_exception=False,
+            raise_error=False,
         )["stdout"]
         .strip()
         .split(":")

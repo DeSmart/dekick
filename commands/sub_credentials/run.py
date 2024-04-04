@@ -2,14 +2,12 @@ import os
 import sys
 from argparse import ArgumentParser, Namespace
 from logging import error
-from os.path import exists
 
 from commands.local import check_dekickrc
 from lib.logger import install_logger
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.providers.credentials import parser_driver_arguments
 from lib.providers.credentials import ui_run_action as provider_ui_run_action
-from lib.run_func import run_func
 from lib.settings import C_CODE, C_END, C_ERROR, C_FILE
 
 
@@ -46,19 +44,3 @@ def ui_run(**kwargs):
         error(e)
         print(f"{C_ERROR}Error{C_END}: {e}")
         return 1
-
-
-def ui_check_dotenv_file():
-    """Check if .env file exists"""
-
-    def wrapper():
-
-        if exists(".env"):
-            return {"success": True}
-
-        return {
-            "success": False,
-            "text": f"File {C_FILE}.env{C_END} file does not exist. It must exist to make initial import to {C_CODE}local{C_END} environment.",
-        }
-
-    run_func(text="Checking .env file", func=wrapper)

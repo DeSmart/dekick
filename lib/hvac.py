@@ -1,6 +1,7 @@
 """Set of helper functions to interact with HashiCorp Vault."""
 
 from logging import debug
+from typing import Union
 
 from hvac import Client
 from hvac import exceptions as hvac_exceptions
@@ -243,16 +244,23 @@ def create_entity_by_username(client: Client, username: str, metadata: dict) -> 
     return ""
 
 
-def create_or_update_user(client: Client, username: str, password: str, metadata: dict):
+def create_or_update_user(
+    client: Client, username: str, password: Union[str, None], metadata: dict
+):
     """Create or update a user in Vault."""
-    create_userpass(client, username, password)
+    if not is_user_exists(client, username):
+        create_userpass(client, username, password)
 
-    entity_id = create_entity_by_username(client, username, metadata)
-    if entity_id:
-        create_alias(client, username, entity_id)
+        entity_id = create_entity_by_username(client, username, metadata)
+        if entity_id:
+            create_alias(client, username, entity_id)
+    else:
+        client.secrets.identity.create_or_update_entity_by_name(
+            name=username, metadata=metadata
+        )
 
 
-def create_userpass(client: Client, username: str, password: str):
+def create_userpass(client: Client, username: str, password: Union[str, None]):
     """Create a user in Vault."""
     client.auth.userpass.create_or_update_user(
         username=username, password=password, policies=["default"]

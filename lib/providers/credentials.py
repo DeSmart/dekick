@@ -1,4 +1,3 @@
-import inspect
 import sys
 from importlib import import_module
 
@@ -6,7 +5,7 @@ from beaupy import select
 from rich.console import Console
 
 from lib.dekickrc import get_dekickrc_value
-from lib.settings import C_BOLD, C_CMD, C_END, C_FILE, DEKICKRC_FILE
+from lib.settings import C_BOLD, C_END, C_FILE, DEKICKRC_FILE
 
 console = Console()
 
@@ -66,8 +65,8 @@ def ui_push() -> bool:
 def ui_run_action() -> bool:
     """Run driver"""
     _configure()
-    driver_module = _get_driver_module()
     ARG_ACTION = sys.argv[3] if len(sys.argv) > 3 else None
+    action_name = ""
 
     if not ARG_ACTION:
         actions = list()
@@ -87,22 +86,22 @@ def ui_run_action() -> bool:
 
         if not ARG_ACTION:
             return False
-
-        ARG_ACTION = (
-            str(ARG_ACTION)
-            .split(" - ")[0]
-            .replace(f"{C_FILE}{C_BOLD}", "")
-            .replace(f"{C_END}", "")
-            .replace(" ", "_")
-            .lower()
-        )
     else:
         action_name = get_actions()[
             [action.lower() for action, _ in get_actions()].index(ARG_ACTION)
         ][1]
         console.print(f"\n{action_name}", style="bold")
 
-    return getattr(driver_module, f"ui_action_{ARG_ACTION}")()
+    action_module = (
+        str(ARG_ACTION)
+        .split(" - ")[0]
+        .replace(f"{C_FILE}{C_BOLD}", "")
+        .replace(f"{C_END}", "")
+        .replace(" ", "_")
+        .lower()
+    )
+
+    return _get_driver_module(action_module).ui_action()
 
 
 # Private functions
@@ -130,10 +129,10 @@ def _driver_configure():
         raise RuntimeError(f"{get_info()}: {exception.args[0]}") from exception
 
 
-def _get_driver_module():
+def _get_driver_module(submodule: str = "_main"):
     """Gets driver module"""
     module_name = _get_driver_module_name()
-    get_module = import_module(f"lib.drivers.credentials.{module_name}")
+    get_module = import_module(f"lib.drivers.credentials.{module_name}.{submodule}")
     return get_module
 
 
@@ -141,7 +140,5 @@ def _get_driver_module_name() -> str:
     """Get driver name"""
     module_name = get_dekickrc_value("project.providers.credentials.driver")
     if not module_name:
-        raise ValueError(
-            f"Missing key project.providers.credentials.driver in {DEKICKRC_FILE}"
-        )
+        raise KeyError("No driver")
     return str(module_name)

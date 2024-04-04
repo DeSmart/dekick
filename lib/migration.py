@@ -1,4 +1,5 @@
 """Runs migrations from migrations/ directory"""
+
 from importlib import import_module
 from os import listdir
 from re import match
