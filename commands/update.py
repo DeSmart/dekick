@@ -173,7 +173,7 @@ def ui_copy_files(tmpdir: str):
 
     def run():
         try:
-            run_shell(["rm", "-rf", f"{DEKICK_PATH}*", f"{DEKICK_PATH}.*"], {})
+            run_shell(["rm", "-rf", f"{DEKICK_PATH}/*", f"{DEKICK_PATH}/.*"], {})
             run_shell(["cp", "-r", f"{tmpdir}/.", DEKICK_PATH], {})
             run_shell(["rm", "-rf", f"{DEKICK_PATH}/.git"], {})
             run_shell(["rm", "-rf", f"{tmpdir}"], {})
