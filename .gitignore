@@ -1,9 +1,0 @@
-__pycache__/
-*.py[cod]
-*$py.class
-boilerplates/
-boilerplates
-.env
-logs/*
-tmp/dind_containers/*
-tmp/pytest.lock
