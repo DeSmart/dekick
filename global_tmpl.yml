@@ -1,6 +1,0 @@
-gitlab:
-  token: ""
-hashicorp_vault:
-  token: ""
-boilerplates:
-  git_url: ""

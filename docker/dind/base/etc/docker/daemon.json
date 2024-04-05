@@ -1,7 +1,0 @@
-{
-  "max-concurrent-uploads": 16,
-  "max-concurrent-downloads": 16,
-  "features": {
-    "buildkit": true
-  }
-}
