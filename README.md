@@ -130,7 +130,7 @@ Start local environment:
 dekick local
 ```
 
-![dekick local command](docs/files/dekick-local.gif)
+![dekick local command](docs/docusaurus/static/img/dekick-local.gif)
 
 DeKick will start the development enviromnent which depends on specific flavour. Typically, depending on the project size, project is ready to be developed in a matter of a couple of minutes (sometimes even under a minute).
 
@@ -223,7 +223,7 @@ dekick yarn add lodash
 ```
 This will run `yarn` inside a proper container which your application is build with.
 
-![dekick yarn install command](docs/files/dekick-yarn-add-lodash.gif)
+![dekick yarn install command](docs/docusaurus/statis/img/dekick-yarn-add-lodash.gif)
 
 > Note that above will only work with some flavours like `react`, running `dekick yarn` command on `laravel` flavour won't work because there is no `yarn` command inside a node image.
 
