@@ -10,6 +10,7 @@ fi
 
 echo "Building docs"
 cd docs/docusaurus || exit 1
+npm install
 npm start build
 mv build "$TMPDIR"
 cd - || exit 1
