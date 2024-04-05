@@ -3,7 +3,7 @@ set -e
 
 TMPDIR=$(mktemp -d)
 
-if git diff --quiet --exit-code; then
+if ! git diff --quiet --exit-code; then
   echo "There are uncommited changes. Please commit or stash them before releasing."
   exit 1
 fi
