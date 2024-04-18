@@ -36,7 +36,7 @@
 
 # What's DeKick?
 <a id="markdown-what's-dekick%3F" name="what's-dekick%3F"></a>
-DeKick /də kɪk/ is a tool which supports and improves the work of dev team, by provisioning and building unified environments using [Docker](https://docker.com) without being an expert. It relieves the pain of running projects locally on different platforms (Linux, macOS with Intel and ARM based CPUs) and prevents many common problems faced by developers when dockerizing their projects.
+DeKick /də kɪk/ is a tool which supports and improves the work of dev team, by provisioning and building unified environments using [Docker](https://docker.com) without being an expert. It relieves the pain of running projects locally on different platforms (Linux, Windows with WSL2 or macOS with Intel and ARM based CPUs) and prevents many common problems faced by developers when dockerizing their projects.
 
 DeKick goes even further and helps to build target Docker images which can be deployed on a test, beta or even production environment with ease.
 
@@ -74,8 +74,8 @@ DeKick can be the answer when ***"It (locally) works for me"*** is not enough ;)
 
 ## System requirements
 <a id="markdown-system-requirements" name="system-requirements"></a>
-- Linux or macOS (both Intel and ARM CPUs are supported)
-- [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) on Linux or [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) on macOS installed
+- Linux, Windows (with [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install)) or macOS (both Intel and ARM CPUs are supported)
+- [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) on Linux or [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) on macOS, Windows installed
 - Terminal with `bash` or `zsh` shell (other shell like `fish` are not supported for now)
 
 # How it works?
@@ -292,7 +292,7 @@ It is important to note that this command will remove all unused resources, so m
 
 To restart docker you need to use one of the follow instruction:
 
-on macOS you can just restart `docker desktop`
+on macOS, Windows you can just restart **Docker Desktop** application
 
 on Linux:
 ```shell
