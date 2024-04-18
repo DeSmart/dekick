@@ -13,6 +13,12 @@ HOST_PLATFORM="$(uname -s)"
 HOST_DOCKER_SOCK="/var/run/docker.sock"
 HOST_HOME=$HOME
 
+if [ -n "$WSL_DISTRO_NAME" ]; then
+  HOST_SUBSYSTEM="wsl"
+else
+  HOST_SUBSYSTEM="default"
+fi
+
 if ! tty > /dev/null 2>&1; then
   DOCKER_FLAGS=""
 fi
@@ -149,6 +155,8 @@ docker run $DOCKER_FLAGS --rm \
   -e HOST_ARCH="${HOST_ARCH}" \
   -e HOST_HOME="${HOST_HOME}" \
   -e HOST_PLATFORM="${HOST_PLATFORM}" \
+  -e WSL_DISTRO_NAME="${WSL_DISTRO_NAME}" \
+  -e HOST_SUBSYSTEM="${HOST_SUBSYSTEM}" \
   -e PROJECT_ROOT="${PROJECT_ROOT}" \
   -e DISPLAY="${DISPLAY}" \
   -e HOST_IP="${HOST_IP}" \

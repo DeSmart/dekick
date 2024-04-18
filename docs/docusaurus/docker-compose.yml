@@ -1,0 +1,10 @@
+services:
+  node:
+    image: node:lts
+    volumes:
+      - ./:/app/website
+      - ../docs/:/app/docs
+    working_dir: /app/website/
+    command: npm start
+    ports:
+      - 3000:3000

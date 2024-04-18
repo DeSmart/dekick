@@ -119,7 +119,14 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
     env["COMPOSE_PROJECT_NAME"] = (
         os.getenv("COMPOSE_PROJECT_NAME") or compose_project_name
     )
-    env["PROJECT_ROOT"] = PROJECT_ROOT
+
+    # WSL Paths in Docker workaround
+    if get_subsystem() == "wsl" and not is_dind_running():
+        wsl_distro_name = get_wsl_distro()
+        path = PROJECT_ROOT.replace("/", "\\")
+        env["PROJECT_ROOT"] = f"\\\\wsl.localhost\\{wsl_distro_name}{path}"
+    else:
+        env["PROJECT_ROOT"] = PROJECT_ROOT
     env["CURRENT_UID"] = str(CURRENT_UID)
     env["PATH"] = os.getenv("PATH")
     env["HOME"] = os.getenv("HOME")
@@ -138,6 +145,8 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
         env[f"DOCKER_PORT_{service}"] = os.getenv(f"DOCKER_PORT_{service}") or str(
             port_def["port"]
         )
+
+    logging.debug(env)
 
     return env
 
@@ -162,6 +171,21 @@ def get_platform() -> str:
         return "osx" if host_platform.casefold() == "darwin" else "linux"
 
     return "osx" if sys.platform == "darwin" else "linux"
+
+
+def get_subsystem() -> str:
+    """Detects subsystem (ie. WSL2 on Windows)
+    Returns: wsl or default
+    """
+    return str(os.getenv("HOST_SUBSYSTEM"))
+
+
+def get_wsl_distro() -> str:
+    """If on WSL then return distro name"""
+    if get_subsystem() != "wsl":
+        return ""
+
+    return str(os.getenv("WSL_DISTRO_NAME"))
 
 
 def are_all_ports_free(ports: list) -> bool:
@@ -262,7 +286,7 @@ def run_shell(
             os.getcwd(),
             *tmp_docker_env,
             dind_container_id,
-        ] + cmd
+        ] + list(cmd)
 
     with Popen(
         args=cmd,
