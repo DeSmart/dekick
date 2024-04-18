@@ -15,6 +15,8 @@ if [[ $(echo -e "$VERSION\n$CURRENT_VERSION" | sort -Vr | head -n 1) != "$VERSIO
   exit 1
 fi
 
+git flow init -d
+
 echo "Releasing version $VERSION"
 
 read -p "Continue? (y/n) " -n 1 -r
