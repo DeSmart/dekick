@@ -139,6 +139,11 @@ def create_deployment_policy(
     client.sys.create_or_update_policy(name=policy_name, policy=policy)
     return policy_name
 
+def get_max_ttl_for_token(client: Client) -> int:
+    """Get the maximum TTL for a token in Vault."""
+    return int(client.sys.read_auth_method_tuning(
+        path="token"
+    )["max_lease_ttl"])
 
 def create_token(
     client: Client,
@@ -148,6 +153,7 @@ def create_token(
     renawable: bool = True,
 ) -> str:
     """Create a token in Vault and return it"""
+    
     res = client.auth.token.create(
         policies=policies, ttl=ttl, renewable=renawable, no_parent=no_parent
     )

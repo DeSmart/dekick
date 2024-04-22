@@ -1,3 +1,4 @@
+from beaupy import prompt
 from hvac import exceptions as hvac_exceptions
 from rich.console import Console
 from rich.prompt import Confirm
@@ -9,8 +10,8 @@ from lib.drivers.credentials.hashicorp_vault._main import (
     ui_get_for_root_token,
 )
 from lib.glcli import set_project_var
-from lib.hvac import create_policy_name, create_token
-from lib.settings import C_CODE, C_END, C_FILE
+from lib.hvac import create_policy_name, create_token, get_max_ttl_for_token
+from lib.settings import C_CODE, C_END, C_ERROR, C_FILE
 
 console = Console()
 ask = Confirm.ask
@@ -23,7 +24,26 @@ def ui_action(root_token: str = "") -> bool:
         project_group = str(get_dekickrc_value("project.group"))
         project_name = str(get_dekickrc_value("project.name"))
         policy_names = [create_policy_name(project_group, project_name, "deployment")]
-        token = create_token(client, policy_names, no_parent=True, renawable=True)
+
+        while True:
+            max_ttl_days = int(get_max_ttl_for_token(client) / 3600 / 24)
+            try:
+                ttl_days = prompt(
+                    f"What would be the expiration time for the token in days (max is {max_ttl_days} days)?", 
+                    target_type=int,
+                    initial_value=str(max_ttl_days),
+                )
+                ttl_hours = int(ttl_days * 24)
+            except Exception:
+                print(f"{C_ERROR}Error:{C_END} Please enter a number")
+                continue
+            
+            if ttl_days > max_ttl_days:
+                print(f"{C_ERROR}Error:{C_END} Maximum token expiration time is {max_ttl_days} days")
+                continue
+            break
+        
+        token = create_token(client, policy_names, no_parent=True, renawable=True, ttl=f"{ttl_hours}h")
 
         if ask(
             f"Would you like to store the deployment token in Gitlab under {C_FILE}{DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME}{C_END} variable?",
@@ -46,4 +66,5 @@ def ui_action(root_token: str = "") -> bool:
         HVAC_CLIENT = None
         return ui_action(ui_get_for_root_token())
 
+    return True
     return True
