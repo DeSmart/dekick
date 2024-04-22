@@ -24,6 +24,7 @@ from lib.environments import get_environments
 from lib.git import is_git_repository
 from lib.global_config import get_global_config_value
 from lib.hvac import get_all_user_data, get_mount_point, get_user_policies
+from lib.logger import get_log_level
 from lib.misc import run_shell
 from lib.settings import (
     C_BOLD,
@@ -523,7 +524,10 @@ def _renew_token_self(client: hvac.Client):
 
     debug("Renewing token")
     client.auth.token.renew_self()
-
+    
+    if get_log_level() == "DEBUG":
+        token = client.auth.token.lookup_self()
+        debug("Token: %s" % (token))
 
 def generate_word_password(num_words: int = 8) -> str:
     """Generate a password consisting of random English words and numbers."""
