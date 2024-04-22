@@ -1,4 +1,4 @@
-![version-develop](https://img.shields.io/badge/version-2.8.1-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version-2.8.2](https://img.shields.io/badge/version-2.8.2-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -12,14 +12,14 @@
 - [Quick start](#quick-start)
 - [Usage](#usage)
   - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [Using `local` command](#using-local-command)
+    - [Using local command](#using-local-command)
   - [DeKick commands](#dekick-commands)
-    - [`e2e` command](#e2e-command)
-  - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
-  - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+    - [e2e command](#e2e-command)
+  - [Global config ~/.config/dekick/global.yml](#global-config-configdekickglobalyml)
+  - [How to run flavour specific commands like yarn, npm, npx, composer or artisan?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
   - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
 - [Troubleshooting](#troubleshooting)
-  - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
+  - [Docker permission denied "Got permission denied while trying to connect..."](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
   - [Error response from deamon: network 45677... not found](#error-response-from-deamon-network-45677-not-found)
 - [Contribution Guidelines](#contribution-guidelines)
   - [How to Contribute](#how-to-contribute)
