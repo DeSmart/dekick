@@ -43,10 +43,10 @@ git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
-sed -i "s/\[version develop\]/[version-$VERSION]/g" README.md
-sed -i "s/version-develop-teal/version-$VERSION-teal/g" README.md
-git add README.md
-git commit -m "docs: update"
+sed -i "s/\[version develop\]/[version-$VERSION]/g" README.md || true
+sed -i "s/version-develop-teal/version-$VERSION-teal/g" README.md || true
+git add README.md || true
+git commit -m "docs: update" || true
 
 echo "Creating Docker images"
 cd docker || exit 1
