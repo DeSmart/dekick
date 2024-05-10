@@ -69,10 +69,10 @@ def _ui_select_policies(
         and not policy.startswith("root")
         and (not exclude_deployment_policy or "deployment" not in policy)
     ]
-    ticked_indices = [
-        index for index, p in enumerate(policies_filtered) if p in user_policies
-    ]
     policies_sorted = sorted(policies_filtered)
+    ticked_indices = [
+        index for index, p in enumerate(policies_sorted) if p in user_policies
+    ]
     policy_indexes = select_multiple(
         policies_sorted,
         tick_style="cyan",
@@ -87,7 +87,7 @@ def _ui_select_policies(
     )
 
     policy_names = [
-        policies_filtered[int(policy_index)] for policy_index in policy_indexes
+        policies_sorted[int(policy_index)] for policy_index in policy_indexes
     ]
 
     return policy_names
