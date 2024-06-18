@@ -1,6 +1,7 @@
 """
 Runs the specified command
 """
+
 import ipaddress
 import logging
 import re
@@ -12,10 +13,10 @@ from os.path import isfile
 from rich.traceback import install
 
 from commands.local import get_envs_from_credentials_provider, install_logger
-from lib.misc import get_platform, run_shell, get_subsystem
+from lib.misc import get_platform, get_subsystem, run_shell
 from lib.parser_defaults import parser_default_args, parser_default_funcs
 from lib.run_func import run_func
-from lib.settings import C_END, C_FILE, C_ERROR
+from lib.settings import C_END, C_ERROR, C_FILE
 
 install()
 
@@ -56,7 +57,7 @@ def main(parser: Namespace, args: list):  # pylint: disable=unused-argument
     """
     parser_default_funcs(parser)
 
-    if get_subsystem() != "":
+    if get_subsystem() == "wsl":
         print(f"{C_ERROR}Error:{C_END} E2E tests doesn't work under Windows WSL2")
         sys.exit(1)
 

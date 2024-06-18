@@ -80,6 +80,8 @@ def set_project_var(
     variable_name: str = "ENVFILE",
     raw: bool = False,
     update: bool = False,
+    expand: bool = False,
+    masked: bool = False,
 ) -> str:
     """Sets a project variable in Gitlab"""
     gl_client = auth(token)
@@ -101,6 +103,8 @@ def set_project_var(
             "value": value,
             "environment_scope": scope,
             "raw": raw,
+            "masked": masked,
+            "expand": expand,
         }
 
         if update:

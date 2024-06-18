@@ -29,7 +29,7 @@ def ui_action(root_token: str = "") -> bool:
             max_ttl_days = int(get_max_ttl_for_token(client) / 3600 / 24)
             try:
                 ttl_days = prompt(
-                    f"What would be the expiration time for the token in days (max is {max_ttl_days} days)?", 
+                    f"What would be the expiration time for the token in days (max is {max_ttl_days} days)?",
                     target_type=int,
                     initial_value=str(max_ttl_days),
                 )
@@ -37,20 +37,28 @@ def ui_action(root_token: str = "") -> bool:
             except Exception:
                 print(f"{C_ERROR}Error:{C_END} Please enter a number")
                 continue
-            
+
             if ttl_days > max_ttl_days:
-                print(f"{C_ERROR}Error:{C_END} Maximum token expiration time is {max_ttl_days} days")
+                print(
+                    f"{C_ERROR}Error:{C_END} Maximum token expiration time is {max_ttl_days} days"
+                )
                 continue
             break
-        
-        token = create_token(client, policy_names, no_parent=True, renawable=True, ttl=f"{ttl_hours}h")
+
+        token = create_token(
+            client, policy_names, no_parent=True, renawable=True, ttl=f"{ttl_hours}h"
+        )
 
         if ask(
             f"Would you like to store the deployment token in Gitlab under {C_FILE}{DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME}{C_END} variable?",
             default=False,
         ):
             set_project_var(
-                "*", token, variable_name=DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME, raw=True
+                "*",
+                token,
+                variable_name=DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME,
+                raw=True,
+                masked=True,
             )
             print(
                 f"Deployment token stored in GitLab under {C_FILE}{DEKICKRC_GITLAB_VAULT_TOKEN_VAR_NAME}{C_END} variable"
