@@ -120,13 +120,7 @@ def default_env(override_env: Union[dict, None] = None) -> dict:
         os.getenv("COMPOSE_PROJECT_NAME") or compose_project_name
     )
 
-    # WSL Paths in Docker workaround
-    if get_subsystem() == "wsl" and not is_dind_running():
-        wsl_distro_name = get_wsl_distro()
-        path = PROJECT_ROOT.replace("/", "\\")
-        env["PROJECT_ROOT"] = f"\\\\wsl.localhost\\{wsl_distro_name}{path}"
-    else:
-        env["PROJECT_ROOT"] = PROJECT_ROOT
+    env["PROJECT_ROOT"] = PROJECT_ROOT
     env["CURRENT_UID"] = str(CURRENT_UID)
     env["PATH"] = os.getenv("PATH")
     env["HOME"] = os.getenv("HOME")
