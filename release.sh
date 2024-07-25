@@ -2,7 +2,7 @@
 set -e
 
 VERSION="$1"
-CURRENT_VERSION=$(curl -s https://raw.githubusercontent.com/DeSmart/dekick/main/.version)
+CURRENT_VERSION=$(wget -qO- https://raw.githubusercontent.com/DeSmart/dekick/main/.version)
 BOILERPLATES_DIR=boilerplates/
 
 if [ -z "$VERSION" ]; then
