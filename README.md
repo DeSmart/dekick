@@ -1,7 +1,6 @@
-![version-develop](https://img.shields.io/badge/version-2.8.5-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version-2.8.6](https://img.shields.io/badge/version-2.8.6-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
-<!-- TOC depthfrom:1 -->
 <!-- TOC depthfrom:1 -->
 
 - [What's DeKick?](#whats-dekick)
@@ -95,7 +94,7 @@ dekick install
 ```
 (the `install` command is planned for future releases, soon :slightly_smiling_face:)
 - answer some questions about the **project**, **flavour**, **boilerplate** etc.
-- some new files should appear in your project (i.e. `.dekickrc.yml`, `docker-compose.yml`, `.gitlab-ci.yml`, depdends on the flavour and boilerplate you've chosen) 
+- some new files should appear in your project (i.e. `.dekickrc.yml`, `docker-compose.yml`, `.gitlab-ci.yml`, depdends on the flavour and boilerplate you've chosen)
 - run
 ```shell
 cd [YOUR_PROJECT_BASE_DIRECTORY]
@@ -139,13 +138,13 @@ DeKick will start the development enviromnent which depends on specific flavour.
 
 ### `e2e` command
 <a id="markdown-e2e-command" name="e2e-command"></a>
-This command is used to run end-to-end tests using popular Cypress image (right now, it's our [own Docker image based on Cypress included](https://hub.docker.com/r/desmart/cypress-included/tags) version). It runs `cypress` tests inside a container. 
+This command is used to run end-to-end tests using popular Cypress image (right now, it's our [own Docker image based on Cypress included](https://hub.docker.com/r/desmart/cypress-included/tags) version). It runs `cypress` tests inside a container.
 
 > For now, we support opening Cypress GUI and running tests on **Linux** and **macOS** only.
 
 You need to have `cypress/` directory with all the tests and typical Cypress directory structure inside your project. You can read more about Cypress [here](https://www.cypress.io/).
 
-Also, there's a special `cypress/cypress.config.template.js` file which is, when starting the container copied to `cypress/cypress.config.js` file. You can use it to configure your Cypress tests and inject environment variables to them. Just add needed variables to `.env` file in the root of your project and they will be available in `cypress/cypress.config.js` file after starting the container. 
+Also, there's a special `cypress/cypress.config.template.js` file which is, when starting the container copied to `cypress/cypress.config.js` file. You can use it to configure your Cypress tests and inject environment variables to them. Just add needed variables to `.env` file in the root of your project and they will be available in `cypress/cypress.config.js` file after starting the container.
 
 For example file `cypress/cypress.config.template.js` can look like this:
 
@@ -410,7 +409,7 @@ If you encounter any bugs or issues with DeKick, please report them using the pr
 
 ## Communication
 <a id="markdown-communication" name="communication"></a>
-If you have any questions or need help with your contribution, you can reach out to the project maintainers on our mailing list (dooshek@desmart.com). 
+If you have any questions or need help with your contribution, you can reach out to the project maintainers on our mailing list (dooshek@desmart.com).
 We are happy to help and answer any questions you may have.
 
 Thank you for your contributions and for helping to make DeKick better!
