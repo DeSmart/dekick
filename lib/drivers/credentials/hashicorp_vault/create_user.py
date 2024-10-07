@@ -12,7 +12,14 @@ from lib.drivers.credentials.hashicorp_vault.assign_policies import (
     ui_action as assign_policies_ui_action,
 )
 from lib.hvac import create_or_update_user, is_user_exists
-from lib.settings import C_BOLD, C_CODE, C_END, C_FILE
+from lib.settings import (
+    C_BOLD,
+    C_CODE,
+    C_END,
+    C_FILE,
+    DEKICKRC_GLOBAL_HOST_PATH,
+    HOST_HOME,
+)
 
 console = Console()
 ask = Confirm.ask
@@ -45,6 +52,13 @@ def ui_action(
             )
         print(f"\n{C_BOLD}Choose policies for user {C_CODE}{username}{C_END}")
         assign_policies_ui_action(root_token, username)
+        global_host_path = DEKICKRC_GLOBAL_HOST_PATH.replace(HOST_HOME, "~")
+        print(
+            f"\n{C_BOLD}The user should create a file {global_host_path} with the following content:"
+        )
+        print(f"\nhashicorp_vault:")
+        print(f"  password: {password}")
+        print(f"  username: {username}\n")
     except hvac_exceptions.InvalidPath as exception:
         raise ValueError(
             f"Vault not initialized (use {C_CODE}dekick credentials run init{C_END} to initialize)"
