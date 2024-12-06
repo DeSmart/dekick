@@ -20,7 +20,7 @@ git flow init -d
 echo "Releasing version $VERSION"
 
 read -p "Continue? (y/n) " -n 1 -r
-if [[ $REPLY =~ ^[Nn]$ ]]; then 
+if [[ $REPLY =~ ^[Nn]$ ]]; then
   exit 1
 fi
 
@@ -43,8 +43,8 @@ git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
-sed -i "s/\[version develop\]/[version-$VERSION]/g" README.md || true
 sed -i "s/version-develop-teal/version-$VERSION-teal/g" README.md || true
+sed -i "s/\[version-develop\]/[version-$VERSION]/g" README.md || true
 git add README.md || true
 git commit -m "docs: update" || true
 
@@ -71,8 +71,8 @@ git add .version
 git commit -m "chore: new version"
 
 echo "Changing README.md"
-sed -i "s/\[version $VERSION\]/[version-develop]/g" README.md
 sed -i "s/version-$VERSION-teal/version-develop-teal/g" README.md
+sed -i "s/\[version-$VERSION\]/[version-develop]/g" README.md
 git add README.md
 git commit -m "docs: update"
 

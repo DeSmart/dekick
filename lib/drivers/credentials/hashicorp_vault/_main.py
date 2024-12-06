@@ -472,6 +472,14 @@ def _get_client(token: str = "") -> hvac.Client:
 
     try:
         if HVAC_CLIENT:
+            try:
+                token_info = HVAC_CLIENT.auth.token.lookup_self()
+                debug(
+                    f"Token info - renewable: {token_info['renewable']}, ttl: {token_info['ttl']}"
+                )
+            except Exception as e:
+                debug(f"Error looking up token: {str(e)}")
+
             _renew_token_self(HVAC_CLIENT)
             return HVAC_CLIENT
 
@@ -507,7 +515,7 @@ def _get_client(token: str = "") -> hvac.Client:
         raise ValueError("Invalid token or token expired.")
     except RequestConnectionError:
         raise RequestConnectionError(
-            f"Can't connect to {info()} using {C_CODE}{VAULT_ADDR}{C_END}. Please check your network connection and try again."
+            f"Can't connect to {info()} using {C_CODE}{_get_vault_url()}{C_END}. Please check your network connection and try again."
         )
 
 
@@ -524,10 +532,11 @@ def _renew_token_self(client: hvac.Client):
 
     debug("Renewing token")
     client.auth.token.renew_self()
-    
+
     if get_log_level() == "DEBUG":
         token = client.auth.token.lookup_self()
         debug("Token: %s" % (token))
+
 
 def generate_word_password(num_words: int = 8) -> str:
     """Generate a password consisting of random English words and numbers."""
