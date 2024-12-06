@@ -54,6 +54,7 @@ cd docker || exit 1
 ./create-dekick-image.sh
 cd - || exit 1
 
+git checkout .
 git checkout main
 git pull
 git checkout "release/${VERSION}"
