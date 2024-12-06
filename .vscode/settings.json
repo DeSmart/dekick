@@ -36,15 +36,15 @@
   },
   "workbench.colorCustomizations": {
     "commandCenter.border": "#e7e7e799",
-    "statusBar.background": "#9383ba",
-    "statusBar.foreground": "#15202b",
-    "statusBarItem.hoverBackground": "#7662a8",
-    "statusBarItem.remoteBackground": "#9383ba",
-    "statusBarItem.remoteForeground": "#15202b",
-    "tab.activeBorder": "#b0a4cc",
-    "titleBar.activeBackground": "#7662a8",
+    "statusBar.background": "#0d32f9",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#3f5cfa",
+    "statusBarItem.remoteBackground": "#0d32f9",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "tab.activeBorder": "#3f5cfa",
+    "titleBar.activeBackground": "#0525ce",
     "titleBar.activeForeground": "#e7e7e7",
-    "titleBar.inactiveBackground": "#7662a899",
+    "titleBar.inactiveBackground": "#0525ce99",
     "titleBar.inactiveForeground": "#e7e7e799"
   },
   "python.testing.pytestPath": "DEKICK_PATH=$(pwd) dekick pytest",
@@ -52,5 +52,6 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "markdown-toc.insertAnchor": true,
-  "peacock.remoteColor": "#9383ba"
+  "peacock.remoteColor": "#9383ba",
+  "peacock.color": "#0d32f9"
 }

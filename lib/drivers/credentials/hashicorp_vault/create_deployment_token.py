@@ -46,7 +46,7 @@ def ui_action(root_token: str = "") -> bool:
             break
 
         token = create_token(
-            client, policy_names, no_parent=True, renawable=True, ttl=f"{ttl_hours}h"
+            client, policy_names, no_parent=True, renewable=True, ttl=f"{ttl_hours}h"
         )
 
         if ask(
