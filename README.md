@@ -1,4 +1,4 @@
-![version-2.8.7](https://img.shields.io/badge/version-2.8.7-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version-2.8.8](https://img.shields.io/badge/version-2.8.8-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
@@ -11,12 +11,12 @@
 - [How it works?](#how-it-works)
 - [Quick start](#quick-start)
 - [Usage](#usage)
-  - [Running DeKick in **local** environment](#running-dekick-in-local-environment)
-    - [Using `local` command](#using-local-command)
+  - [Running DeKick in **local** environ](#running-dekick-in-local-environ)
+    - [Using `local` comma](#using-local-comma)
   - [DeKick commands](#dekick-commands)
-    - [`e2e` command](#e2e-command)
-  - [Global config (`~/.config/dekick/global.yml`)](#global-config-configdekickglobalyml)
-  - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or-artisan)
+    - [`e2e` comma](#e2e-comma)
+  - [Global config (\`~/.config/dekick/global.yml](#global-config-configdekickglobalyml)
+  - [How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or](#how-to-run-flavour-specific-commands-like-yarn-npm-npx-composer-or)
   - [How to run any command inside a container?](#how-to-run-any-command-inside-a-container)
 - [Troubleshooting](#troubleshooting)
   - [Docker permission denied ("Got permission denied while trying to connect...")](#docker-permission-denied-got-permission-denied-while-trying-to-connect)
@@ -106,12 +106,12 @@ dekick local
 # Usage
 <a id="markdown-usage" name="usage"></a>
 
-## Running DeKick in **local** environment
-<a id="markdown-running-dekick-in-**local**-environment" name="running-dekick-in-**local**-environment"></a>
+## Running DeKick in **local** environ
+<a id="markdown-running-dekick-in-local-environment" name="running-dekick-in-local-environment"></a>ment
 A **local** environment is this one that's run on developer's machine. One uses local version mostly for **development** of the application, so the tool provides an environment that closely mimics the production environment, allowing developers to test and debug their code under realistic conditions.
 
-### Using `local` command
-<a id="markdown-using-local-command" name="using-local-command"></a>
+### Using `local` comma
+<a id="markdown-using-local-command" name="using-local-command"></a>nd
 Assuming that you already have DeKick installed run following commands to start local environment:
 ```shell
 cd [YOUR_PROJECT_BASE_DIRECTORY]
@@ -136,8 +136,8 @@ DeKick will start the development enviromnent which depends on specific flavour.
 ## DeKick commands
 <a id="markdown-dekick-commands" name="dekick-commands"></a>
 
-### `e2e` command
-<a id="markdown-e2e-command" name="e2e-command"></a>
+### `e2e` comma
+<a id="markdown-e2e-command" name="e2e-command"></a>nd
 This command is used to run end-to-end tests using popular Cypress image (right now, it's our [own Docker image based on Cypress included](https://hub.docker.com/r/desmart/cypress-included/tags) version). It runs `cypress` tests inside a container.
 
 > For now, we support opening Cypress GUI and running tests on **Linux** and **macOS** only.
@@ -198,8 +198,8 @@ dekick e2e --mode run --spec cypress/e2e/your-test.cy.js
 
 > Running tests on macOS will require to install `xquartz` package. You can install it using `brew install xquartz` command or by downloading it from [here](https://www.xquartz.org/).
 
-## Global config (`~/.config/dekick/global.yml`)
-<a id="markdown-global-config-~%2F.config%2Fdekick%2Fglobal.yml" name="global-config-~%2F.config%2Fdekick%2Fglobal.yml"></a>
+## Global config (`~/.config/dekick/global.yml
+<a id="markdown-global-config-~%2F.config%2Fdekick%2Fglobal.yml" name="global-config-~%2F.config%2Fdekick%2Fglobal.yml"></a>`)
 You can create global config file in your home directory in `.config/dekick/global.yml` file. This file will be used as a default config for all projects. The structure is following:
 
 ```yaml
@@ -213,8 +213,8 @@ dekick:
 ```
 If the file doesn't exist then DeKick will use default values.
 
-## How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or `artisan`?
-<a id="markdown-how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F" name="how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F"></a>
+## How to run flavour specific commands like `yarn`, `npm`, `npx`, `composer` or
+<a id="markdown-how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F" name="how-to-run-flavour-specific-commands-like-yarn%2C-npm%2C-npx%2C-composer-or-artisan%3F"></a>`artisan`?
 Hence DeKick is dockerized (runs inside a Docker container), in order to run commands like `yarn` (for **react** flavour) or `composer` (for **laravel** flavour) you have to run it using `dekick` command. For example if you want to add `lodash` package using `yarn` then just run:
 
 ```shell
