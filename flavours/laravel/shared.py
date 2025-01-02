@@ -87,7 +87,7 @@ def db_migrate():
 
     def run():
         artisan(
-            args=["migrate:fresh", "--force"],
+            args=["migrate:fresh", "--force", "--seed"],
             capture_output=True,
         )
 
