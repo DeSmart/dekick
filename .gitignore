@@ -7,3 +7,5 @@ boilerplates
 logs/*
 tmp/dind_containers/*
 tmp/pytest.lock
+.idea/
+.vscode/
