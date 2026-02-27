@@ -1,6 +1,8 @@
 """
 Runs phpunit
 """
+import json
+import re
 import sys
 from argparse import ArgumentParser, Namespace
 from typing import Union
@@ -15,6 +17,95 @@ from lib.run_func import run_func
 from lib.settings import C_CMD, C_END, CURRENT_UID
 
 install()
+
+# Cache for PHPUnit version to avoid running --version multiple times
+_phpunit_version_cache = None
+
+def get_phpunit_version():
+    """Get PHPUnit version by running phpunit --version
+
+    Returns:
+        float: PHPUnit major.minor version (e.g., 11.0, 10.5)
+    """
+    global _phpunit_version_cache
+
+    # Return cached version if already determined
+    if _phpunit_version_cache is not None:
+        return _phpunit_version_cache
+
+    try:
+        container = get_flavour_container()
+
+        # Run phpunit --version in the container with minimal output
+        result = docker_compose(
+            cmd="run",
+            args=[
+                "--rm",
+                "--user",
+                CURRENT_UID,
+                container,
+                "vendor/bin/phpunit",
+                "--version"
+            ],
+            capture_output=True,
+            raise_exception=False
+        )
+
+        if result["returncode"] == 0 and result["stdout"]:
+            # Parse version output like "PHPUnit 11.5.7 by Sebastian Bergmann and contributors."
+            version_output = result["stdout"].strip()
+            version_match = re.search(r'PHPUnit (\d+\.\d+)', version_output)
+            if version_match:
+                version_str = version_match.group(1)
+                _phpunit_version_cache = float(version_str)
+                return _phpunit_version_cache
+
+        # Fallback to composer.json if direct version check fails
+        _phpunit_version_cache = get_phpunit_version_from_composer()
+        return _phpunit_version_cache
+    except Exception:
+        # Final fallback to composer.json
+        _phpunit_version_cache = get_phpunit_version_from_composer()
+        return _phpunit_version_cache
+
+
+def get_phpunit_version_from_composer():
+    """Get PHPUnit version from composer.json as fallback
+
+    Returns:
+        float: PHPUnit major.minor version (e.g., 11.0, 10.5)
+    """
+    try:
+        with open('composer.json', 'r') as f:
+            composer_data = json.load(f)
+
+        phpunit_constraint = composer_data.get('require-dev', {}).get('phpunit/phpunit', '')
+
+        # Extract version from constraint like "^11.0", "~10.5.3", etc.
+        version_match = re.search(r'[\^~]?\s*(\d+\.\d+)', phpunit_constraint)
+        if version_match:
+            version_str = version_match.group(1)
+            return float(version_str)
+
+        # Default to a high version if we can't determine
+        return 11.0
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        # Default to a high version if we can't determine
+        return 11.0
+
+
+def get_cache_option():
+    """Get appropriate cache option based on PHPUnit version
+
+    Returns:
+        str: Cache option string for PHPUnit command
+    """
+    phpunit_version = get_phpunit_version()
+
+    if phpunit_version >= 10.0:
+        return "--cache-directory=/tmp/.phpunit.cache"
+    else:
+        return "--cache-result-file=/tmp/.phpunit.result.cache"
 
 
 def arguments(parser: ArgumentParser):
@@ -87,7 +178,7 @@ def phpunit(
         CURRENT_UID,
         container,
         "vendor/bin/phpunit",
-        "--cache-result-file=/tmp/.phpunit.result.cache",
+        get_cache_option(),
     ] + args
 
     ret = docker_compose(
