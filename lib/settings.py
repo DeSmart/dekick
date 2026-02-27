@@ -39,6 +39,7 @@ DEKICK_BOILERPLATES = [
     "laravel/php7_4",
     "laravel/php8_1",
     "laravel/php8_2",
+    "laravel/php8_4",
     "react/default",
     "nuxt/default",
     "next/default",
