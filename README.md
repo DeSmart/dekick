@@ -1,4 +1,4 @@
-![version-2.8.8](https://img.shields.io/badge/version-2.8.8-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![version-2.8.9](https://img.shields.io/badge/version-2.8.9-teal.svg) ![Licence MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 **Table of Contents**
 <!-- TOC depthfrom:1 -->
